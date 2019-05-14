@@ -65,4 +65,18 @@
         jedis.del(lockKey);
     }
 }
-参考文献：http://www.importnew.com/27477.html
+ 参考文献：http://www.importnew.com/27477.html
+ 
+
+3.redis的使用模式：
+  (1)单点模式，一个redis实例
+  (2)主从模式，多个实例，1主N从，主读写，从只读，master挂了，slave不会竞选成为master
+  (3)哨兵模式，与主从模式相比，可以选举slave成为master，一个sentinel可管理多个主从Redis，该模式下
+     连接的是sentinel，由sentinel来提供具体可以提供服务的Redis实例
+	Sentinel集群：Sentinel进程可发现监视相同实例的其他sentinel。
+	集群中的Sentinel不会在同一时刻failover(故障切换or故障转移)同一个master，除非有sentinel失败。完成操作后广播，其他sentinel更新配置。
+  (4)集群模式：多主多从。当数据量达到一台服务器存不下时，主从或者sentinel模式就不能满足了。需要对存储的数据分片，存储到对个redis实例中。	
+     一个集群包含16384个哈希槽，每个节点负责一部分哈希槽。对节点使用了主从复制功能。主节点挂掉时，从节点通过心跳监听，
+	 竞选成为主节点。
+	 
+4.Redis与MemeCached：数据类型，持久化，分布式，内存管理机制
