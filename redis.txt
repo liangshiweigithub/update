@@ -7,6 +7,62 @@
   如果节点在哈希环上分布不均匀，可能会导致数据分布不均匀，可以通过增加虚拟节点，
   然后将虚拟节点映射到真实节点上解决
   
- https://blog.wangqi.love/articles/Java/%E5%9F%BA%E4%BA%8Eredis%E7%9A%84%E5%88%86%E5%B8%83%E5%BC%8F%E9%99%90%E6%B5%81%E6%96%B9%E6%A1%88.html
+  https://blog.wangqi.love/articles/Java/%E5%9F%BA%E4%BA%8Eredis%E7%9A%84%E5%88%86%E5%B8%83%E5%BC%8F%E9%99%90%E6%B5%81%E6%96%B9%E6%A1%88.html
  https://www.jianshu.com/p/a3d068f2586d
  https://segmentfault.com/a/1190000012947169
+  
+2.redis分布式锁：分布式锁一般有三种实现方式，数据库乐观锁，基于redis的分布式锁和基于Zookeeper的分布式锁
+ 分布式锁满足的条件:
+  (1)互斥性，任意时刻，只有一个客户端有锁。
+  (2)不会死锁，加锁客户端崩溃时，其他客户端能继续加锁。
+  (3)容错性，大部分redis节点正常运行，客户端就可以加锁解锁
+  (4)解锁唯一性，保证加锁解锁是同一个客户端。
+ 
+ 加锁：
+ 方式：set(lockKey, requestId, SET_IF_NOT_EXIST, SET_WITH_EXPIRE_TIME, expire_time)
+   redis 自带的setNX指令无法指定过期时间。
+   如果key对应的value作为过期时间，
+ 代码：
+   public static boolean wrongGetLock2(Jedis jedis, String lockKey, int expireTime) {
+ 
+    long expires = System.currentTimeMillis() + expireTime;
+    String expiresStr = String.valueOf(expires);
+ 
+    // 如果当前锁不存在，返回加锁成功
+    if (jedis.setnx(lockKey, expiresStr) == 1) {
+        return true;
+    }
+ 
+    // 如果锁存在，获取锁的过期时间
+    String currentValueStr = jedis.get(lockKey);
+    if (currentValueStr != null && Long.parseLong(currentValueStr) < System.currentTimeMillis()) {
+        // 锁已过期，获取上一个锁的过期时间，并设置现在锁的过期时间
+        String oldValueStr = jedis.getSet(lockKey, expiresStr);
+        if (oldValueStr != null && oldValueStr.equals(currentValueStr)) {
+            // 考虑多线程并发的情况，只有一个线程的设置值和当前值相同，它才有权利加锁
+            return true;
+        }
+    }
+ 
+    // 其他情况，一律返回加锁失败
+    return false;
+ 
+}
+会有以下问题
+   客户端自己生成过期时间，每个客户端时间必须同步。
+   锁过期时，过个客户端同时getSet，最终虽然只有一个客户端加了锁，但是过期时间可能被覆盖
+   没有标识，任何客户端都可以解锁。
+   
+ 解锁：
+	解锁步骤：
+	1.检测上面设置的锁值是否与自己相同，2.是的话删除。要保证这两步操作的原子性。通常用eval，或者MULTI执行？
+错误示例：	
+    public static void wrongReleaseLock2(Jedis jedis, String lockKey, String requestId) {
+ 
+    // 判断加锁与解锁是不是同一个客户端
+    if (requestId.equals(jedis.get(lockKey))) {
+        // 若在此时，这把锁突然不是这个客户端的(如过期了，然后其他人加了锁)，则会误解锁
+        jedis.del(lockKey);
+    }
+ 
+}
