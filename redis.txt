@@ -64,5 +64,5 @@
         // 若在此时，这把锁突然不是这个客户端的(如过期了，然后其他人加了锁)，则会误解锁
         jedis.del(lockKey);
     }
- 
 }
+参考文献：http://www.importnew.com/27477.html
