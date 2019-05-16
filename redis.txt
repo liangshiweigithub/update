@@ -150,3 +150,12 @@ public static void wrongReleaseLock2(Jedis jedis, String lockKey, String request
 	 竞选成为主节点。
 	 
 12.Redis与MemeCached：数据类型，持久化，分布式，内存管理机制
+
+13.redis为什么这么快：
+(1)完全基于内存，数据在内存中。
+(2)数据结构简单高效，很多数据结构经过专门的设计。
+(3)单线程避免了不必要的上下文切换和竞争条件，不用考虑加锁解锁的消耗。
+(4)I/O多路复用，非阻塞IO
+(5)构建了自己的VM机制。
+多核CPU时，可开多个Redis实例。这里的单线程指的是处理网络请求的时候。
+参考：https://juejin.im/entry/5b7cfe976fb9a01a13366d95
