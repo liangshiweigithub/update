@@ -80,8 +80,10 @@
  加锁：
  方式：set(lockKey, requestId, SET_IF_NOT_EXIST, SET_WITH_EXPIRE_TIME, expire_time)
    redis 自带的setNX指令无法指定过期时间。
-   如果key对应的value作为过期时间，
- 代码：
+   如果key对应的value作为过期时间，会出现解锁不一致问题。
+   
+错误示范 
+代码：
    public static boolean wrongGetLock2(Jedis jedis, String lockKey, int expireTime) {
  
     long expires = System.currentTimeMillis() + expireTime;
@@ -116,8 +118,8 @@
 	解锁步骤：
 	1.检测上面设置的锁值是否与自己相同，2.是的话删除。要保证这两步操作的原子性。通常用eval，或者MULTI执行？
 错误示例：	
-    public static void wrongReleaseLock2(Jedis jedis, String lockKey, String requestId) {
- 
+
+public static void wrongReleaseLock2(Jedis jedis, String lockKey, String requestId) {
     // 判断加锁与解锁是不是同一个客户端
     if (requestId.equals(jedis.get(lockKey))) {
         // 若在此时，这把锁突然不是这个客户端的(如过期了，然后其他人加了锁)，则会误解锁
@@ -127,7 +129,7 @@
  参考文献：http://www.importnew.com/27477.html
  
 
-3.redis的使用模式：
+11.redis的使用模式：
   (1)单点模式，一个redis实例
   (2)主从模式，多个实例，1主N从，主读写，从只读，master挂了，slave不会竞选成为master
   (3)哨兵模式，与主从模式相比，可以选举slave成为master，一个sentinel可管理多个主从Redis，该模式下
@@ -138,4 +140,4 @@
      一个集群包含16384个哈希槽，每个节点负责一部分哈希槽。对节点使用了主从复制功能。主节点挂掉时，从节点通过心跳监听，
 	 竞选成为主节点。
 	 
-4.Redis与MemeCached：数据类型，持久化，分布式，内存管理机制
+12.Redis与MemeCached：数据类型，持久化，分布式，内存管理机制
