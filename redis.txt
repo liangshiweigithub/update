@@ -75,10 +75,6 @@
   如果节点在哈希环上分布不均匀，可能会导致数据分布不均匀，可以通过增加虚拟节点，
   然后将虚拟节点映射到真实节点上解决
   
-  https://blog.wangqi.love/articles/Java/%E5%9F%BA%E4%BA%8Eredis%E7%9A%84%E5%88%86%E5%B8%83%E5%BC%8F%E9%99%90%E6%B5%81%E6%96%B9%E6%A1%88.html
- https://www.jianshu.com/p/a3d068f2586d
- https://segmentfault.com/a/1190000012947169
-  
 10.redis分布式锁：分布式锁一般有三种实现方式，数据库乐观锁，基于redis的分布式锁和基于Zookeeper的分布式锁
  分布式锁满足的条件:
   (1)互斥性，任意时刻，只有一个客户端有锁。
@@ -159,3 +155,7 @@ public static void wrongReleaseLock2(Jedis jedis, String lockKey, String request
 (5)构建了自己的VM机制。
 多核CPU时，可开多个Redis实例。这里的单线程指的是处理网络请求的时候。
 参考：https://juejin.im/entry/5b7cfe976fb9a01a13366d95
+
+14.redis的RedLock：使用多个redis实例获取锁，保证在发生单点故障时仍然可用。
+  1.设定一个过期时间。
+  2.尝试从N个相互独立的Redis实例获取锁。在限定的过期时间内，从一半以上的redis实例中获取了锁，则认为加锁成功。否则失败
