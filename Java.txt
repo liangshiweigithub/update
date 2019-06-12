@@ -36,4 +36,18 @@
   类型。
   
 7.闭包：能够将一个方法作为一个变量去存储，这个方法有能力访问所在类的自由变量。Java闭包实现：内部类+接口，可用来实现回调。
+
+                                  
+								容器：
+1.容器的类型参数可以有多个，容器类库两种：Collection和Map。Arrays.AsList.
+
+2.HashSet：查找元素最快，TreeSet：升序保存对象，LinkedHashSet：按照添加的顺序保存对象。
+
+3.Map：HashMap：查找最快。TreeMap：升序保存键。LinkedHashMap：按照插入顺序保存键，保留了HashMap的查询速度。put(key,value),get(key)
+
+4.list: ArrayList：类似数组。 LinkedList：类似链表。add,remove,contains,indexOf,subList，isEmplty, clear,toArray，get
+        LinkedList:getFirst, element, peek, removeFirst, remove, poll, addFirst, add, addLast, removeLast. 
+
+5.迭代器：基类：Iterator，只能单向移动，next(),hasNext(),remove()
+  ListIterator:用于各种list的访问，可双向移动，listIterator(n)创建指向索引为n的元素。hasPrevious(),previouse()
   
