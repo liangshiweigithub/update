@@ -16,3 +16,7 @@
  (4)ps aux -sort --rss
  IO状态查看：iostat
  
+4.页面置换算法:LRU,FIFO,OPT(最佳置换法)，时钟算法。
+
+5.查看占用进程的端口：
+  
