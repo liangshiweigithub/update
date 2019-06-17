@@ -51,3 +51,28 @@
 5.迭代器：基类：Iterator，只能单向移动，next(),hasNext(),remove()
   ListIterator:用于各种list的访问，可双向移动，listIterator(n)创建指向索引为n的元素。hasPrevious(),previouse()
   
+6.linkedList：略
+
+7.stack:略
+
+8.Set：唯一性
+
+9.Map：get，put，containsKey，containsValue;
+
+10.Queue:LinkedList实现了Queue的接口，可以将其向上转型为Queue。方法：添加：offer。查询：peek,element,移除：poll,remove.
+  PriorityQueue
+  
+
+  
+								
+									异常：
+1.语法：throw new ExceptionName(description str)
+  try{state;}catch{EXC type){state}
+  
+2.异常说明：告知调用者可能发生的异常，方便调用者处理。语法：void f() throws ExcetionName1,....{}
+
+3.捕获异常的基类Exception来捕获所有的异常。Exception的getMessage()，getLocalizedMessage打印异常的信息，printStackTrace打印调用站
+	for(StackTraceElement ste : e.getStackTrace())
+
+4.Throwable这个类用来表示任何可以作为异常被抛出的类。
+  
