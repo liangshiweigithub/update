@@ -103,5 +103,12 @@
   
 2.Class.forName参数需要是全限定类名，ClassObj。getSimpleName,getCanonicalName可以获得类的名称和全限定名称。isInterface和getInterface获取接口信息。
   getSuperClass获取基类，Class.newInstace创建一个实例对象，这时类必须有默认构造函数。
+  
+3.也可使用ClassName.class获取Class对象。这种方式不会引发类的初始化，与Class.ForName不同。同时类的static final如果是编译器常量，也不会初始化。
+ 非编译器常量会初始化。变量只是static的，在读取值之前，也会进行链接和初始化。总过程是加载，链接，初始化。
+ 
+4.Class对象制造类实例，包含可做用于这些实例的所有方法代码，包含类的静态成员。
 
+5.在使用泛化的Class引用时放松限制，可用通配符。比如 Class<? extends Number> a = int.class. 可用Class.cast进行对象实例的转换。
+  if(classInstance instanceof Class)，来判断类型
   
