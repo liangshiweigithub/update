@@ -75,18 +75,33 @@
 	for(StackTraceElement ste : e.getStackTrace())
 
 4.Throwable这个类用来表示任何可以作为异常被抛出的类。
-
-5.异常匹配时派生类会被匹配为基类。
-
+5.异常匹配时派生类会被匹配为基类
 
 
-13.5:当只需要返回一个string对象的时候，用String.format
-  Integer.parseInt(string) Double.parseDouble
+                                    字符串：
+1.使用StringBuilder来进行字符串操作，方法有append，toString，insert，delete，replace，substring，reverse。
+
+2.打印内存地址时引起的无限递归调用。解决super.toString()
+
+3.一些方法：length,charAt,getChars,getBytes,toCharArray,equals,equalsIgnoreCase,compareTo,Contains,ContentEquals,
+           equalsIgnoreCase,regionMatcher,startsWith,endWith,indexOf,lastIndexOf,substring,concat,replace,toLowerCase,toUppserCase,
+		   valueOf,intern
+		   
+4.格式化输出：format，可用于PrintStream，PrintWriter对象，System.out.format(),使用方法与c中的相似。
+
+5.Formatter类：格式化功能。Formatter f = new Formatter(System.out);f.format("hahs %d hadhh%s",13,lsw)
+
+
+
+
+
+								类型信息：
+								
+1.Class对象：含有类型信息，创建该类型的所有对象。每个类都有一个Class对象。Class类对象是在第一次使用时加载到JVM中。
+  Class对象被加载后才能创建该类的对象。所有Class对象都属于Class类，Class对象也是对象，可以通过Class.forName取得其引用。
+  要在运行时使用类型信息，必须先获得Class对象的引用。也可以通过类实例的getClass方法获得类的Class对象的引用。
   
-  
-  
-                    
-					
-					               类型信息：
+2.Class.forName参数需要是全限定类名，ClassObj。getSimpleName,getCanonicalName可以获得类的名称和全限定名称。isInterface和getInterface获取接口信息。
+  getSuperClass获取基类，Class.newInstace创建一个实例对象，这时类必须有默认构造函数。
 
-1.Class对象：表示运行时类的类型信息，Class对象用来创建类所有的常规对象。
+  
