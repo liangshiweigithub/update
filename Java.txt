@@ -67,7 +67,7 @@
 								
 									异常：
 1.语法：throw new ExceptionName(description str)
-  try{state;}catch{EXC type){state}
+  try{state;}catch{EXC type){state}finally{state}
   
 2.异常说明：告知调用者可能发生的异常，方便调用者处理。语法：void f() throws ExcetionName1,....{}
 
@@ -75,4 +75,18 @@
 	for(StackTraceElement ste : e.getStackTrace())
 
 4.Throwable这个类用来表示任何可以作为异常被抛出的类。
+
+5.异常匹配时派生类会被匹配为基类。
+
+
+
+13.5:当只需要返回一个string对象的时候，用String.format
+  Integer.parseInt(string) Double.parseDouble
   
+  
+  
+                    
+					
+					               类型信息：
+
+1.Class对象：表示运行时类的类型信息，Class对象用来创建类所有的常规对象。
