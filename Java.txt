@@ -112,3 +112,5 @@
 5.在使用泛化的Class引用时放松限制，可用通配符。比如 Class<? extends Number> a = int.class. 可用Class.cast进行对象实例的转换。
   if(classInstance instanceof Class)，来判断类型
   
+6.Java.lang.reflect支持反射：有Field，Method，Constructor类。Class.getFields,Class.getMethods, Class.getConstructors获得类域，方法，和构造函数
+  
