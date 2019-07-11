@@ -31,8 +31,12 @@
 
 13.内存分配方式：
   (1).静态存储区分配：程序运行前就已分配好，程序运行期间都存在，如全局变量，static变量。
-  (2).栈上创建：函数局部变量的存储单元，函数执行结束紫铜释放。
+  (2).栈上创建：函数局部变量的存储单元，函数执行结束自动释放。
   (3).堆上分配：动态内存分配，malloc和new的对象存储地，易发生内存泄漏。
   
 14.const比#define的有点：const有数据类型，编译器可进行安全检查，而#define只进行字符替换，const常量可以调试，#define则能。
-  
+
+15.关联容器中(map,set,multimap,multiset)，删除当前iterator，会使当前iterator失效，erase时递增当前iterator
+   序列式容器，删除当前iterator会使后面所有元素的iterator失效，因为分配了连续的内存，删除元素会使后面的元素迁移，但erase方法会返回下一个
+   有效的iterator
+   list使用了不连续内存，删除元素也会返回下一个有效的iterator，也不会使以前的iterator失效。
