@@ -1,0 +1,45 @@
+1. three stage of rendering: Application Stage, Geometry Stage, Rasterizer Stage
+
+2.应用阶段：由CPU负责，主要完成三个任务：
+ (1).准备场景数据，如摄像机位置，视锥体，场景中的模型，光源信息等。
+ (2).粗粒度的剔除工作，移除不可见的物体。
+ (3).设置好每个模型的渲染状态，包括使用的材质，纹理，shader等
+ 这一阶段最重要的是输出渲染所需要的几何信息，即渲染图元(点线面等),这些渲染图元传递给下一个阶段。
+ 
+2.几何阶段：处理所有和绘制相关的事情，通常在GPU进行。如要绘制的图元是什么，怎么绘制等。进行逐顶点，逐多边形操作。输出
+  屏幕空间的二维顶点坐标，顶点的深度值，着色等信息。
+  
+3.光栅化阶段：使用上阶段的数据产生像素，并渲染出最终图像。
+
+4.几何阶段的步骤：CPU流水线
+  (1)加载数据到显存。先加载到内存，再加载到显存。
+  (2)设置渲染状态。这些状态定义场景中网格怎么被渲染。
+  (3)Draw Call的调用，这个命令指向需要被渲染的图元列表
+  
+5.GUP流水线：
+几何阶段：
+ (1)顶点着色器(Vertex Shader)：用于实现顶点空间变换，顶点着色
+ (2)曲面细分着色器(Tessellation Shader):可选着色器，用于细分图元
+ (3)几何着色器(Geometry Shader):可选，用户执行逐图元的着色操作。
+ (4)裁剪(Clipping):剔除不在摄像机视野的顶点和三角图元，可配置。
+ (5)屏幕映射(Screen Mapping):将每个图元的坐标转换到屏幕坐标系，不可配置和编程。
+光栅化阶段：
+ (1)三角形设置(Triangle Setup)和三角形遍历(Triangle Traversal)固定函数阶段。
+ (2)片元着色器(Fragment Shader)可变程，实现逐片元的着色操作，
+ (3)逐片元操作(Per-Fragment Operations)如修改颜色，深度缓冲，混合等。
+ 
+ 
+ 
+                                            Unity shader
+1.Property:
+ 定义：
+ Properties{
+	Name ("display name", PropertyType) = DefaultValue)
+	...
+ }
+ 声明属性是为了在材质面板中可以方便的调整各种材质的属性。
+ 
+2.SubShader:每个Shader文件必须包含，加载Shader时，扫描所有的SubShader语义快，选择第一个能够在目标平台运行的SubShader。
+  都不支持选择Fallback语义指定的Shader。
+  SubShader中会定义一系列的Pass和可选的状态[RenderSetup]和标签[Tags]。每个pass定义一次完整的渲染流程，多了影响性能。
+  状态的设置回用于所有的pass
