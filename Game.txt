@@ -33,3 +33,9 @@
 5.帧同步的[所有人]的输入必须在[所有客户端]进行计算，这样大家运算出来的结果才能一样，才能保证帧同步.注意是【所有人】,
   所以常见用于rts，moba、2k等房间游戏.因为人数固定.但是mmo中玩家不定，如果同步所有人
   这个带宽(即传输问题)。。所以mmo中用状态同步+aoi视野管理.
+
+  参考：
+  https://my.oschina.net/u/1859679/blog/1137723?p=3
+  https://blog.csdn.net/u012175089/article/details/56835469
+  https://www.zhihu.com/question/36258781
+  https://zhuanlan.zhihu.com/p/36884005
