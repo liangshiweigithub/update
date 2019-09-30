@@ -1,0 +1,10 @@
+1.type of matrice: square matrix, diagonal matrix, Identity matrix, transpose of matrix
+  Identity matrix is the multiplicative identity element for matrices.
+  
+2.Matrix mulplcation is not commutative, but is associative.
+
+3. (v+w)M = vM + wM, where v, m is vector, M is matrix.
+
+4. Each coordinate of a vector specifies the signed displacement parallel to corresponding axes.
+
+5. A transformation that contains translation is known as an affine transformation.
