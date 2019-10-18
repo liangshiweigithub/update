@@ -159,7 +159,76 @@
 
         Queues is command buffer, in Vulkan the buffer is visible to the user and the user must specifically create and manage buffers for commands.
 
-        Specific types of command may be processed by dedicated hardware, and that's why queues are called families. Each queues family may support different types of operations.
+        Specific types of command may be processed by dedicated hardware, and that's why queues are called families. Each queues family may support different types of operations. Second Part of  CheckPhysicalDeviceProperties() function.
 
+        ```c++
+        uint32_t queue_families_count = 0;
+        vkGetPhysicalDeviceQueueFamilyProperties( physical_device, &queue_families_count, nullptr );
+        if( queue_families_count == 0 ) {
+          std::cout << "Physical device " << physical_device << " doesn't have any queue families!" << std::endl;
+          return false;
+        }
         
+        std::vector<VkQueueFamilyProperties> queue_family_properties( queue_families_count );
+        vkGetPhysicalDeviceQueueFamilyProperties( physical_device, &queue_families_count, &queue_family_properties[0] );
+        for( uint32_t i = 0; i < queue_families_count; ++i ) {
+          if( (queue_family_properties[i].queueCount > 0) &&
+              (queue_family_properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) ) {
+            queue_family_index = i;
+            return true;
+          }
+        }
+        
+        std::cout << "Could not find queue family with required properties on physical device " << physical_device << "!" << std::endl;
+        return false;
+        ```
+        
+        The properties of each queue family contain queue flag, number of available queues in this family, time stamp support and image transfer granularity.
+      
+   3.  After we chose the physical device we can create logical device that will represent it in the rest of our application. The code is:
+   
+      ```c++
+      if( selected_physical_device == VK_NULL_HANDLE ) {
+        std::cout << "Could not select physical device based on the chosen properties!" << std::endl;
+        return false;
+      }
+      
+      std::vector<float> queue_priorities = { 1.0f };
+      
+      VkDeviceQueueCreateInfo queue_create_info = {
+        VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,     // VkStructureType              sType
+        nullptr,                                        // const void                  *pNext
+        0,                                              // VkDeviceQueueCreateFlags     flags
+        selected_queue_family_index,                    // uint32_t                     queueFamilyIndex
+        static_cast<uint32_t>(queue_priorities.size()), // uint32_t                     queueCount
+        &queue_priorities[0]                            // const float                 *pQueuePriorities
+      };
+      
+      VkDeviceCreateInfo device_create_info = {
+        VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,           // VkStructureType                    sType
+        nullptr,                                        // const void                        *pNext
+        0,                                              // VkDeviceCreateFlags                flags
+        1,                                              // uint32_t                           queueCreateInfoCount
+        &queue_create_info,                             // const VkDeviceQueueCreateInfo     *pQueueCreateInfos
+        0,                                              // uint32_t                           enabledLayerCount
+        nullptr,                                        // const char * const                *ppEnabledLayerNames
+        0,                                              // uint32_t                           enabledExtensionCount
+        nullptr,                                        // const char * const                *ppEnabledExtensionNames
+        nullptr                                         // const VkPhysicalDeviceFeatures    *pEnabledFeatures
+      };
+      
+      if( vkCreateDevice( selected_physical_device, &device_create_info, nullptr, &Vulkan.Device ) != VK_SUCCESS ) {
+        std::cout << "Could not create Vulkan device!" << std::endl;
+        return false;
+      }
+      
+      Vulkan.QueueFamilyIndex = selected_queue_family_index;
+      return true;
+      ```
+   
+      Logic device is created by calling vkCreateDevice function.
+   
+       
+   
+   
 
