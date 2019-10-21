@@ -226,9 +226,69 @@
       return true;
       ```
    
-      Logic device is created by calling vkCreateDevice function.
+      Logic device is created by calling vkCreateDevice function. It takes the handle to a physical device and an address of a structure that contains the information necessary for device creation. The structure is of type VkDeviceCreateInfo and contains the following field.
    
-       
+      * sType: standard type of a provided structure.
+      
+      * pNext: parameter pointing to an extension specific structure.
+      
+      * flags:  reserved for future which is set to zero.
+      
+      * queueCreateInfoCount: number of different queue families from which we create queues along with the device.
+      
+      * pQueueCreateInfos: point to an array of queuqCreateInfoCount elements specify queues we want to create.
+      
+        the rest is ignored here.
+      
+      VkDeviceQueueCreateInfo describes a queue family. Its fields include SType, PNext, flags, queueFamilyIndex, queueCount, pQueuePriorities. Different queue families may have similar meaning the may support similar types of operations. The higher of the queue priority, the more time the given queue may have for processing commands. But this is not guaranteed. And it don't influence execution order. Queues from different devices are treated independently.
+      
    
+7. Acquiring Pointes to Device-level function:
+
+   We can use logical device we created to load functions from device level. 
+
+   + There can be so many devices on a single computer, we can load universal procedures which is done with the vkGetInstanceProcAddr function. It returns the address of dispatch functions that perform jumps to proper implementions based on a provided logical device handle.
+
+   + Loading functions for each logic device separately to avoid overhead by the upper method. We must remember that we can call the given function only with the device we loaded this function from. When using more devices we must load functions from each of these devices. This is done by vkGetDeviceProcAdd function along with a logical device handle.
+
+   1. Retrieving Queues: Now that we have created a device, we need a queue that we can submit some commands to for processing. The vkGetDeviceQueue is used to ask for a queue handle. Code is 
+
+      ```c++
+      vkGetDeviceQueue(Vulkan.Device, Vulkan.QueueFamilyIndex, 0, &Vulkan.Queue)
+      ```
+
+      The first parameter is the logic device, the second is the queue family index and it must be one of the indices we've provided during logical device creation. One last parameter is a queue index from within a given family, it must be smaller than the total number of queues we requested from a given family.  When the function succeeds, it store a handle to a requested queue in the last variable. All work we want perform can be submitted for processing to the acquired.
+
+8.  Resource cleanup: cleanup code is:
+
+   ```
+   if( Vulkan.Device != VK_NULL_HANDLE ) {
+     vkDeviceWaitIdle( Vulkan.Device );
+     vkDestroyDevice( Vulkan.Device, nullptr );
+   }
    
+   if( Vulkan.Instance != VK_NULL_HANDLE ) {
+     vkDestroyInstance( Vulkan.Instance, nullptr );
+   }
+   
+   if( VulkanLibrary ) {
+   #if defined(VK_USE_PLATFORM_WIN32_KHR)
+     FreeLibrary( VulkanLibrary );
+   #elif defined(VK_USE_PLATFORM_XCB_KHR) || defined(VK_USE_PLATFORM_XLIB_KHR)
+     dlclose( VulkanLibrary );
+   #endif
+   }
+   ```
+
+   We must ensure that before deleting any object, it is not being used by device. That's why there is a wait function which will block until all processing on queues of a given device is finished.
+
+9. Conclusion: how to use Vulkan:
+   1. Connect with Vulkan Runtime library and load global level function from it
+   2. Create Vulkan instance and load instance-level functions.
+   3. Check what physical devices are available and what are their features, properties, and capabilities.
+   4. Create a logical device and describe what and how many queues must be created along with device
+   5. Retrieve device level functions using newly created logical device handle.
+   6. Retrieve queues and submit work for execution.
+
+
 
