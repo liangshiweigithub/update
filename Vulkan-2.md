@@ -49,7 +49,88 @@
    }
    ```
 
-   if we prepare a place for a smaller amount of extensions, the function will return VK_INCOMPLETE.
+   if we prepare a place for a smaller amount of extensions, the function will return VK_INCOMPLETE. Each element in available_extensions contains the name of extension and its version.
 
-6. 
+6. Enabling an instance-level Extension we need to prepare an array with the names of all extensions we want to enable and pass it to ***VkInstanceCreateInfo***. When create instance success, we can load instance-level functions including additional, extension-specific functions.
+
+7. Create a Presentation Surface:  Call ***vkCreate???SurfaceKHR*** function which accepts Vulcan instance, a pointer to a OS-specific structure, a point to optional memory allocation handling functions and a pointer to a variable to store created surface. The structure is ***Vk???SurfaceCreateInfoKHR*** which contains sTye, pNext, flags, hInstance/connection/dpy and hwnd/window(handle to application window)
+
+8. Check whether a device extension is supported. The extension is called ***VK_KHR_swapchain***, and it defines the actual support, implementation and usage of a swap chain. The check function is ***vkEnumerateDeviceExtensionProperties***. It behaves identically to the function querying instance extension. The only difference is that it takes an additional physical device handle in the first parameter. The code is:
+
+   ```c++
+   uint32_t extensions_count = 0;
+   if( (vkEnumerateDeviceExtensionProperties( physical_device, nullptr, &extensions_count, nullptr ) != VK_SUCCESS) ||
+       (extensions_count == 0) ) {
+     std::cout << "Error occurred during physical device " << physical_device << " extensions enumeration!" << std::endl;
+     return false;
+   }
+   
+   std::vector<VkExtensionProperties> available_extensions( extensions_count );
+   if( vkEnumerateDeviceExtensionProperties( physical_device, nullptr, &extensions_count, &available_extensions[0] ) != VK_SUCCESS ) {
+     std::cout << "Error occurred during physical device " << physical_device << " extensions enumeration!" << std::endl;
+     return false;
+   }
+   
+   std::vector<const char*> device_extensions = {
+     VK_KHR_SWAPCHAIN_EXTENSION_NAME
+   };
+   
+   for( size_t i = 0; i < device_extensions.size(); ++i ) {
+     if( !CheckExtensionAvailability( device_extensions[i], available_extensions ) ) {
+       std::cout << "Physical device " << physical_device << " doesn't support extension named \"" << device_extensions[i] << "\"!" << std::endl;
+       return false;
+     }
+   }
+   ```
+
+   We get supported extension names and look for the device swap-chain extension. If there is none there is no point in further checking the device's properties.
+
+9. Check whether presentation to a given surface is supported:
+
+   The ***vkGetPhysicalDeviceSurfaceSupportKHR*** function  is used to check whether a given queue family from a given physical device support a swap chain or, to be more precise, whether it supports presenting images to a given surface. The code is:
+
+   ```c++
+   uint32_t graphics_queue_family_index = UINT32_MAX;
+   uint32_t present_queue_family_index = UINT32_MAX;
+   
+   for( uint32_t i = 0; i < queue_families_count; ++i ) {
+     vkGetPhysicalDeviceSurfaceSupportKHR( physical_device, i, Vulkan.PresentationSurface, &queue_present_support[i] );
+   
+     if( (queue_family_properties[i].queueCount > 0) &&
+         (queue_family_properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) ) {
+       // Select first queue that supports graphics
+       if( graphics_queue_family_index == UINT32_MAX ) {
+         graphics_queue_family_index = i;
+       }
+   
+       // If there is queue that supports both graphics and present - prefer it
+       if( queue_present_support[i] ) {
+         selected_graphics_queue_family_index = i;
+         selected_present_queue_family_index = i;
+         return true;
+       }
+     }
+   }
+   
+   // We don't have queue that supports both graphics and present so we have to use separate queues
+   for( uint32_t i = 0; i < queue_families_count; ++i ) {
+     if( queue_present_support[i] ) {
+       present_queue_family_index = i;
+       break;
+     }
+   }
+   
+   // If this device doesn't support queues with graphics and present capabilities don't use it
+   if( (graphics_queue_family_index == UINT32_MAX) ||
+       (present_queue_family_index == UINT32_MAX) ) {
+     std::cout << "Could not find queue family with required properties on physical device " << physical_device << "!" << std::endl;
+     return false;
+   }
+   
+   selected_graphics_queue_family_index = graphics_queue_family_index;
+   selected_present_queue_family_index = present_queue_family_index;
+   return true;
+   ```
+
+   The ***vkGetPhysicalDeviceSurfaceSupportKHR*** requires to provide a physical device handle, the queue family index we want to check, and the surface handle we want to render into. if support is available, ***VK_TRUE*** will be stored at a given address, otherwise ***VK_FALSE*** is stored.
 
