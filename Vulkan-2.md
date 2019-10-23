@@ -382,10 +382,109 @@
     
          The image is displayed only on vertical blanking periods, so no tearing should be visible. The presentation engine maintains a queue for images to display. If all images are in the queue, the application has to wait until v-sync releases the currently displayed image. Only after that does it become available to the application and program may render image into it. Must be available in all Vulkan implementations.
     
-          
+       + **FIFO RELAXED**: Similar to FIFO, but when the image is displayed longer than one blanking period it may be released immediately without waiting for another v-sync signal(so if we are rendering frames with lower frequency than screen's refresh rate, tearing may be visible)
+       
+       + **MAILBOX**: Most similar to mentioned triple buffering. The queue size if one compared to FIFO. Internally, the presentation engine uses the queue with only a single element. One image is displayed and one waits in the queue. If application want to present another image it is not append to the end of the queue but replaces the one that waits.
+       
+       For movies we want all frame to be displayed in a proper order. So FIFO mode is the best choice. For game MAILBOX mode always display the recently generated frame, so there is no tearing and input lag is minimized.
     
+    10. **Creating a Swap Chain** by ***vkCreateSwapChainKHR*** Code is
     
+        ```c++
+        uint32_t                      desired_number_of_images = GetSwapChainNumImages( surface_capabilities );
+        VkSurfaceFormatKHR            desired_format = GetSwapChainFormat( surface_formats );
+        VkExtent2D                    desired_extent = GetSwapChainExtent( surface_capabilities );
+        VkImageUsageFlags             desired_usage = GetSwapChainUsageFlags( surface_capabilities );
+        VkSurfaceTransformFlagBitsKHR desired_transform = GetSwapChainTransform( surface_capabilities );
+        VkPresentModeKHR              desired_present_mode = GetSwapChainPresentMode( present_modes );
+        VkSwapchainKHR                old_swap_chain = Vulkan.SwapChain;
+        
+        if( static_cast<int>(desired_usage) == -1 ) {
+          return false;
+        }
+        if( static_cast<int>(desired_present_mode) == -1 ) {
+          return false;
+        }
+        
+        VkSwapchainCreateInfoKHR swap_chain_create_info = {
+          VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,  // VkStructureType                sType
+          nullptr,                                      // const void                    *pNext
+          0,                                            // VkSwapchainCreateFlagsKHR      flags
+          Vulkan.PresentationSurface,                   // VkSurfaceKHR                   surface
+          desired_number_of_images,                     // uint32_t                       minImageCount
+          desired_format.format,                        // VkFormat                       imageFormat
+          desired_format.colorSpace,                    // VkColorSpaceKHR                imageColorSpace
+          desired_extent,                               // VkExtent2D                     imageExtent
+          1,                                            // uint32_t                       imageArrayLayers
+          desired_usage,                                // VkImageUsageFlags              imageUsage
+          VK_SHARING_MODE_EXCLUSIVE,                    // VkSharingMode                  imageSharingMode
+          0,                                            // uint32_t                       queueFamilyIndexCount
+          nullptr,                                      // const uint32_t                *pQueueFamilyIndices
+          desired_transform,                            // VkSurfaceTransformFlagBitsKHR  preTransform
+          VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,            // VkCompositeAlphaFlagBitsKHR    compositeAlpha
+          desired_present_mode,                         // VkPresentModeKHR               presentMode
+          VK_TRUE,                                      // VkBool32                       clipped
+          old_swap_chain                                // VkSwapchainKHR                 oldSwapchain
+        };
+        
+        if( vkCreateSwapchainKHR( Vulkan.Device, &swap_chain_create_info, nullptr, &Vulkan.SwapChain ) != VK_SUCCESS ) {
+          std::cout << "Could not create swap chain!" << std::endl;
+          return false;
+        }
+        if( old_swap_chain != VK_NULL_HANDLE ) {
+          vkDestroySwapchainKHR( Vulkan.Device, old_swap_chain, nullptr );
+        }
+        
+        return true;
+        ```
     
+        Images in Vulkan can be referenced by queues. This means that we can create commands that use these images. These commands are stored in command buffers, and these command buffers are submitted to queue.
+
+13. **Image Presentation**
+
+    Swap chain images belong to and are owned by the swap chain. This means that the application can't use these images until it asks for them. After finishes using the image it should return it by presenting it. If not we will soon run out of images and nothing will display on the screen. Acquiring access may require waiting when there are not enough images. The availability of images may depend on many factors: internal implementation, OS, number of created images, number of images the application want to use at a single time and on the selected presentation time. Code is 
+
+    ```c++
+    uint32_t image_index;
+    VkResult result = vkAcquireNextImageKHR( Vulkan.Device, Vulkan.SwapChain, UINT64_MAX, Vulkan.ImageAvailableSemaphore, VK_NULL_HANDLE, &image_index );
+    switch( result ) {
+      case VK_SUCCESS:
+      case VK_SUBOPTIMAL_KHR:
+        break;
+      case VK_ERROR_OUT_OF_DATE_KHR:
+        return OnWindowSizeChanged();
+      default:
+        std::cout << "Problem occurred during swap chain image acquisition!" << std::endl;
+        return false;
+    }
+    ```
+    
+    To access an image, call the ***vkAcquireNextImageKHR*** function. We must specify a swap chain from which we want to use an image, a timeout, a semaphore, and a fence object. Images are processed or referenced by commands stored in command buffers. In Vulkan, creating command buffers and submitting them to queues is the only way to cause operations to be performed by the device.
+    When command buffers are submitted to queues, all their commands start being processed. But a queue can't use an image until it is allowed to, and the semaphore we created earlier is for internal queue synchronization--before the queue starts processing commands that reference a given image, it should wait on this semaphore. There are two synchronization mechanisms for accessing swap chain images. (1) a timeout, which may block an application but doesn't stop queue processing. (2) a semaphore, which doesn't block the application but blocks selected queues. Before the processing will start, we should tell the queue to wait. Code is:
+    
+    ```c++
+    VkPipelineStageFlags wait_dst_stage_mask = VK_PIPELINE_STAGE_TRANSFER_BIT;
+    VkSubmitInfo submit_info = {
+      VK_STRUCTURE_TYPE_SUBMIT_INFO,                // VkStructureType              sType
+      nullptr,                                      // const void                  *pNext
+      1,                                            // uint32_t                     waitSemaphoreCount
+      &Vulkan.ImageAvailableSemaphore,              // const VkSemaphore           *pWaitSemaphores
+      &wait_dst_stage_mask,                         // const VkPipelineStageFlags  *pWaitDstStageMask;
+      1,                                            // uint32_t                     commandBufferCount
+      &Vulkan.PresentQueueCmdBuffers[image_index],  // const VkCommandBuffer       *pCommandBuffers
+      1,                                            // uint32_t                     signalSemaphoreCount
+      &Vulkan.RenderingFinishedSemaphore            // const VkSemaphore           *pSignalSemaphores
+    };
+    
+    if( vkQueueSubmit( Vulkan.PresentQueue, 1, &submit_info, VK_NULL_HANDLE ) != VK_SUCCESS ) {
+      return false;
+    }
+    ```
+    
+    In this example we telling the queue to wait only on one semaphore, which will be signaled by the presentation engine when the queue can safely start processing commands referencing the swap chain image.
+
+14. **Checking What Images Were Created in a Swap Chain**
+
     
 
 
