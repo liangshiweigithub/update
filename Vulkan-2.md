@@ -366,10 +366,26 @@
        }
        ```
 
-       
+    9. **Selecting Presentation Mode**
 
+       Presentation modes determines the way images will be processed internally by the presentation egine and displayed on the screen. 
+
+       1. single buffer: The draw operations were visible.
+       2. dubble buffer: Prevent the visibility of drawing operations. During presentation, the contents of the second image was copied into the first image (earlier) or (later) the image was swapped which means that their pinters was exchanged. 
+       3. Tearing was another issue with displaying images, so the ability to wait for the vertical blank signal was introduced if we want to avoid it. But waiting introduced another proble: input lag. So double buffering was changed into tripple buffering in which we were drawing into two back buffers intechangeably and during v-sync the most recent one was used for presentation.
     
-
+       Presentation mode determines how to deal with all these issues, how to present iamges on the screen and whether we want to use v-sync. Available presentation mode are
+    
+       + **IMMEDIATE**: Present request are applied immediately and tearing may be observed. The presentation engine doesn't use any queue fro holding swap chain image.
+    
+       + **FIFO**: This mode is most popular to OpenGL's buffer swapping with a swap interval set to 1.
+    
+         The image is displayed only on vertical blanking periods, so no tearing should be visible. The presentation engine maintains a queue for images to display. If all images are in the queue, the application has to wait until v-sync releases the currently displayed image. Only after that does it become available to the application and program may render image into it. Must be available in all Vulkan implementations.
+    
+          
+    
+    
+    
     
 
 
