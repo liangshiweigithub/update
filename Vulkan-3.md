@@ -6,7 +6,7 @@
 
    Process of deferred shading:
 
-   +  The first subpass draws the geometry with shaders that fill the G-buffer: store diffuse color in one texture, normal vectors in another, shininess in depth in yet another.  
+   +  The first subpass draws the geometry with shaders that fill the G-buffer: store diffuse color in one texture, normal vectors in another, shininess and depth in yet another.  
    + Next for each light source, drawing is performed that reads some of the data(normal vectors, shininess, depth/position), calculates lighting and stores it in another texture.
    +  Final pass aggregates lighting data with diffuse color.
 
@@ -14,7 +14,9 @@
 
    A subpass consists of drawing operations that use the same attachments. Each of these drawing operations may read from some input attachments and render data in some other attachments. A render pass also describes the dependencies between attachments: in one subpass we perform rendering into the texture, but in another this texture will be used as a source of data (be sampled from).
 
-2. ***vkCreateRenderPass*** is used to create a render pass, which requires a pointer to a structure describing all the attachments involved in rendering and all the subpasses forming the render pass. Struct that describes each attachment is ***VkAttachmentDescription***, which contains the following:
+2. **Render Pass Attachment Description**
+
+   To create a render pass, first we prepare an array with elements describing each attachment, regardless of the type of attachment. Struct that describes each attachment is ***VkAttachmentDescription***, which contains the following:
 
    + flags: Describes additional properties of an attachment. Only aliasing flag is available, which informs the driver that the attachment shares the same physical memory with another.
    + format: Format of an image used for the attachment.
@@ -28,3 +30,105 @@
 
    Layout is an internal memory arrangement of an image. Image data may be organized in such a way that neighboring "image pixels" are also neighbors in memory, which can increase cache hit when read. Image layout may be changed using image memory barriers. Initial layout informs the hardware about the layout the application "provides" the given attachment with.
 
+3. **Subpass Description**: The ***VkSubpassDescription*** structure is used to describe each subpass that our render pass will include. It includes:
+
+   + flags: For future use.
+   + pipelineBindPoint: Type of pipeline in which this subpass will be used.
+   + inputAttachmentCount: Number of elements in the pInputAttachments array.
+   + pInputAttachments: Array with elements describing which attachments are used as an input and can be read from inside shaders.
+   + colorAttachmentCount: Number of elements in pColorAttachments and pResolverAttachments arrays.
+   + pColorAttachments: Array describing attachments which will be used as color render targets
+   + pResolveAttachments: Each element corresponds to an element from a color attachments array. Any such color attachment will be resolved to a given resolve attachment.
+   + pDepthStencilAttachment: Description of an attachment that will be used for depth data.
+   + preserveAttachmentCount: Number of elements in pPreserveAttachments Array.
+   + pPreserveAttachments: Describling attachments that should be preserved. If a subpass doesn't use some of the attachments but we need their contents in later subpasses, specify these attachments here.
+
+4. **Render Pass Creation**, the code is:
+
+   ```
+   vkRenderPassCreateInfo render_pass_create_info = {
+     VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,    // VkStructureType                sType
+     nullptr,                                      // const void                    *pNext
+     0,                                            // VkRenderPassCreateFlags        flags
+     1,                                            // uint32_t                       attachmentCount
+     attachment_descriptions,                      // const VkAttachmentDescription *pAttachments
+     1,                                            // uint32_t                       subpassCount
+     subpass_descriptions,                         // const VkSubpassDescription    *pSubpasses
+     0,                                            // uint32_t                       dependencyCount
+     nullptr                                       // const VkSubpassDependency     *pDependencies
+   };
+   
+   if( vkCreateRenderPass( GetDevice(), &render_pass_create_info, nullptr, &Vulkan.RenderPass ) != VK_SUCCESS ) {
+     printf( "Could not create render pass!\n" );
+     return false;
+   }
+   
+   return true;
+   ```
+
+   We start by filling the ***VkRenderPassCreateInfo*** structure, which contains
+
+   + sType, pNext, flags.
+   + attachmentCount: Number of all different attachments used during whole render pass.
+   + pAttachments: Array specifying all attachments used in a render pass.
+   + subpassCount: Number of subpasses a render pass consist of.
+   + pSubpasses: Array with descriptions of all subpasses.
+   + dependencyCount: Number of elements in pDependencies array.
+   + pDependencies: Array describing dependencies between pairs of subpasses.
+
+   Dependencies describes what parts of the graphics pipeline use memory resource in what way. Each subpass may use resource in a different way. We use the ***vkCreateRenderPass*** function to create render pass.
+
+#### Creating a Framebuffer
+
+In the create of render pass, we have specified formats of all attachments and described how attachments will be used by each subpass. But we didn't specify WHAT attachments we will  be using or, in other words, what images will be used as these attachments. This done through a framebuffer.
+
+A framebuffer describes specific images that the render pass operates on. In OpenGL, a framebuffer is a set of textures (attachments) we are rendering into. In Vulkan, it describes all the textures (attachments) used during the render pass, not only the images we are rendering into (color and depth/stencil attachments) but also images used as a source of data.
+
+Before we can create a framebuffer, we must create image views for each image used as a framebuffer and render pass attachment. In Vulkan, images are not accessed directly. For this purpose, image views are used. **Image View** represent images, they "wrap" images and provide additional data for them.
+
+1. **Creating Image Views**: We must create an image view for each of the swap chain images.
+
+   ```
+   const std::vector<VkImage> &swap_chain_images = GetSwapChain().Images;
+   Vulkan.FramebufferObjects.resize( swap_chain_images.size() );
+   
+   for( size_t i = 0; i < swap_chain_images.size(); ++i ) {
+     VkImageViewCreateInfo image_view_create_info = {
+       VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,   // VkStructureType                sType
+       nullptr,                                    // const void                    *pNext
+       0,                                          // VkImageViewCreateFlags         flags
+       swap_chain_images[i],                       // VkImage                        image
+       VK_IMAGE_VIEW_TYPE_2D,                      // VkImageViewType                viewType
+       GetSwapChain().Format,                      // VkFormat                       format
+       {                                           // VkComponentMapping             components
+         VK_COMPONENT_SWIZZLE_IDENTITY,              // VkComponentSwizzle             r
+         VK_COMPONENT_SWIZZLE_IDENTITY,              // VkComponentSwizzle             g
+         VK_COMPONENT_SWIZZLE_IDENTITY,              // VkComponentSwizzle             b
+         VK_COMPONENT_SWIZZLE_IDENTITY               // VkComponentSwizzle             a
+       },
+       {                                           // VkImageSubresourceRange        subresourceRange
+         VK_IMAGE_ASPECT_COLOR_BIT,                  // VkImageAspectFlags             aspectMask
+         0,                                          // uint32_t                       baseMipLevel
+         1,                                          // uint32_t                       levelCount
+         0,                                          // uint32_t                       baseArrayLayer
+         1                                           // uint32_t                       layerCount
+       }
+     };
+   
+     if( vkCreateImageView( GetDevice(), &image_view_create_info, nullptr, &Vulkan.FramebufferObjects[i].ImageView ) != VK_SUCCESS ) {
+       printf( "Could not create image view for framebuffer!\n" );
+       return false;
+     }
+   
+   ```
+
+   We use **vkCreateImageView** to create image view. This requires the struct ***VkImageViewCreateInfo***  which contains:
+
+   + sType, pNext, flags
+   + image: Handle to an image for which the view will be created.
+   + viewType: View type must compatible with an image it is created for.
+   + format: It must be compatible with the image's format but may not be the same format.
+   + components: Mapping of an image components into a vector returned in the shader by texturing operations. This applies only to read operations (sampling), but since we are using an image as a color attachment, we must set the so-called identity mapping or just use "identity" value ***VK_COMPONENT_SWIZZLE_IDENTITY***.
+   + subresourceRange: Describes the set of mipmap levels and array layers that will be accessible to a view. If image is mipmapped, we may specific mipmap level we want to render to.
+
+    
