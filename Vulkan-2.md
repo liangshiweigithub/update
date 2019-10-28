@@ -49,7 +49,7 @@
    }
    ```
 
-   if we prepare a place for a smaller amount of extensions, the function will return VK_INCOMPLETE. Each element in available_extensions contains the name of extension and its version.
+   if we prepare a place for a smaller amount of extensions, the function will return **VK_INCOMPLETE**. Each element in available_extensions contains the name of extension and its version.
 
 6. Enabling an instance-level Extension we need to prepare an array with the names of all extensions we want to enable and pass it to ***VkInstanceCreateInfo***. When create instance success, we can load instance-level functions including additional, extension-specific functions.
 
@@ -138,7 +138,7 @@
 
 10. **Create a Device with a Swap Chain Extension Enabled**:
 
-    Fill a variable of VkDeviceCreateInfo type with VkDeviceQueueCreateInfo. Then ask for the third extension related to a swap chain-- a device-level ***VK_KHR_swapchain*** extension. After create device, we can load device level functions and get device queues. Code to create Device:
+    Fill a variable of ***VkDeviceCreateInfo*** type with VkDeviceQueueCreateInfo. Then ask for the third extension related to a swap chain-- a device-level ***VK_KHR_swapchain*** extension. After create device, we can load device level functions and get device queues. Code to create Device:
 
     ```c++
     std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
@@ -211,7 +211,7 @@
 
 12. **Creating a swap chain**
 
-    To create a swap chain, we call the ***vkCreateSwapchainKHR*** function.  It requires us to provide an address of a variable of type VkSwapchainCreateInfoKHR, which informs the driver about the properties of a swap chain that is being created.  This info is get by check device properties.
+    To create a swap chain, we call the ***vkCreateSwapchainKHR*** function.  It requires us to provide an address of a variable of type ***VkSwapchainCreateInfoKHR***, which informs the driver about the properties of a swap chain that is being created.  This info is get by check device properties.
 
     1. **Acquiring Surface Capabilities** by ***vkGetPhysicalDeviceSurfaceCapabilitiesKHR***
 
@@ -368,10 +368,10 @@
 
     9. **Selecting Presentation Mode**
 
-       Presentation modes determines the way images will be processed internally by the presentation egine and displayed on the screen. 
+       Presentation modes determines the way images will be processed internally by the presentation engine and displayed on the screen. 
 
        1. single buffer: The draw operations were visible.
-       2. dubble buffer: Prevent the visibility of drawing operations. During presentation, the contents of the second image was copied into the first image (earlier) or (later) the image was swapped which means that their pinters was exchanged. 
+       2. double buffer: Prevent the visibility of drawing operations. During presentation, the contents of the second image was copied into the first image (earlier) or (later) the image was swapped which means that their pointers was exchanged. 
        3. Tearing was another issue with displaying images, so the ability to wait for the vertical blank signal was introduced if we want to avoid it. But waiting introduced another proble: input lag. So double buffering was changed into tripple buffering in which we were drawing into two back buffers intechangeably and during v-sync the most recent one was used for presentation.
     
        Presentation mode determines how to deal with all these issues, how to present iamges on the screen and whether we want to use v-sync. Available presentation mode are
@@ -458,10 +458,10 @@
         return false;
     }
     ```
-    
+
     To access an image, call the ***vkAcquireNextImageKHR*** function. We must specify a swap chain from which we want to use an image, a timeout, a semaphore, and a fence object. Images are processed or referenced by commands stored in command buffers. In Vulkan, creating command buffers and submitting them to queues is the only way to cause operations to be performed by the device.
     When command buffers are submitted to queues, all their commands start being processed. But a queue can't use an image until it is allowed to, and the semaphore we created earlier is for internal queue synchronization--before the queue starts processing commands that reference a given image, it should wait on this semaphore. There are two synchronization mechanisms for accessing swap chain images. (1) a timeout, which may block an application but doesn't stop queue processing. (2) a semaphore, which doesn't block the application but blocks selected queues. Before the processing will start, we should tell the queue to wait. Code is:
-    
+
     ```c++
     VkPipelineStageFlags wait_dst_stage_mask = VK_PIPELINE_STAGE_TRANSFER_BIT;
     VkSubmitInfo submit_info = {
@@ -480,12 +480,212 @@
       return false;
     }
     ```
-    
+
     In this example we telling the queue to wait only on one semaphore, which will be signaled by the presentation engine when the queue can safely start processing commands referencing the swap chain image.
+
+    After we have submitted a command buffer, all the processing starts in the background. Next, we want to present a rendered image. Presenting means that we want our image to be displayed and we are giving it back to the swap chain. Code is
+
+    ```c++
+    VkPresentInfoKHR present_info = {
+      VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,           // VkStructureType              sType
+      nullptr,                                      // const void                  *pNext
+      1,                                            // uint32_t                     waitSemaphoreCount
+      &Vulkan.RenderingFinishedSemaphore,           // const VkSemaphore           *pWaitSemaphores
+      1,                                            // uint32_t                     swapchainCount
+      &Vulkan.SwapChain,                            // const VkSwapchainKHR        *pSwapchains
+      &image_index,                                 // const uint32_t              *pImageIndices
+      nullptr                                       // VkResult                    *pResults
+    };
+    result = vkQueuePresentKHR( Vulkan.PresentQueue, &present_info );
+    
+    switch( result ) {
+      case VK_SUCCESS:
+        break;
+      case VK_ERROR_OUT_OF_DATE_KHR:
+      case VK_SUBOPTIMAL_KHR:
+        return OnWindowSizeChanged();
+      default:
+        std::cout << "Problem occurred during image presentation!" << std::endl;
+        return false;
+    }
+    
+    return true;
+    ```
+
+    An image is presented by calling the ***vkQueuePresentKHR***. Each operation that is performed by calling ***vkQueue...*** is appended to the end of the queue for processing.
 
 14. **Checking What Images Were Created in a Swap Chain**
 
+    pass for temporary
     
+    **Recreating a Swap Chain**: The properties of the surface, platform, or application window properties changed in such a way that the current the swap chain can't be used anymore. If the return value is ***VK_SUBOPTIMAL_KHR***, The swap chain sometimes can still be used, but it may no longer the optimal choice. If it is ***VK_ERROR_OUT_OF_DATE_KHR***, we must recreate the swap chain.
 
+15. **Command  Buffers**: Commands are encapsulated inside command buffers. Submitting such buffers to queues causes devices to start processing commands that were recorded in them.
 
+    1. **Creating Command Buffer Memory Pool**: To prepare space for commands we create a pool from which the buffer can allocate its memory. Command buffer is not connected with any queue or queue family, but the memory pool from which buffer allocates memory is. So each command buffer that takes memory from a given memory pool can only be submitted to a queue from a queue family which the memory pool was created. Code is 
+
+       ```
+       VkCommandPoolCreateInfo cmd_pool_create_info = {
+         VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,     // VkStructureType              sType
+         nullptr,                                        // const void*                  pNext
+         0,                                              // VkCommandPoolCreateFlags     flags
+         Vulkan.PresentQueueFamilyIndex                  // uint32_t                     queueFamilyIndex
+       };
+       
+       if( vkCreateCommandPool( Vulkan.Device, &cmd_pool_create_info, nullptr, &Vulkan.PresentQueueCmdPool ) != VK_SUCCESS ) {
+         std::cout << "Could not create a command pool!" << std::endl;
+         return false;
+       }
+       ```
+
+       Call the ***vkCreateComandPool*** to create tool for command buffer.
+
+    2. **Allocating Command Buffers**:  The code is:
+
+       ```c++
+       uint32_t image_count = 0;
+       if( (vkGetSwapchainImagesKHR( Vulkan.Device, Vulkan.SwapChain, &image_count, nullptr ) != VK_SUCCESS) ||
+           (image_count == 0) ) {
+         std::cout << "Could not get the number of swap chain images!" << std::endl;
+         return false;
+       }
+       
+       Vulkan.PresentQueueCmdBuffers.resize( image_count );
+       
+       VkCommandBufferAllocateInfo cmd_buffer_allocate_info = {
+         VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO, // VkStructureType              sType
+         nullptr,                                        // const void*                  pNext
+         Vulkan.PresentQueueCmdPool,                     // VkCommandPool                commandPool
+         VK_COMMAND_BUFFER_LEVEL_PRIMARY,                // VkCommandBufferLevel         level
+         image_count                                     // uint32_t                     bufferCount
+       };
+       if( vkAllocateCommandBuffers( Vulkan.Device, &cmd_buffer_allocate_info, &Vulkan.PresentQueueCmdBuffers[0] ) != VK_SUCCESS ) {
+         std::cout << "Could not allocate command buffers!" << std::endl;
+         return false;
+       }
+       
+       if( !RecordCommandBuffers() ) {
+         std::cout << "Could not record command buffers!" << std::endl;
+         return false;
+       }
+       return true;
+       ```
+
+       Use the ***vkAllocateCommandBuffers*** to create command buffer. 
+
+    3.  **Recording Command Buffers**: Code of first part:
+
+       ```
+       uint32_t image_count = static_cast<uint32_t>(Vulkan.PresentQueueCmdBuffers.size());
+       
+       std::vector<VkImage> swap_chain_images( image_count );
+       if( vkGetSwapchainImagesKHR( Vulkan.Device, Vulkan.SwapChain, &image_count, &swap_chain_images[0] ) != VK_SUCCESS ) {
+         std::cout << "Could not get swap chain images!" << std::endl;
+         return false;
+       }
+       
+       VkCommandBufferBeginInfo cmd_buffer_begin_info = {
+         VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,  // VkStructureType                        sType
+         nullptr,                                      // const void                            *pNext
+         VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT, // VkCommandBufferUsageFlags              flags
+         nullptr                                       // const VkCommandBufferInheritanceInfo  *pInheritanceInfo
+       };
+       
+       VkClearColorValue clear_color = {
+         { 1.0f, 0.8f, 0.4f, 0.0f }
+       };
+       
+       VkImageSubresourceRange image_subresource_range = {
+         VK_IMAGE_ASPECT_COLOR_BIT,                    // VkImageAspectFlags                     aspectMask
+         0,                                            // uint32_t                               baseMipLevel
+         1,                                            // uint32_t                               levelCount
+         0,                                            // uint32_t                               baseArrayLayer
+         1                                             // uint32_t                               layerCount
+       };
+       ```
+
+       We need to prepare a variable of structured type ***VkCommandBufferBeginInfo***. It contains the information necessary in more typical rendering scenarios.
+
+       Tow types of command buffer:
+
+       + Primary command buffers (similar to drawing lists) are independent, individual "begins" and they may be submitted to queues.
+       + Second command buffers may only be referenced from with primary command buffers and can not be submitted directly to queues.
+
+       The ***VkImageSubresourceRange*** specifies parts of the image that our operations will be performed on. Our image consists of only one mipmap level and one array level.
+
+    4. **Image Layouts and Layout Transitions**: Images may be used as render targets, as textures that can be sampled from inside shaders, or as a data resource for copy/blit operation. We must specify different usage flag during image creation for different types of operations. Depending on the type of operations, images may be differently allocated or may have a different layout in memory. We can use a general layout that is supported by all operations, but it may not provide the best performance. For different usage we should use dedicated layouts. To perform different operations on image, we must change the images current layout before we can perform each type of operation. The swap-chain-images have ***VK_IMAGE_LAYOUT_PRESENT_SOURCE_KHR*** layouts (designed for presentation engine to display on the screen). Before using these images, we need to change their layouts to ones compatible with desired operations. After processing the images, we need to transition their layout back to the ***VK_IMAGE_LAYOUT_PRESENT_SOURCE_KHR*** otherwise the presentation engine will not be able to use these images and undefine behavior may occur. ***Image memory barriers*** are use to do this.
+
+    5. **Recording Command Buffers**: The record code is:
+
+       ```c++
+       for( uint32_t i = 0; i < image_count; ++i ) {
+         VkImageMemoryBarrier barrier_from_present_to_clear = {
+           VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,     // VkStructureType                        sType
+           nullptr,                                    // const void                            *pNext
+           VK_ACCESS_MEMORY_READ_BIT,                  // VkAccessFlags                          srcAccessMask
+           VK_ACCESS_TRANSFER_WRITE_BIT,               // VkAccessFlags                          dstAccessMask
+           VK_IMAGE_LAYOUT_UNDEFINED,                  // VkImageLayout                          oldLayout
+           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,       // VkImageLayout                          newLayout
+           Vulkan.PresentQueueFamilyIndex,             // uint32_t                               srcQueueFamilyIndex
+           Vulkan.PresentQueueFamilyIndex,             // uint32_t                               dstQueueFamilyIndex
+           swap_chain_images[i],                       // VkImage                                image
+           image_subresource_range                     // VkImageSubresourceRange                subresourceRange
+         };
+       
+         VkImageMemoryBarrier barrier_from_clear_to_present = {
+           VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,     // VkStructureType                        sType
+           nullptr,                                    // const void                            *pNext
+           VK_ACCESS_TRANSFER_WRITE_BIT,               // VkAccessFlags                          srcAccessMask
+           VK_ACCESS_MEMORY_READ_BIT,                  // VkAccessFlags                          dstAccessMask
+           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,       // VkImageLayout                          oldLayout
+           VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,            // VkImageLayout                          newLayout
+           Vulkan.PresentQueueFamilyIndex,             // uint32_t                               srcQueueFamilyIndex
+           Vulkan.PresentQueueFamilyIndex,             // uint32_t                               dstQueueFamilyIndex
+           swap_chain_images[i],                       // VkImage                                image
+           image_subresource_range                     // VkImageSubresourceRange                subresourceRange
+         };
+       
+         vkBeginCommandBuffer( Vulkan.PresentQueueCmdBuffers[i], &cmd_buffer_begin_info );
+         vkCmdPipelineBarrier( Vulkan.PresentQueueCmdBuffers[i], VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier_from_present_to_clear );
+       
+         vkCmdClearColorImage( Vulkan.PresentQueueCmdBuffers[i], swap_chain_images[i], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clear_color, 1, &image_subresource_range );
+       
+         vkCmdPipelineBarrier( Vulkan.PresentQueueCmdBuffers[i], VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier_from_clear_to_present );
+         if( vkEndCommandBuffer( Vulkan.PresentQueueCmdBuffers[i] ) != VK_SUCCESS ) {
+           std::cout << "Could not record command buffers!" << std::endl;
+           return false;
+         }
+       }
+       
+       return true;
+       ```
+
+       First we need to prepare two memory barriers.  Memory barriers are used to change three different things in case of images which need a variable of type ***VkImageMemoryBarrier*** which has:
+
+       + sType: type of structure, VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER.
+       + pNext
+       + srcAccessMask: Type of memory operations done on the image before memory barrier.
+       + dstAccessMask: Type of memory operations that will take place after memory barrier.
+       + oldLayout: Layout from which we are transitioning.
+       + newLayout: A layout that is compatible with operations that we will perform after barrier.
+       + srcQueueFamilyIndex: queue family index that was referencing the image previously.
+       + dstQueueFamilyIndex: queue family index that will reference the image after memory barrier.
+       + image: handle to image
+       + subresourceRange: describing parts of an image we want to perform transitions on.
+
+       In this example before the first barrier and after the second barrier only the presentation engine has access to the image which only reads from the image. So the srcAccessMask (first barrier) and dstAccessMask in the second barrier to ***AK_ACCESS_MEMORY_READ_BIT***. We only clear an image (the so-called "transfer" operation), so ***VK_ACCESS_MEMORY_WRITE_BIT*** is used.
+
+       **vkBegineCommandBuffer** is used to start recording our commands. Then **vkCmdPipelineBarrier**  is used to set up barrier to change image layout. After barrier we can safely perform any operations that is compatible with the layout we have transitioned images to. The **vkCmdClearColorImage** function is used to clear image to specific color. The last is to call **vkEndCommandBuffer** to inform that we have ended recording a command buffer. If there were errors, we can't use the command buffer and need to record it again.
+
+16. **Clean up**:
+
+    Note: Destroying a command pool implicitly frees all command buffers allocated from a given pool.
+
+17. **Conclusion**: process of this tutorial:
+    * Enable proper instance level functions.
+    * Create an application window's Vulkan representation called a surface.
+    * Choose a device with a queue family that supported presentation and create a logical device which enables device extensions.
+    * Create a swap chain. To do that we first acquired a set of parameters describing our surface and then choose value for proper swap chain creation.
+    * Create and record command buffers, which also includes image's layout transitions for which image memory barrier were used.
+    * Present image, which include acquiring an image, submitting a command buffer.
 
