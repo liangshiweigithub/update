@@ -138,10 +138,10 @@ Before we can create a framebuffer, we must create image views for each image us
    + attachmentCount: Numbe of attachments in a framebuffer
    + pAttachments: Array of image views representing all attachments used in a framebuffer and render  pass. Echa element corresponds to each attachment in a render pass
    + width: Width of a framebuffer
-   + heigh: Height of a framebuffer
-   + layers: Number of layers in a framebuffer (OpenGL's layered rendering with geomery shaders, which could specify the laye into which fragments rasterized from a givent polygon will be render)
+   + height: Height of a framebuffer
+   + layers: Number of layers in a framebuffer (OpenGL's layered rendering with geometry shaders, which could specify the layer into which fragments rasterized from a given polygon will be render)
 
-   The framebuffer specifies what images are used as attachments on which the render pass operates. THe number of images specified for a framebuffer must be the same as the number of attachments in a render pass. We may use a framebuffer not only with the specified render pass but also with all render passes that are compatible with the one specified.
+   The framebuffer specifies what images are used as attachments on which the render pass operates. The number of images specified for a framebuffer must be the same as the number of attachments in a render pass. We may use a framebuffer not only with the specified render pass but also with all render passes that are compatible with the one specified.
 
    We call the **vkCreateFramebuffe** to create framebuffer.
 
@@ -153,4 +153,14 @@ In OpenGL there are multiple programmable stages (vertex, tessellation, fragment
 
 Why this? Changing just one single state of the whole pipeline may cause graphic hardware to perform many background operations lie state and error checking. This may cause applications to perform differently when executed on different graphics hardware.
 
-In Vulkan, the state of the whole pipeline is to gather in one, single object. ALl the relevant statue and error checking is performed when the pipeline object is created. If error occures, the pipeline can't be created.
+In Vulkan, the state of the whole pipeline is to gather in one, single object. All the relevant statue and error checking is performed when the pipeline object is created. If error occurs, the pipeline can't be created.
+
+The downside of this methodology is that we have create multiple pipeline object, multiple variation of pipeline objects when we are drawing many objects in a different way. If we want to draw objects using different shaders, we also have to create multiple pipeline object, one for each combination of shader programs.
+
+1. **Creating a Shader Module**
+
+   The first data to create graphics pipeline is a collection of all shader stages and shader programs that will be used during rendering with a given graphics pipeline bound.
+
+   In OpenGL, we write shaders in GLSL. They are compiled and then linked into shader programs directly in our application. We can use or stop using a shader program anytime we want in out application.
+
+   Vulkan accepts only a binary representation of shaders, an intermediate language called SPIR-V.  So we compile GLSL code into assembly offline. Then we prepare the SPIR-V assembly we can create a shader module from it. Such modules are then composed into an array of ***VkPipelineShaderStageInfo*** structures, which are used to create pipeline.
