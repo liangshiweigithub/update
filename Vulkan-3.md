@@ -163,4 +163,157 @@ The downside of this methodology is that we have create multiple pipeline object
 
    In OpenGL, we write shaders in GLSL. They are compiled and then linked into shader programs directly in our application. We can use or stop using a shader program anytime we want in out application.
 
-   Vulkan accepts only a binary representation of shaders, an intermediate language called SPIR-V.  So we compile GLSL code into assembly offline. Then we prepare the SPIR-V assembly we can create a shader module from it. Such modules are then composed into an array of ***VkPipelineShaderStageInfo*** structures, which are used to create pipeline.
+   Vulkan accepts only a binary representation of shaders, an intermediate language called SPIR-V.  So we compile GLSL code into assembly offline. Then we prepare the SPIR-V assembly we can create a shader module from it. Such modules are then composed into an array of ***VkPipelineShaderStageInfo*** structures, which are used to create pipeline. Code is:
+   
+   ```c++
+   const std::vector<char> code = Tools::GetBinaryFileContents( filename );
+   if( code.size() == 0 ) {
+     return Tools::AutoDeleter<VkShaderModule, PFN_vkDestroyShaderModule>();
+   }
+   
+   VkShaderModuleCreateInfo shader_module_create_info = {
+     VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,    // VkStructureType                sType
+     nullptr,                                        // const void                    *pNext
+     0,                                              // VkShaderModuleCreateFlags      flags
+     code.size(),                                    // size_t                         codeSize
+     reinterpret_cast<const uint32_t*>(&code[0])     // const uint32_t                *pCode
+   };
+   
+   VkShaderModule shader_module;
+   if( vkCreateShaderModule( GetDevice(), &shader_module_create_info, nullptr, &shader_module ) != VK_SUCCESS ) {
+     printf( "Could not create shader module from a %s file!\n", filename );
+     return Tools::AutoDeleter<VkShaderModule, PFN_vkDestroyShaderModule>();
+   }
+   
+   return Tools::AutoDeleter<VkShaderModule, PFN_vkDestroyShaderModule>( shader_module, vkDestroyShaderModule, GetDevice() );
+   
+   ```
+   
+   The ***VkShaderModuleCreateInfo*** contains:
+   
+   + sType, pNext, flags.
+   + codeSize: size in bytes of the code passed in pCode paramter.
+   + pCode: Pointer to an array with source code.
+   
+   After we prepare a structure, use ***vkCreateShaderModule*** to create a shader module. To destroy the shader we created, use
+   
+   ```c++
+   template<class T, class F>
+   class AutoDeleter {
+   public:
+     AutoDeleter() :
+       Object( VK_NULL_HANDLE ),
+       Deleter( nullptr ),
+       Device( VK_NULL_HANDLE ) {
+     }
+   
+     AutoDeleter( T object, F deleter, VkDevice device ) :
+       Object( object ),
+       Deleter( deleter ),
+       Device( device ) {
+     }
+   
+     AutoDeleter( AutoDeleter&& other ) {
+       *this = std::move( other );
+     }
+   
+     ~AutoDeleter() {
+       if( (Object != VK_NULL_HANDLE) && (Deleter != nullptr) && (Device != VK_NULL_HANDLE) ) {
+         Deleter( Device, Object, nullptr );
+       }
+     }
+   
+     AutoDeleter& operator=( AutoDeleter&& other ) {
+       if( this != &other ) {
+         Object = other.Object;
+         Deleter = other.Deleter;
+         Device = other.Device;
+         other.Object = VK_NULL_HANDLE;
+       }
+       return *this;
+     }
+   
+     T Get() {
+       return Object;
+     }
+   
+     bool operator !() const {
+       return Object == VK_NULL_HANDLE;
+     }
+   
+   private:
+     AutoDeleter( const AutoDeleter& );
+     AutoDeleter& operator=( const AutoDeleter& );
+     T         Object;
+     F         Deleter;
+     VkDevice  Device;
+   };
+   
+   ```
+
+2. **Preparing a Description of the Shade stages**
+
+   Shader stages composite our graphics pipeline. The data that for shader stages describes what shader stages should be active when a given graphics pipeline is bound has a form of an array with elements of type ***VkPipelineShaderStageCreateInfo***. The code is:
+
+   ```c++
+   Tools::AutoDeleter<VkShaderModule, PFN_vkDestroyShaderModule> vertex_shader_module = CreateShaderModule( "Data03/vert.spv" );
+   Tools::AutoDeleter<VkShaderModule, PFN_vkDestroyShaderModule> fragment_shader_module = CreateShaderModule( "Data03/frag.spv" );
+   
+   if( !vertex_shader_module || !fragment_shader_module ) {
+     return false;
+   }
+   
+   std::vector<VkPipelineShaderStageCreateInfo> shader_stage_create_infos = {
+     // Vertex shader
+     {
+       VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,        // VkStructureType                                sType
+       nullptr,                                                    // const void                                    *pNext
+       0,                                                          // VkPipelineShaderStageCreateFlags               flags
+       VK_SHADER_STAGE_VERTEX_BIT,                                 // VkShaderStageFlagBits                          stage
+       vertex_shader_module.Get(),                                 // VkShaderModule                                 module
+       "main",                                                     // const char                                    *pName
+       nullptr                                                     // const VkSpecializationInfo                    *pSpecializationInfo
+     },
+     // Fragment shader
+     {
+       VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,        // VkStructureType                                sType
+       nullptr,                                                    // const void                                    *pNext
+       0,                                                          // VkPipelineShaderStageCreateFlags               flags
+       VK_SHADER_STAGE_FRAGMENT_BIT,                               // VkShaderStageFlagBits                          stage
+       fragment_shader_module.Get(),                               // VkShaderModule                                 module
+       "main",                                                     // const char                                    *pName
+       nullptr                                                     // const VkSpecializationInfo                    *pSpecializationInfo
+     }
+   };
+   ```
+
+   The tool that compiles shader to assembly is "glslangValidator". The content of shader.vert is
+
+   ```
+   #version 400
+   
+   void main() {
+       vec2 pos[3] = vec2[3]( vec2(-0.7, 0.7), vec2(0.7, 0.7), vec2(0.0, -0.7) );
+       gl_Position = vec4( pos[gl_VertexIndex], 0.0, 1.0 );
+   }
+   ```
+
+   The vertices are indexed using the Vulkan-specific "gl_VertextIndex" built-in variable. The shader.frag is
+
+   ```glsl
+   #version 400
+   
+   layout(location = 0) out vec4 out_Color;
+   
+   void main() {
+     out_Color = vec4( 0.0, 0.4, 1.0, 1.0 );
+   }
+   ```
+
+   In Vulkan's shaders (when transforming from GLSL to SPIR-V) layout qualifiers are required. Here we specify to what output (color) attachment we want to store the color values generated by fragment shader. For each enabled shader stage we need to prepare an instance of ***VkPipelineShaderStageCreateInfo*** structure which contains:
+
+   + sType, pNext, flags.
+   + stage: Type of shader stage we are decribing (like vertex, tessellation control, and so on).
+   + module: Handle to a shader module that contains the shader for a given stage.
+   + pName: Name of the entry pointer of the provided shader.
+   + pSpecicalizationInfo: Pointer to ***VkSpecialization*** strcture, leave for null.
