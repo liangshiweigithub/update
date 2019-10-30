@@ -316,4 +316,33 @@ The downside of this methodology is that we have create multiple pipeline object
    + stage: Type of shader stage we are decribing (like vertex, tessellation control, and so on).
    + module: Handle to a shader module that contains the shader for a given stage.
    + pName: Name of the entry pointer of the provided shader.
-   + pSpecicalizationInfo: Pointer to ***VkSpecialization*** strcture, leave for null.
+   + pSpecicalizationInfo: Pointer to ***VkSpecialization*** structure, leave for null.
+   
+3.  **Preparing Description of a Vertex Input**:
+
+   We need to provide a description of the input data used for drawing. This is similar to OpenGL's vertex data: attributes, number of components, buffer from which to take data, data stride, or step rate. Because of the fact that vertex data is hardcoded into a vertex shader in this tutorial, we can almost entirely skip this step and fill the ***VkPipelineVertexInputStateCreateInfo*** with almost nulls and zero: The structure contains:
+
+   + sType, pNext, flags
+   + vertexBindingDescriptionCount: Number of elements in the pVertexBindingDescription array
+   + pVertextBindDescriptions: Array with elements describing input vertex data (stride and stepping rate)
+   + vertexAttributeDescriptionCount: Number of elements in the pVertexAttributeDescription array
+   + pVertexAttributeDescriptions: element describing vertex attributes (location, format, offset)
+
+4. **Preparing the Description of an Input Assembly**:
+
+   Use the ***VKPipelineInputAssemblyStateCreateInfo*** to describe how vertices should be assembled into primitives.
+
+5. **Preparing the Viewport's Description**:
+
+   Output data specification start from here. Output data includes all the part of the graphics pipeline that connected with fragments, like rasterization, window (viewport), depth test and so on. The first set of data we must prepare is the state of viewport, which specifies to what part of the image we want to draw. The structure is ***VkViewPort***. The upper-left corner is the start.
+
+   The scissor test, similar to OpenGL, restricts generation of fragments only to the specified rectangular area. In Vulkan this can't be turned off. This is a ***VkRect2D*** which contains ***VkOffset2D*** and ***VkExtent2D***.
+
+   We use viewport and the scissor test to fill the ***VkPipelineViewportStateCreateInfo***
+
+6. **Preparing the Rasterization State's Description**:
+
+   We must specify how polygons are going to be rasterized (changed into fragments), which means whether we want fragments to be generated for whole polygons or just their edges or whether we want to see the front or back side or maybe both sides of the polygon (face culling). We can also provide depth bias parameters or indicate whether we want to enable depth clamp. This is encapsulated in ***VkPipelineRasterizationStateCreateInfo***.
+
+
+
