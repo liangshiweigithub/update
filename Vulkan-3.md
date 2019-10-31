@@ -344,5 +344,43 @@ The downside of this methodology is that we have create multiple pipeline object
 
    We must specify how polygons are going to be rasterized (changed into fragments), which means whether we want fragments to be generated for whole polygons or just their edges or whether we want to see the front or back side or maybe both sides of the polygon (face culling). We can also provide depth bias parameters or indicate whether we want to enable depth clamp. This is encapsulated in ***VkPipelineRasterizationStateCreateInfo***.
 
+7. **Setting the Multisampling State's Description**:
 
+   When creating a graphics pipeline, we must specify the state relevant to multisampling. This is done by the ***VkPipelineMultisampleStateCreateInfo***.
+
+   + sType, pNext, flags
+   + rasterizationSamples: Number of per pixel samples used in rasterization.
+   + sampleShadingEnable: Parameter specifying that shading should occur per sample instead of per fragment.
+   + minSampleShading: Specifies the minimum number of unique sample locations that should be used during the given fragment's shading.
+   + pSampleMask: Pointers to an array of static coverage sample masks.
+   + alphaToCoverageEnable: Controls whether the fragment's alpha value should be used for coverage calculations.
+   + alphaToOneEnable: Whether the fragment's alpha value should be replaced with one.
+
+8. **Setting the Blending State's Description**
+
+   The related structure is ***VkPipelineColorBlendStateCreateInfo***.
+
+   When we want to perform drawing operations we set up parameters, the most important of which are graphics pipeline, render pass and framebuffer. The graphics card needs to know how to draw (graphics pipeline which describes render state, shaders, test and so on) and where to draw (the render pass gives general pass  setup, the framebuffer specifies exactly what images are used). The render pass specifies how operations are ordered, what dependencies are, when we are render into a given attachment, and when we are reading from the same attachment. These stages take the form of subpass. And for each drawing operation we can enable/use a different pipeline. For blending state, we can specify whether we want to enable blending at all. This is done through the pAttachments array. Each of its elements must correspond to each color attachment defined in a render pass.
+
+9. **Creating a Pipeline Layout**
+
+   A pipeline layout describes all the resources that can be accessed by the pipeline. In our example we must specify how many textures can be used by shaders and which shader stages will have access to them. Apart from shader stages, we must also describe the types of resources (textures, buffers), their total numbers, and layout.
+
+   In Vulkan, we create some form of a memory layout: first there two buffers, next we have three textures and an images. This memory structure is called a set and a collection of these sets is provided for the pipeline. We access specified resources using specific memory locations from within these sets. This is done through a layout (set = X, binding = Y) specifier.
+
+   A pipeline layout can be thought of as an interface between shader stages and shader resources as it takes these groups of resources, describes how they are gathered, and provides them to the pipeline.
+
+   The ***VkPipelineLayoutCreateInfo*** is used to describe pipeline layout. Which contains:
+
+   + sType, pNext, flag.
+   + setLayoutCount and pSetLayouts: Array contains descriptions of descriptor layouts.
+   + pPushConstantRanges: Array describes all push constant ranges used inside shaders and its num.
+
+   Push constants in Vulkan allow us to modify the data of constant variables used in shaders. We update their values through Vulkan commands, not through memory updates, and it is expected that updates of push constant's value  are faster than normal memory writes.
+
+10. **Creating a Graphics Pipeline**
+
+    Dynamic State: To allow for some flexibility and to lower the number of created pipeline objects, the dynamic state was introduced. In the ***VkGraphicsPipelineCreateInfo***,  we can define through the "pDynamicState" parameter what parts of the graphics pipeline can be set dynamically through additional Vulkan commands and what parts are static, set once during pipeline creation. The dynamic state includes viewports, line width, blend constants, or some stencil parameters. 
+
+    We use the ***vkCreateGraphicsPipelines*** to create a pipeline.
 
