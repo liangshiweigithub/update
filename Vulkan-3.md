@@ -384,3 +384,6 @@ The downside of this methodology is that we have create multiple pipeline object
 
     We use the ***vkCreateGraphicsPipelines*** to create a pipeline.
 
+### Preparing Drawing Commands
+
+1. **Creating Command Pool**: ***vkCreateCommandPool*** with ***VkCommandPoolCreateInfo*** 
