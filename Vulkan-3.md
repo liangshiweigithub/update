@@ -387,3 +387,96 @@ The downside of this methodology is that we have create multiple pipeline object
 ### Preparing Drawing Commands
 
 1. **Creating Command Pool**: ***vkCreateCommandPool*** with ***VkCommandPoolCreateInfo*** 
+2. **Allocating Command Buffer**: ***vkAllocateCommandBuffers*** with ***VkCommandBufferAllocateInfo***.
+
+3. **Recording Command Buffers**:
+
+   Performing command buffer recording is similar to OpenGL's draw lists where we start recording a list by calling the glNewList function.
+
+   + First we need to prepare a variable of type ***VkCommandBufferBeginInfo***. It is used when we start recording a command buffer and it tells the driver about the type, contents, and desired usage of  a command buffer.
+   + Next we describe the areas or parts of our images that we will set up image memory barriers for. This is done by ***VkImageSubresourceRange***.
+   + Next we set up a clear value for our images. Before drawing we need to clear images.
+
+   All these variables is independent of an image itself.
+
+Recording a command buffer is started by calling the ***vkBeginCommandBuffer***. Code is:
+
+```c++
+for( size_t i = 0; i < Vulkan.GraphicsCommandBuffers.size(); ++i ) {
+  vkBeginCommandBuffer( Vulkan.GraphicsCommandBuffers[i], &graphics_commandd_buffer_begin_info );
+
+  if( GetPresentQueue().Handle != GetGraphicsQueue().Handle ) {
+    VkImageMemoryBarrier barrier_from_present_to_draw = {
+      VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,     // VkStructureType                sType
+      nullptr,                                    // const void                    *pNext
+      VK_ACCESS_MEMORY_READ_BIT,                  // VkAccessFlags                  srcAccessMask
+      VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,       // VkAccessFlags                  dstAccessMask
+      VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,            // VkImageLayout                  oldLayout
+      VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,            // VkImageLayout                  newLayout
+      GetPresentQueue().FamilyIndex,              // uint32_t                       srcQueueFamilyIndex
+      GetGraphicsQueue().FamilyIndex,             // uint32_t                       dstQueueFamilyIndex
+      swap_chain_images[i],                       // VkImage                        image
+      image_subresource_range                     // VkImageSubresourceRange        subresourceRange
+    };
+    vkCmdPipelineBarrier( Vulkan.GraphicsCommandBuffers[i], VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier_from_present_to_draw );
+  }
+
+  VkRenderPassBeginInfo render_pass_begin_info = {
+    VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,     // VkStructureType                sType
+    nullptr,                                      // const void                    *pNext
+    Vulkan.RenderPass,                            // VkRenderPass                   renderPass
+    Vulkan.FramebufferObjects[i].Handle,          // VkFramebuffer                  framebuffer
+    {                                             // VkRect2D                       renderArea
+      {                                           // VkOffset2D                     offset
+        0,                                          // int32_t                        x
+        0                                           // int32_t                        y
+      },
+      {                                           // VkExtent2D                     extent
+        300,                                        // int32_t                        width
+        300,                                        // int32_t                        height
+      }
+    },
+    1,                                            // uint32_t                       clearValueCount
+    &clear_value                                  // const VkClearValue            *pClearValues
+  };
+
+  vkCmdBeginRenderPass( Vulkan.GraphicsCommandBuffers[i], &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE );
+
+  vkCmdBindPipeline( Vulkan.GraphicsCommandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, Vulkan.GraphicsPipeline );
+
+  vkCmdDraw( Vulkan.GraphicsCommandBuffers[i], 3, 1, 0, 0 );
+
+  vkCmdEndRenderPass( Vulkan.GraphicsCommandBuffers[i] );
+
+  if( GetGraphicsQueue().Handle != GetPresentQueue().Handle ) {
+    VkImageMemoryBarrier barrier_from_draw_to_present = {
+      VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,       // VkStructureType              sType
+      nullptr,                                      // const void                  *pNext
+      VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,         // VkAccessFlags                srcAccessMask
+      VK_ACCESS_MEMORY_READ_BIT,                    // VkAccessFlags                dstAccessMask
+      VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,              // VkImageLayout                oldLayout
+      VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,              // VkImageLayout                newLayout
+      GetGraphicsQueue().FamilyIndex,               // uint32_t                     srcQueueFamilyIndex
+      GetPresentQueue( ).FamilyIndex,               // uint32_t                     dstQueueFamilyIndex
+      swap_chain_images[i],                         // VkImage                      image
+      image_subresource_range                       // VkImageSubresourceRange      subresourceRange
+    };
+    vkCmdPipelineBarrier( Vulkan.GraphicsCommandBuffers[i], VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier_from_draw_to_present );
+  }
+
+  if( vkEndCommandBuffer( Vulkan.GraphicsCommandBuffers[i] ) != VK_SUCCESS ) {
+    printf( "Could not record command buffer!\n" );
+    return false;
+  }
+}
+return true;
+```
+
+At the beginning we set up a barrier that tells the driver that previously queues from one family referenced a given image but now queues from a different family will be referencing it. Set only graphics queues is different from present queue. Done by ***vkCmdPipelineBarrier***.
+
+Next we start a render pass. We call the **vkCmdBegineRenderPass** with ***VkRenderPassBeginInfo***. When we start a render pass we also starting its first subpass. We can switch the subpass by ***vkCmdNextSubpass***. During these operations, layout transitions and clear operations may occur. Clear are done in a subpass in which the image is first used. Layout transitions occur each time a subpass layout is different than the layout in a previous subpass or different than the initial layout.
+
+We bind a graphics pipeline by the ***vkCmdBindPipeline***. This "activates" all shader programs (similar to glUseProgram) and sets desired tests, blending operations and so on. After the pipeline is bound, we can finally draw something by calling the ***vkCmdDraw***. We specify number of vertices we want to draw, number of instances that should be drawn, and a numbers or indices of a first vertex and first instance.
+
+Next the ***vkCmdEndRenderPass*** ends the given render pass. Here all final layout transitions occur if the final layout specified for a render pass is different from the layout used in the last subpass the given image was referenced in.
+
