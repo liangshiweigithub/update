@@ -53,7 +53,7 @@
 
 6. Enabling an instance-level Extension we need to prepare an array with the names of all extensions we want to enable and pass it to ***VkInstanceCreateInfo***. When create instance success, we can load instance-level functions including additional, extension-specific functions.
 
-7. **Create a Presentation Surface:**  Call ***vkCreate???SurfaceKHR*** function which accepts Vulcan instance, a pointer to a OS-specific structure, a point to optional memory allocation handling functions and a pointer to a variable to store created surface. The structure is ***Vk???SurfaceCreateInfoKHR*** which contains sTye, pNext, flags, hInstance/connection/dpy and hwnd/window(handle to application window)
+7. **Create a Presentation Surface:**  Call ***vkCreate???SurfaceKHR*** function which accepts Vulkan instance, a pointer to a OS-specific structure, a point to optional memory allocation handling functions and a pointer to a variable to store created surface. The structure is ***Vk???SurfaceCreateInfoKHR*** which contains sTye, pNext, flags, hInstance/connection/dpy and hwnd/window(handle to application window)
 
 8. **Check whether a device extension is supported**. 
 
@@ -138,7 +138,7 @@
 
 10. **Create a Device with a Swap Chain Extension Enabled**:
 
-    Fill a variable of ***VkDeviceCreateInfo*** type with VkDeviceQueueCreateInfo. Then ask for the third extension related to a swap chain-- a device-level ***VK_KHR_swapchain*** extension. After create device, we can load device level functions and get device queues. Code to create Device:
+    Fill a variable of ***VkDeviceCreateInfo*** type with ***VkDeviceQueueCreateInfo***. Then ask for the third extension related to a swap chain-- a device-level ***VK_KHR_swapchain*** extension. After create device, we can load device level functions and get device queues. Code to create Device:                      
 
     ```c++
     std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
@@ -149,7 +149,7 @@
       nullptr,                                          // const void                  *pNext
       0,                                                // VkDeviceQueueCreateFlags     flags
       selected_graphics_queue_family_index,             // uint32_t                     queueFamilyIndex
-      static_cast<uint32_t>(queue_priorities.size()),   // uint32_t                     queueCount
+      static_cast<uint32_t>(queue_priorities.size()),   // uint32_t                                     queueCount
       &queue_priorities[0]                              // const float                 *pQueuePriorities
     } );
     
@@ -372,11 +372,11 @@
 
        1. single buffer: The draw operations were visible.
        2. double buffer: Prevent the visibility of drawing operations. During presentation, the contents of the second image was copied into the first image (earlier) or (later) the image was swapped which means that their pointers was exchanged. 
-       3. Tearing was another issue with displaying images, so the ability to wait for the vertical blank signal was introduced if we want to avoid it. But waiting introduced another proble: input lag. So double buffering was changed into tripple buffering in which we were drawing into two back buffers intechangeably and during v-sync the most recent one was used for presentation.
+       3. Tearing was another issue with displaying images, so the ability to wait for the vertical blank signal was introduced if we want to avoid it. But waiting introduced another proble: input lag. So double buffering was changed into tripple buffering in which we were drawing into two back buffers interchangeably and during v-sync the most recent one was used for presentation.
     
        Presentation mode determines how to deal with all these issues, how to present iamges on the screen and whether we want to use v-sync. Available presentation mode are
     
-       + **IMMEDIATE**: Present request are applied immediately and tearing may be observed. The presentation engine doesn't use any queue fro holding swap chain image.
+       + **IMMEDIATE**: Present request are applied immediately and tearing may be observed. The presentation engine doesn't use any queue for holding swap chain image.
     
        + **FIFO**: This mode is most popular to OpenGL's buffer swapping with a swap interval set to 1.
     

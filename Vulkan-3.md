@@ -128,32 +128,34 @@ Before we can create a framebuffer, we must create image views for each image us
    + image: Handle to an image for which the view will be created.
    + viewType: View type must compatible with an image it is created for.
    + format: It must be compatible with the image's format but may not be the same format.
-   + components: Mapping of an image components into a vector returned in the shader by texturing operations. This applies only to read operations (sampling), but since we are using an image as a color attachment, we must set the so-called identity mapping or just use "identity" value ***VK_COMPONENT_SWIZZLE_IDENTITY***.
+   + components: Mapping of an image components into a vector returned in the shader by texturing operations. This applies only to read operations (sampling), but since we are using an image as a color attachment (we are rendering into images), we must set the so-called identity mapping or just use "identity" value ***VK_COMPONENT_SWIZZLE_IDENTITY***.
    + subresourceRange: Describes the set of mipmap levels and array layers that will be accessible to a view. If image is mipmapped, we may specific mipmap level we want to render to.
 
-2. **Specifying Framebuffer Parameters**: to create Framebuffer, we need a struct ***VkFramebufferCreateInfo*** which contains:
+2. **Specifying Framebuffer Parameters**: 
 
+   To create Framebuffer, we need a struct ***VkFramebufferCreateInfo*** which contains:
+   
    + sType, pNext, flag
    + rendePass: Render pass this parameter will be compatible with
-   + attachmentCount: Numbe of attachments in a framebuffer
-   + pAttachments: Array of image views representing all attachments used in a framebuffer and render  pass. Echa element corresponds to each attachment in a render pass
+   + attachmentCount: Number of attachments in a framebuffer
+   + pAttachments: Array of image views representing all attachments used in a framebuffer and render  pass. Each element corresponds to each attachment in a render pass
    + width: Width of a framebuffer
-   + height: Height of a framebuffer
++ height: Height of a framebuffer
    + layers: Number of layers in a framebuffer (OpenGL's layered rendering with geometry shaders, which could specify the layer into which fragments rasterized from a given polygon will be render)
 
    The framebuffer specifies what images are used as attachments on which the render pass operates. The number of images specified for a framebuffer must be the same as the number of attachments in a render pass. We may use a framebuffer not only with the specified render pass but also with all render passes that are compatible with the one specified.
-
+   
    We call the **vkCreateFramebuffe** to create framebuffer.
 
 ### Creating a Graphics Pipeline
 
-A pipeline is a collection of stages that process data one stage after another. In Vulkan there is currently a compute pipeline and a graphics pipeline. The compute pipeline allows us to perform some computational work, such as performing physics calculations for objects in games. The graphics pipeline is used for drawing operations.
+**A pipeline is a collection of stages that process data one stage after another.** In Vulkan there is currently a compute pipeline and a graphics pipeline. The compute pipeline allows us to perform some computational work, such as performing physics calculations for objects in games. The graphics pipeline is used for drawing operations.
 
 In OpenGL there are multiple programmable stages (vertex, tessellation, fragment shaders and so on) and some fixed function stages (rasterizer, depth test, blending). In Vulkan, this is similar. But the whole pipelines' stage is gathered in one monolithic object. OpenGL allows us to change the state that influence rendering operations anytime we want, we can change parameters for each stage independently. We can set up shader programs, depth test, blending, and whatever state we want, and then we can render some objects. Next we can change just some small part of the state and render another object. In Vulkan, such operation can't be done. We must prepare the whole state and set up parameters for pipeline stages and group them in a pipeline object.
 
 Why this? Changing just one single state of the whole pipeline may cause graphic hardware to perform many background operations lie state and error checking. This may cause applications to perform differently when executed on different graphics hardware.
 
-In Vulkan, the state of the whole pipeline is to gather in one, single object. All the relevant statue and error checking is performed when the pipeline object is created. If error occurs, the pipeline can't be created.
+In Vulkan, the state of the whole pipeline is to gather in one, single object. All the relevant state and error checking is performed when the pipeline object is created. If error occurs, the pipeline can't be created.
 
 The downside of this methodology is that we have create multiple pipeline object, multiple variation of pipeline objects when we are drawing many objects in a different way. If we want to draw objects using different shaders, we also have to create multiple pipeline object, one for each combination of shader programs.
 
@@ -313,7 +315,7 @@ The downside of this methodology is that we have create multiple pipeline object
    In Vulkan's shaders (when transforming from GLSL to SPIR-V) layout qualifiers are required. Here we specify to what output (color) attachment we want to store the color values generated by fragment shader. For each enabled shader stage we need to prepare an instance of ***VkPipelineShaderStageCreateInfo*** structure which contains:
 
    + sType, pNext, flags.
-   + stage: Type of shader stage we are decribing (like vertex, tessellation control, and so on).
+   + stage: Type of shader stage we are describing (like vertex, tessellation control, and so on).
    + module: Handle to a shader module that contains the shader for a given stage.
    + pName: Name of the entry pointer of the provided shader.
    + pSpecicalizationInfo: Pointer to ***VkSpecialization*** structure, leave for null.
