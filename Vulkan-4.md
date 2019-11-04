@@ -61,5 +61,52 @@ We can specify dependencies between render passes (by providing the number of a 
 + desAccessMask: Types of memory operations that occurred in a dest subpass or after a render pass.
 + dependencyFlags: Flag describing the type of dependency.
 
-### Graphics Pipeline Creation
+### Graphics Pipeline Creatio
 
+#### Writing Shaders
+
+```glsl
+#version 450
+
+layout(location = 0) in vec4 i_Position;
+layout(location = 1) in vec4 i_Color;
+
+out gl_PerVertex
+{
+  vec4 gl_Position;
+};
+
+layout(location = 0) out vec4 v_Color;
+
+void main() {
+    gl_Position = i_Position;
+    v_Color = i_Color;
+}
+
+```
+
+In Vulkan, all attributes must have a location layout qualifier. When we specify a description of the vertex attributes in Vulkan API, the names of these attributes don't matter, only their indices/locations. In OpenGL we could ask for a location of an attribute with a given name. In Vulkan location layout qualifiers are the only way to go.
+
+shader.frag
+
+```
+#version 450
+
+layout(location = 0) in vec4 v_Color;
+
+layout(location = 0) out vec4 o_Color;
+
+void main() {
+  o_Color = v_Color;
+}
+```
+
+#### Vertex Attributes Specification
+
+We specify the vertex input state creation, for which we specify a variable of type ***VkPipelineVertexInputStateCreateInfo***. In this variable we provide pointers to structures, which define the type of vertex input data and number and layout of our attributes.
+
+***VertexInputBindingDescription*** is used to specify the binding (general memory information) of vertex data. It contains:
+
++ binding: Index of a binding with which vertex data will be associated.
++ stride: The distance in bytes between two consecutive elements.
++ inputRate: Defines how data should be consumed, per vertex or per instance.
