@@ -61,7 +61,7 @@ We can specify dependencies between render passes (by providing the number of a 
 + desAccessMask: Types of memory operations that occurred in a dest subpass or after a render pass.
 + dependencyFlags: Flag describing the type of dependency.
 
-### Graphics Pipeline Creatio
+### Graphics Pipeline Creation
 
 #### Writing Shaders
 
@@ -105,8 +105,67 @@ void main() {
 
 We specify the vertex input state creation, for which we specify a variable of type ***VkPipelineVertexInputStateCreateInfo***. In this variable we provide pointers to structures, which define the type of vertex input data and number and layout of our attributes.
 
-***VertexInputBindingDescription*** is used to specify the binding (general memory information) of vertex data. It contains:
+***VkVertexInputBindingDescription*** is used to specify the binding (general memory information) of vertex data. It contains:
 
 + binding: Index of a binding with which vertex data will be associated.
 + stride: The distance in bytes between two consecutive elements.
 + inputRate: Defines how data should be consumed, per vertex or per instance.
+
+When creating a vertex buffer, we bind it to a chosen slot before rendering operations. The slot number is this binding and we describe how data in this slot is aligned in memory and how it should be consumed.
+
+Next step is to define all vertex attributes. We must specify a location (index) for each attribute (the same as in a shader source code, in location layout qualifier), source of data (binding from which data will be read), format (data type and number of components) and offset at which data for this specific attribute can be found (offset from the beginning of a data for a given vertex, not from the beginning of all vertex data). This information is provided through the ***VkVertexInputAttributeDescription*** structure. It contains:
+
++ location: Index of an attribute, the same as defined by the location layout specifier in a shader source code.
++ binding: The number of the slot from which data should be read (source of data like VBO in OpenGL)
++ format: Data type and number of components per attribute.
++ offset: Beginning of data for a given attribute.
+
+The last is prepare vertex input state description by filling a variable of type ***VkPipelineVertexInputStateCreateInfo*** which contains:
+
++ SType, pNext, flags
++ vertexBindingDescriptionCount
++ pVertexBindingDescriptions: Array describing all bindings defined for a given pipeline (buffers from which values of all attributes are read)
++ vertexAttrbuteCount
++ pVertexAttributeDescription: Array with elements specifying all vertex attributes.
+
+#### Input Assembly State Specification
+
+We are going to draw a quad. To do this, we must use triangle strip topology. We define it through ***VkPipelineInputAssemblyStateCreateInfo*** structure which cotains:
+
++ sType, pNext, flags
++ topology: Topology used for drawing vertices.
++ primitiveRestartEnable: Parameter defining whether we want to restart assembling a primitive by using a special value of vertex index.
+
+#### Viewport State Specification:
+
+Previously setting up step caused our image to be always the same size, no matter how big the window is. This time we use a dynamic state for the viewport and scissor test parameters. Don't specify pViewports and pScissors members in the ***VkPipelineViewPortStateCreateInfo***. The number of viewports and scissor test rectangle is same as before.
+
+#### Dynamic State Specification:
+
+When we create a pipeline, we can specify which parts of it are always static, defined through structures at a pipeline creation, and which are dynamic, specified by proper function calls during command buffer recording. This allows us to lower the number of pipeline objects that differ only with small details like width, blend constants, or stencil parameter. The code is:
+
+```c++
+std::vector<VkDynamicState> dynamic_states = {
+  VK_DYNAMIC_STATE_VIEWPORT,
+  VK_DYNAMIC_STATE_SCISSOR,
+};
+
+VkPipelineDynamicStateCreateInfo dynamic_state_create_info = {
+  VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,         // VkStructureType                                sType
+  nullptr,                                                      // const void                                    *pNext
+  0,                                                            // VkPipelineDynamicStateCreateFlags              flags
+  static_cast<uint32_t>(dynamic_states.size()),                 // uint32_t                                       dynamicStateCount
+  &dynamic_states[0]                                            // const VkDynamicState                          *pDynamicStates
+};
+
+```
+
+This is done by using structure of type ***VkPipelineDynamicStateCreateInfo***, which contains:
+
++ sTYpe, pNext, flags.
++ dynamicStateCount:
++ pDynamicStates: Array contains enums, specifying which parts of a pipeline should be marked as dynamic. Each element of it is of type ***VkDynamicState***.
+
+#### Pipeline Object Creation:
+
+Every pipeline state, which is specified as dynamic, must be set through a proper function call during command buffer recording.
