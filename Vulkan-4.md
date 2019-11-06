@@ -288,3 +288,56 @@ if( vkBindBufferMemory( GetDevice(), Vulkan.VertexBuffer.Handle, Vulkan.VertexBu
 After buffer memory allocation, we must bind it to our buffer by ***vkBindBufferMemory***. We provide a handle to buffer, handle to a memory object, and an offset. We can create larger memory objects and use it as a storage space for multiple buffers (or images) This is the recommended behavior. Creating larger memory objects means we are creating fewer memory objects. This allows driver to track fewer objects in general. Memory objects must be tracked by a driver because of OS requirements and security measures. Larger memory object don't cause big problems with memory fragmentation.
 
 But when we allocate larger memory objects and bind them to multiple buffers, not all of them can be bounded at offset zero. This is what the offset for.
+
+##### Uploading Vertex Data
+
+After created a buffer and have a bound a memory that is host visible. We can map this memory, acquire a pointer to this memory, and use this pointer to copy data from our application to the buffer itself.
+
+```
+void *vertex_buffer_memory_pointer;
+if( vkMapMemory( GetDevice(), Vulkan.VertexBuffer.Memory, 0, Vulkan.VertexBuffer.Size, 0, &vertex_buffer_memory_pointer ) != VK_SUCCESS ) {
+  std::cout << "Could not map memory and upload data to a vertex buffer!" << std::endl;
+  return false;
+}
+
+memcpy( vertex_buffer_memory_pointer, vertex_data, Vulkan.VertexBuffer.Size );
+
+VkMappedMemoryRange flush_range = {
+  VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,            // VkStructureType        sType
+  nullptr,                                          // const void            *pNext
+  Vulkan.VertexBuffer.Memory,                       // VkDeviceMemory         memory
+  0,                                                // VkDeviceSize           offset
+  VK_WHOLE_SIZE                                     // VkDeviceSize           size
+};
+vkFlushMappedMemoryRanges( GetDevice(), 1, &flush_range );
+
+vkUnmapMemory( GetDevice(), Vulkan.VertexBuffer.Memory );
+
+return true;
+```
+
+The ***vkMapMemory*** is used to map memory. In this call we must specify which memory object we want to map and a region to access. Region is defined by an offset from the beginning of a memory object's storage and size. We then acquire a pointer. We can use it to copy data from our application to the provided memory address.
+
+After a memory copy operation and before unmap a memory (this is not needed), we need to tell the driver which parts of the memory was modified by our operations. This operation is called flushing. Through it we specify all memory ranges that our application copied data to. The ranges are defined by an array of ***VkMappedMemoryRange*** elements which contains:
+
++ sType, pNext
++ memory: Handle of a mapped and modified memory object.
++ offset: Offset at which a given range starts.
++ size: Size, in bytes, of an affected region. If the whole memory, from an offset to the end, was modified, we can use ***VK_WHOLE_SIZE***.
+
+Call ***vkFlushMappedMemoryRanges*** to flash. After that, the driver will known which parts were modified and will reload them (refresh cache). Reloading usually occurs on barriers.
+
+### Rendering Resources Creation
+
+To record command buffers and submit them to queue in an efficient way, we need four types of resources: command buffers, semaphores, fences and framebuffer. Semaphores are used for internal queue synchronization. Fences allow the application to check if some specific situation occurred, if command buffer's execution after it was submitted to queue, has finished. If necessary, application can wait on a fence, until it is signaled. In general, semaphores are used to synchronize queues (GPU) and fences are used to synchronize application (CPU).
+
+To render a single frame of animation we need at least one command buffer, two semaphores--one for a swapchain image acquisition (image available semaphore) and the other to signal that presentation may occur -- a fence, and a framebuffer. The fence is used to later to check whether we can record a given command buffer. We will keep several numbers of such rendering resources, which we call **virtual frame**. The number of these **virtual frames** should be independent of a number of swapchain image.
+
+We are not allowed to record a command buffer that has been submitted to a queue until its execution in the queue is finished. During command buffer recording, we can use the "simultaneous use" flag, which allows us to record or resubmit a command buffer that has already been submitted. This may impact performance. A better way is to use fences and check whether a command buffer is not used any more. Tow or three virtual frames seems to be the most reasonable compromise between performance, memory usage, and input lag.
+
+##### Command Pool Creation
+
+Call the ***vkCreateCommandPool*** same as before. This time we provide two additional flag in ***VkCommandPoolCreatInfo*** which is:
+
++ VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT: Indicates that command buffers, allocated from this pool, may be reset individually. Normally, without this flag, we can't record the same command buffer multiple times. It must be reset first. And, command buffers created from one pool may be reset only all at once. Specifying this flag allows us to reset command buffers individually, and it is done implicitly by calling the ***vkBeginCommandBuffer*** function.
++ VK_COMMAND_POOL_CREATE_TRANSIENT_BIT: This flag tells the driver that command buffers allocated from this pool will be living for a short amount of time, they will be often recorded and reset (re-recorded). This information helps optimize command buffer allocation and perform it more optimally.
