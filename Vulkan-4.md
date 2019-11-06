@@ -341,3 +341,109 @@ Call the ***vkCreateCommandPool*** same as before. This time we provide two addi
 
 + VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT: Indicates that command buffers, allocated from this pool, may be reset individually. Normally, without this flag, we can't record the same command buffer multiple times. It must be reset first. And, command buffers created from one pool may be reset only all at once. Specifying this flag allows us to reset command buffers individually, and it is done implicitly by calling the ***vkBeginCommandBuffer*** function.
 + VK_COMMAND_POOL_CREATE_TRANSIENT_BIT: This flag tells the driver that command buffers allocated from this pool will be living for a short amount of time, they will be often recorded and reset (re-recorded). This information helps optimize command buffer allocation and perform it more optimally.
+
+##### Fence Creation:
+
+The code is:
+
+```c++
+VkFenceCreateInfo fence_create_info = {
+  VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,              // VkStructureType                sType
+  nullptr,                                          // const void                    *pNext
+  VK_FENCE_CREATE_SIGNALED_BIT                      // VkFenceCreateFlags             flags
+};
+
+for( size_t i = 0; i < Vulkan.RenderingResources.size(); ++i ) {
+  if( vkCreateFence( GetDevice(), &fence_create_info, nullptr, &Vulkan.RenderingResources[i].Fence ) != VK_SUCCESS ) {
+    std::cout << "Could not create a fence!" << std::endl;
+    return false;
+  }
+}
+return true;
+```
+
+To create a fence object we call the ***vkCreateFence***.  It accepts a variable of ***VkFenceCreateInfo*** which contains:
+
++ sType, pNext
++ flags: Allows for creating a fence that is already signaled.
+
+A fence may have two states: signaled and unsignaled. The application checks whether a given fence is in a signaled state, or it may wait on a fence until the fence gets signaled. Signaling is done by the GUP after all operations submitted to the queue are processed. When we submit command buffers, we can provide a fence that will be signaled when a queue has finished executing all commands that were issued in this one submit operation. After the fence is signaled, it is the application's responsibility to reset it to an unsignaled state.
+
+### Drawing
+
+```c++
+static size_t           resource_index = 0;
+RenderingResourcesData ¤t_rendering_resource = Vulkan.RenderingResources[resource_index];
+VkSwapchainKHR          swap_chain = GetSwapChain().Handle;
+uint32_t                image_index;
+
+resource_index = (resource_index + 1) % VulkanTutorial04Parameters::ResourcesCount;
+
+if( vkWaitForFences( GetDevice(), 1, ¤t_rendering_resource.Fence, VK_FALSE, 1000000000 ) != VK_SUCCESS ) {
+  std::cout << "Waiting for fence takes too long!" << std::endl;
+  return false;
+}
+vkResetFences( GetDevice(), 1, ¤t_rendering_resource.Fence );
+
+VkResult result = vkAcquireNextImageKHR( GetDevice(), swap_chain, UINT64_MAX, current_rendering_resource.ImageAvailableSemaphore, VK_NULL_HANDLE, &image_index );
+switch( result ) {
+  case VK_SUCCESS:
+  case VK_SUBOPTIMAL_KHR:
+    break;
+  case VK_ERROR_OUT_OF_DATE_KHR:
+    return OnWindowSizeChanged();
+  default:
+    std::cout << "Problem occurred during swap chain image acquisition!" << std::endl;
+    return false;
+}
+
+if( !PrepareFrame( current_rendering_resource.CommandBuffer, GetSwapChain().Images[image_index], current_rendering_resource.Framebuffer ) ) {
+  return false;
+}
+
+VkPipelineStageFlags wait_dst_stage_mask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+VkSubmitInfo submit_info = {
+  VK_STRUCTURE_TYPE_SUBMIT_INFO,                          // VkStructureType              sType
+  nullptr,                                                // const void                  *pNext
+  1,                                                      // uint32_t                     waitSemaphoreCount
+  ¤t_rendering_resource.ImageAvailableSemaphore,    // const VkSemaphore           *pWaitSemaphores
+  &wait_dst_stage_mask,                                   // const VkPipelineStageFlags  *pWaitDstStageMask;
+  1,                                                      // uint32_t                     commandBufferCount
+  ¤t_rendering_resource.CommandBuffer,              // const VkCommandBuffer       *pCommandBuffers
+  1,                                                      // uint32_t                     signalSemaphoreCount
+  ¤t_rendering_resource.FinishedRenderingSemaphore  // const VkSemaphore           *pSignalSemaphores
+};
+
+if( vkQueueSubmit( GetGraphicsQueue().Handle, 1, &submit_info, current_rendering_resource.Fence ) != VK_SUCCESS ) {
+  return false;
+}
+
+VkPresentInfoKHR present_info = {
+  VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,                     // VkStructureType              sType
+  nullptr,                                                // const void                  *pNext
+  1,                                                      // uint32_t                     waitSemaphoreCount
+  ¤t_rendering_resource.FinishedRenderingSemaphore, // const VkSemaphore           *pWaitSemaphores
+  1,                                                      // uint32_t                     swapchainCount
+  &swap_chain,                                            // const VkSwapchainKHR        *pSwapchains
+  &image_index,                                           // const uint32_t              *pImageIndices
+  nullptr                                                 // VkResult                    *pResults
+};
+result = vkQueuePresentKHR( GetPresentQueue().Handle, &present_info );
+
+switch( result ) {
+  case VK_SUCCESS:
+    break;
+  case VK_ERROR_OUT_OF_DATE_KHR:
+  case VK_SUBOPTIMAL_KHR:
+    return OnWindowSizeChanged();
+  default:
+    std::cout << "Problem occurred during image presentation!" << std::endl;
+    return false;
+}
+return true;
+```
+
+First we take the lease recently used rendering resource. Then we wait until the fence associated with this group is signaled. If it is, this means that we can safely take a command buffer and record it.
+
+When a fence is finished, we reset the fence and perform normal drawing-related operations: we acquire an image, record operations rendering into an acquired image, submit the command buffer, and present an image.
+
