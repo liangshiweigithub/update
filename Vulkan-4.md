@@ -447,3 +447,12 @@ First we take the lease recently used rendering resource. Then we wait until the
 
 When a fence is finished, we reset the fence and perform normal drawing-related operations: we acquire an image, record operations rendering into an acquired image, submit the command buffer, and present an image.
 
+##### Recording a Command Buffer
+
+It is better and more convenient to create framebuffers on demand. Framebuffers operate on image views, which are created for a given, specific image. When a swapchain is recreated, old images are invalid, not existent. So we must recreate image views and also framebuffers.
+
+Before recording a command buffer, we create a framebuffer for an image to which we will be rendering, and of the same size as that image. When we record command buffer that uses a render pass and framebuffer objects, the framebuffer must remain valid for the whole time the command buffer is processed by the queue.
+
+First we define a variable of type ***VkCommandBufferBeginInfo*** and specify that a command buffer will be submitted only once. When we specify a ***VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT***, we can't submit a given command buffer more times.
+
+Next define subresource range for image memory barriers. Then begins a render pass with the temporary framebuffer object. The bind graphics has two dynamic state. The viewport is set by ***vkCmdSetViewPort***, the  scissor is set by ***vkCmdSetScissor***. The last thing before we can draw anything is to bind appropriate vertex buffer, providing data for vertex attributes. We do this by the ***vkCmdBindVertexBuffers*** function call.

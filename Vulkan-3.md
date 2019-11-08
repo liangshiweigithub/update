@@ -10,7 +10,7 @@
    + Next for each light source, drawing is performed that reads some of the data(normal vectors, shininess, depth/position), calculates lighting and stores it in another texture.
    +  Final pass aggregates lighting data with diffuse color.
 
-   So render pass is a set of data required to perform some drawing operations: storing data in textures and reading data from other textures. In Vulkan, a render pass represents a set of framebuffer attachments(images) required for drawing operations and a collection of subpasses that drawing operations will be ordered into. It is a construct that collects all color, depth and stencil attachments and operations modifying them in such a way that driver does not have to deduce this information by itself what may give a substantial optimization opportunities on some GPUs. 
+   In Vulkan, a render pass represents a set of framebuffer attachments(images) required for drawing operations and a collection of subpasses that drawing operations will be ordered into. It is a construct that collects all color, depth and stencil attachments and operations modifying them in such a way that driver does not have to deduce this information by itself what may give a substantial optimization opportunities on some GPUs. 
 
    A subpass consists of drawing operations that use the same attachments. Each of these drawing operations may read from some input attachments and render data in some other attachments. A render pass also describes the dependencies between attachments: in one subpass we perform rendering into the texture, but in another this texture will be used as a source of data (be sampled from).
 
