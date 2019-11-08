@@ -1,0 +1,3 @@
+## Staging Resources
+
+"Staging resources" or "staging buffer" are intermediate or temporary resources used to transfer data from application (CPU) to a graphics card's memory (GPU). They can increase our application's resource. Host-Visible parts of a graphics card's memory aren't the most efficient. They are much slower than the parts of memory that are not directly accessible to the application. One solution to this is to always use device-local memory for all resources involved in a rendering process. But as device-local memory isn't accessible for an application, we can't directly transfer any data from the CPU to such memory. This is why we need intermediate or staging resource.
