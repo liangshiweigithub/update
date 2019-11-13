@@ -10,6 +10,8 @@ The next is to upload appropriate data to our uniform buffer. In it we will stor
 
 #### Preparing Descriptor Set Layout
 
+##### Creating Descriptor Set Layout
+
 Descriptor sets is the interface between our application and a pipeline through which we can provide resources used by shaders. Code is:
 
 ```c++
@@ -56,3 +58,25 @@ layout(set=0, binding=1) uniform u_UniformBuffer {
 };
 
 layout(set=0, binding=0) uniform sampler2D u_Texture;
+
+##### Updating Descriptor Sets
+
+After creating a descriptor pool and allocating descriptor sets, we must provide specific resources that will be used as descriptors. For the combined image samplers, we need two resources -- an image, which can be sampled inside shaders (VK_IMAGE_USAGE_SAMPLED_BIT), and a sampler.
+
+#### Preparing  Drawing State
+
+Created descriptor set layouts are required for two purposes:
+
++ Allocating descriptor sets from pools
++ Creating pipeline layout
+
+The pipeline layout specifies what types of resources can be accessed by a pipeline and its shaders. Before we can use a descriptor set during command buffer recording, we need to create a pipeline layouts.
+
+##### Creating a Pipeline Layout
+
+To create a pipeline layout, we need to provide a list of descriptor set layouts, and a list of ranges of push constants.
+
+Push constants provide a way to pass data to shaders easily and very, very quickly. But the amount of data is also very limited -- the specification allows only 128 bytes to be available for push constants data provided to a pipeline at a given time. We provide the set layout in the ***VkPipelineLayoutCreatInfo***.
+
+##### Creating Shader Programs
+
