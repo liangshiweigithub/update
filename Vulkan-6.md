@@ -157,3 +157,16 @@ The pipeline layout stores information about resource types that the given pipel
 
 Use the ***vkCreatePipelineLayout*** to create pipeline layout.
 
+##### Binding Descriptor Sets
+
+We can have multiple different descriptor sets or multiple, similar descriptor sets (with the same layouts), but they may contain different resource handles. Which of these descriptors are used during rendering is defined during command buffer recording. Before we can draw anything, we need to set up a valid state.
+
+If a pipeline uses descriptor resources (when shaders access images or buffers), we need to bind descriptor sets by calling the ***vkCmdBindSescriptorSets*** function. For this function we provide a handle of the pipeline layout and array of descriptor set handles. We bind descriptor sets to specific indices.
+
+##### Accessing Descriptors in Shaders
+
+The address we use inside shaders like this:
+
+layout( set=S, binding=B) uniform <variable type> <variable name>
+
+Set defines an index that the given descriptor set was bound to through the ***vkCmdBindDescriptorSet***. ***Binding*** specifies the index of a resource within the provided set and corresponds to the binding defined during descriptor set layout creation and corresponds to the binding defined during descriptor set layout creation.
