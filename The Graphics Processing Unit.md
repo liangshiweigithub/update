@@ -17,3 +17,18 @@ Modern shader programs use a unified shader design. This means that the vertex, 
 A ***draw call*** invokes the graphic API to draw a group of primitives, so causing the graphics pipeline to execute and run its shaders. Each programmable shader stage has two types of inputs: ***uniform inputs***, with values that remain constant throughout a draw call (can be changed between draw calls), and ***varying input***, data that come from the triangle's vertices or from rasterization.
 
 The term ***flow control*** refers to the use of branching instructions to change the flow of code execution. There are two types of flow control. ***Static flow control*** branches are based on the values of uniform inputs. There is no thread divergence, since all invocations take the same code path. ***Dynamic flow control*** is based on the values of varying inputs, meaning that each fragment can execute the code differently. This costs performance. 
+
+##### The Vertex Shader
+
+The vertex shader provides a way to modify, create, or ignore values associated with each triangle's vertex, such as its color, normal, texture coordinates, and position. A vertex shader must always transforms vertices from model space to homogeneous clip space.
+
+***Input assembly is usually presented as a process that happens before the vertex shader is executed.
+
+##### The Tessellation Stage
+
+The stage allows us to render a curved surface. The GPU takes each surface description and turn it into a representative set of triangles. It can save memory by a surface description instead of vertex. Besides, its ability to control the level of detail can also control performance.
+
+##### The Pixel Shader
+
+The piece of a triangle partially or fully overlapping the pixel is called ***fragment***. The values at the triangle's vertices, including the z-value used in the z-buffer, are interpolated across the triangle's surface for each pixel. These values are passed to the pixel shader, which then processes the fragment. The type of interpolation performed across the triangle is specified by the pixel shader program. Nowdays, instead of sending results of a pixel shader's program to just the color and z-buffer, multiple sets of values can be generated for each fragment and save to different buffers, each called a ***render target***. This is the idea of ***multiple render targets***.
+
