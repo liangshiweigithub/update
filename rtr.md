@@ -45,4 +45,18 @@ Takes input as three vertices, forming a triangle, and finds all pixels that are
 
 #### Pixel processing
 
- Executes a program per pixel to determine its color and may perform depth testing to see whether it is visible or not.
+ Executes a program per pixel to determine its color and may perform depth testing to see whether it is visible or not. This stage is divided into ***pixel shading*** and ***merging***.
+
+##### Pixel Shading
+
+Any per-pixel shading computations are performed here, using the interpolated shading data as input. The end result is one or more colors to be passed on to the next. This stage is executed by programmable GPU cores.
+
+##### Merging
+
+The information for each pixel is stored in the color buffer, which is a rectangular array of colors. It is the responsibility of the merging stage to combine the fragment color produced by the pixel shading stage with the color currently stored in the buffer. This stage is not fully programmable. It is highly configurable. This stage is also responsible for resolving visibility by the z-buffer.
+
+The ***alpha channel*** is associated with the color buffer and stores a related opacity value for each pixel. In older APIs, the alpha channel was also used to discard pixels selectively via the alpha test feature. Nowadays a discard operation can be used to trigger a discard. This type of test can be used to ensure that fully transparent fragments do not affect the z-buffer.
+
+The ***stencil buffer*** is an offscreen buffer used to record the locations of the rendered primitive. It typically contains 8 bits per pixel. Primitives can be rendered into the stencil buffer using various functions, and the buffer's contents can then be used to control rendering into the color buffer and z-buffer. Assume that a filled circle has been drawn into the stencil buffer. This can be combined with an operator that allows rendering of subsequent primitives into the color buffer only where the circle is present. All these functions at the end of the pipeline are called ***raster operations*** (ROP) or ***blend operations***. It is possible to mix the color currently in the color buffer with the color of the pixel being processed inside a triangle. This can enable effects such as transparency or the accumulation of color samples.
+
+Points, lines, and triangles are the rendering primitives from which a model or an object is built. 
