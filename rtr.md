@@ -41,7 +41,10 @@ Only the clipped primitives inside the view volume are passed on to the screen m
 
 #### Rasterization 
 
-Takes input as three vertices, forming a triangle, and finds all pixels that are considered inside that triangle.
+Takes input as three vertices, forming a triangle, and finds all pixels that are considered inside that triangle. It is split up into two functional substages: ***Triangle Setup***, ***Triangle Traversal***. Rasterization, also called scan conversion, is thus the conversion from two-dimensional vertices in screen space into pixels on the screen. It can also be thought of as a synchronization point between geometry processing and pixel processing. Whether the triangle is considered to overlap the pixel depends on how you have set up the GPU's pipeline (single sampling, multisampling and so on). 
+
++ **Triangle Setup**: The differentials, edge equations, and other data for the triangle are computed. These data are used for triangle traversal.
++ **Triangle Traversal**:  Here is where each pixel that has its center covered by the triangle is checked and a ***fragment*** generated for the part of the pixel that overlaps the triangle. Finding which samples or pixels are inside a triangle is called ***triangle traversal***. Each triangle fragment's properties are generated using data interpolated among the three triangle vertices. All pixels or samples that are inside a primitive are then send to the pixel processing stage.
 
 #### Pixel processing
 
