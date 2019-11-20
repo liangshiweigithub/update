@@ -30,5 +30,12 @@ The stage allows us to render a curved surface. The GPU takes each surface descr
 
 ##### The Pixel Shader
 
-The piece of a triangle partially or fully overlapping the pixel is called ***fragment***. The values at the triangle's vertices, including the z-value used in the z-buffer, are interpolated across the triangle's surface for each pixel. These values are passed to the pixel shader, which then processes the fragment. The type of interpolation performed across the triangle is specified by the pixel shader program. Nowdays, instead of sending results of a pixel shader's program to just the color and z-buffer, multiple sets of values can be generated for each fragment and save to different buffers, each called a ***render target***. This is the idea of ***multiple render targets***.
+The piece of a triangle partially or fully overlapping the pixel is called ***fragment***. The values at the triangle's vertices, including the z-value used in the z-buffer, are interpolated across the triangle's surface for each pixel. These values are passed to the pixel shader, which then processes the fragment. The type of interpolation performed across the triangle is specified by the pixel shader program. Nowdays, instead of sending results of a pixel shader's program to just the color and z-buffer, multiple sets of values can be generated for each fragment and save to different buffers, each called a ***render target***. This is the idea of ***multiple render targets***. This ability has also given rise to a different type of rendering pipeline, called ***deferred shading***, where visibility and shading are done in separate passes. This first pass stores data about an object's location and material at each pixel. Successive passes can then efficiently apply illumination and other effects.
 
+DirectX 11 introduced a buffer type that allows writes access to any location, the ***unordered access view (UAV)***. This ability extended to all shaders in 11.1. It is called ***shader storage buffer object***.
+
+##### The Merging Stage
+
+The merging stage is where the depths and colors of the individual fragments are combined with the frame-buffer. DirectX calls this the ***output merger***, OpenGL refers to it as ***per-sample operations***. This stage is where stencil-buffer and z-buffer operations occur. Another operation is color blending.
+
+To GPUs perform some merge testing before the pixel shader is executed to avoid shader calculation on blocked fragment. This is called ***early-z*** which can improve performance.
