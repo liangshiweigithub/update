@@ -47,3 +47,4 @@ $$
 c_{shaded}=f_{unlit}(n,v)+\sum\limits_{i=1}^{n}(l\cdot n)^+c_{light}c_{surface}
 $$
 The lit part of this model is corresponds to the ***Lambertian*** shading model. This model works in the context of ideal diffusely reflecting surfaces. In the equations we can see that a light source interacts with the shading model via two parameters: the vector **l** pointing toward the light and the light color c<sub>light</sub>.
+
