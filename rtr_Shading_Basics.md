@@ -1,3 +1,5 @@
+### '
+
 ### Shading Basics
 
 ##### Shading Models
@@ -5,6 +7,7 @@
 The first step in determining the appearance of a rendered object is to choose a shading model to describe how the object's color should vary based on factors such as surface orientation, view direction, and lighting. Shading model often have properties used to control appearance variation. Setting the values of these properties is the next step in determining object appearance.
 
 The ***Gooch shading model*** was designed to increase legibility of details in technical illustrations. The mathematical definition of the model is:
+
 $$
 c_{shaded} = s*c_{highlight} + (1-s)(tc_{warm}+(1-t)*c_{cool})\\
 c_{cool}=(0,0,0.55)+0.25*c_{surface}\\
@@ -47,4 +50,18 @@ $$
 c_{shaded}=f_{unlit}(n,v)+\sum\limits_{i=1}^{n}(l\cdot n)^+c_{light}c_{surface}
 $$
 The lit part of this model is corresponds to the ***Lambertian*** shading model. This model works in the context of ideal diffusely reflecting surfaces. In the equations we can see that a light source interacts with the shading model via two parameters: the vector **l** pointing toward the light and the light color c<sub>light</sub>.
+
+###### Directional Lights
+
+Both **l** and c<sub>light</sub> are constant in directional light, except that c<sub>light</sub> may be attenuated by shadowing.
+
+###### Punctual Lights
+
+A punctual light is not one that is on time for its appointments, but rather a light that has a location, unlike directional light. Such lights also have no dimensions to them, no shape or size. Point light (shines light equally in all direction) and spotlight are two different forms of punctual lights. The light direction is:
+$$
+l=\frac{P_{light}-p_0}{||p_{light}-p_0||}
+$$
+Also, c<sub>light</sub> is a function of distance.
+
+###### Point/Omni Lights
 
