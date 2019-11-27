@@ -96,3 +96,40 @@ Don't forget to delete the shader objects once we have linked them into the prog
 ##### Linking Vertex Attributes
 
 The vertex shader allows us to specify any input we want  in the form of vertex attributes and while this allows for great flexibility, it does mean we have to manually specify what part of our input data goes to which vertex attribute in the  vertex shader. This means we have to specify how OpenGL should interpret the vertex data before rendering.
+
+```c++
+glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+glEnableVertexAttribArray(0);
+```
+
+The function glVertexAttribuPointer has quite a few parameters:
+
++ The first specifies which vertex attribute we want to configure. We specified the location of the position vertex attribute in the vertex shader with ***layout(location = 0)***. This sets the location of the vertex attribute to 0 and since we pass data to this vertex attribute, we specify 0.
++ The next specifies the size of the vertex attribute' element
++ The third is the type of data
++ The next argument specifies if we want the data to be normalized.
++ The fifth is the stride of vertex attributes.
++ The last void* is the offset of where the position data begins in the buffer.
+
+##### Vertex Array Object
+
+A vertex array object (**VAO**) can be bound just like a vertex buffer object and any subsequent vertex attribute calls from that point on will be stored inside the VAO. So when configuring vertex attribute pointers you only have to make those calls once and whenever we want to draw object, we can just bind the corresponding VAO. All the state is set inside VAO.
+
+```
+unsigned int VAO;
+glGenVertexArrays(1, &VAO);
+
+glBindVertexArray(GL_ARRAY_BUFFER, VBO);
+glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
+glEnableVertexAttribArray(0);
+
+// draw code
+glUserProgram(shaderProgram);
+glBindVertexArray(VAO);
+glDrawArrays(GL_TRIANGLES, 0, 3);
+```
+
+##### Element Buffer Object
+
+EBO is a buffer, just like a vertex buffer, that stores indices that OpenGL uses to decide what vertices to draw.
