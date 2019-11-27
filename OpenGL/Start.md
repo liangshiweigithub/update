@@ -67,3 +67,32 @@ The use of fragment shade is the same.
 ##### Shader program
 
 A shade program object is the final linked version of multiple shaders combined. To use the recently compiled shaders we have to link them to a shader program object and then activate this shader program when rendering object. When linking the shaders into program it links the outputs of each shader to the inputs of next shader.
+
+```c++
+unsigned int shaderProgram;
+shaderProgram = glCreateProgram();
+
+//Attach shader
+glAttachShader(shaderProgram, vertexShader);
+glAttachShader(shaderProgram, fragmentShader);
+glLinkProgram(shaderProgram);
+
+// check error
+glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+if(!success){
+    glGetProgramInfoLog(shaderProgram, 512, NULL, infolog);
+}
+
+// use the program
+glUseProgram(shaderProgram);
+
+// delete the shader objects 
+glDeleteShader(vertexShader);
+glDeleteShader(fragmentShader);
+```
+
+Don't forget to delete the shader objects once we have linked them into the program object; we no longer need them anymore.
+
+##### Linking Vertex Attributes
+
+The vertex shader allows us to specify any input we want  in the form of vertex attributes and while this allows for great flexibility, it does mean we have to manually specify what part of our input data goes to which vertex attribute in the  vertex shader. This means we have to specify how OpenGL should interpret the vertex data before rendering.
