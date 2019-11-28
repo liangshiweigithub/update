@@ -133,3 +133,48 @@ glDrawArrays(GL_TRIANGLES, 0, 3);
 ##### Element Buffer Object
 
 EBO is a buffer, just like a vertex buffer, that stores indices that OpenGL uses to decide what vertices to draw.
+
+#### GLSL
+
+A Shader contains a list of input and output variables, uniforms and its main function. When talking specifically about the vertex shader each input variable is also known as **vertex attribute**. The maximum allowed attributes can be retrieved by querying **GL_MAX_VERTEX_ATTRIBUTE**.
+
+```
+int nr;
+glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nrAttributes);
+```
+
+##### Vectors
+
+It has ***vecn, bvecn, ivecn, uvecn, dvecn*** form. We can use x,y,z,w to access its component. Also, ***rgba*** for colors and ***stpq*** for texture coordinates, accessing the same components.
+
+The vector datatype allows for some interesting and flexible component selection called **swizzling**. Swizzling allow for the follow syntax:
+
+```
+vec2 a;
+vec4 b = a.xyxx;
+vec3 c= v.zyw;
+vec4 d = vec4(a, 0, 0);
+```
+
+##### In and out
+
+They are used to specify inputs and outputs on the individual shaders. Each shader can specify inputs and outputs using these keywords and whenever the output variable matches an input variable of the next shader stage they're passed along. To define how the vertex data is organized we specify the input variables with location metadata so we can configure the vertex attributes on the CPU. A fragment shader requires a vec4 color output variable.
+
+##### Uniforms
+
+Uniforms are another way to pass data from application on the CPU to the shaders on the GPU.
+
++ Uniforms are global, meaning that a uniform variable is unique per shader program object, and can accessed from any shader at any stage in the shader program.
++ Uniforms keep their values until they are reset or update.
+
+```c++
+# code set the uniform variable named "ourColor"
+float timeValue = glfwGetTime();
+float greenValue = (sin(timeValue)/2.0f) + 0.5f;
+int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
+glUseProgram(shaderProgram);
+glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+```
+
+if ***glGetUnifromLocation*** fails, it returns -1. Because glUniform4f sets the uniform on the currently active shader program, so we should use the program first.
+
