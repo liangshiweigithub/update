@@ -175,5 +175,27 @@ At the end of each vertex shader run, OpenGL expects the coordinates to be withi
 
   The first parameter is field of view (fov).
 
+##### Z-buffer
 
+OpenGL stores all depth information in a z-buffer. The depth is stored within each fragment (as the fragment's z value) and whenever the fragment wants to output its color, OpenGL compares its depth values with the z-buffer to decide to accept or discard the value. This process is called **depth testing**.
 
+Use the ***glEnable*** or ***glDisable*** to enable an attribute.
+
+```
+// enable depth test.
+glEnable(GL_DEPTH_TEST);
+
+.....
+// before each rendering iteration, clear the depth buffer
+glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+```
+
+#### Camera
+
+We can use the OpenGL's ***lookAt*** to create a view matrix for camera:
+
+```
+glm::mat4 view
+//camera postion, camera look target, up vector
+view = glm::lookAt(position, target, up_vec);
+```
