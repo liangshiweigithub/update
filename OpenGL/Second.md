@@ -1,3 +1,34 @@
+#### Texture
+
+To use texture, each vertex should thus have a texture coordinate associated with them that specifies what part of the texture image to sample from. Retrieving the texture color using texture coordinates is called sampling.
+
+##### Texture Wrapping
+
+When the texture coordinate exceeds (1, 1), there are serval option:
+
++ **GL_REPEAT**: Repeats the texture image, ignore the integer part
++ **GL_MIRRORED_DEFAULT**: Same as GL_REPEAT but mirrors the image with repeat.
++ **GL_CLAMP_TO_DEDE**: Clamps the coordinates between 0 and 1. The higher coordinates become clamped to the edge, resulting in a stretched edge pattern.
++ **GL_CLAMP_TO_BORDER**: Coordinates outside the range are now  given a user-specified border order.
+
+```
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT)
+```
+
+Each of the aforementioned options can be set per coordinate axis(s, t, r). It the **GL_CLAMP_TO_BORDER** option is chosen, we should specify a border color.
+
+```
+float borderColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
+glTexParamterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+```
+
+##### Texture Filtering
+
+Texture coordinates do not depend on resolution but can be any floating point value, thus OpenGL has to figure out which texture pixel (texel) to map the texture coordinate to. 
+
++ **GL_NEAREST (nearest neighbor filtering)**: This is default. OpenGL selects the pixel which center is closest to the texture coordinate.
++ **GL_LINEAR (linear filtering)**: Takes an interpolated value from the texture coordinate's texels, approximating a color between the texels.
+
 ![avatar](..\image\texture_filtering.png)
 
 Texture filtering can be set for magnifying and minifying operations. For example, we could use nearest neighbor filtering when textures are scaled downwards and linear filtering for upscaled textures.
@@ -79,3 +110,70 @@ ourShader.setInt("texture2", 1); // or with shader class
 ```
 
 Texture unit G_TEXTURE0 is always activated by default, so we can ignore it when there is only one texture.
+
+#### Transformations
+
+##### GLM
+
+GLM stands for OpenGL Mathematics and is a header only library, which means that we only have to include the proper header files and we are done, no linking and compiling necessary.
+
+```
+#include <glm/glm.hpp>
+#include < glm/gtc/matrix_transform.hpp>
+#include < glm/gtc/type_ptr.hpp>
+
+glm::vec4 vec(1.0f, 0.0f, 0.0f, 1.0f);
+glm::mat4 trans = glm::mat4(1.0f);   // this creates a identity matrix.
+trans = glm::translate(trans, glm::vec3(1.0f, 1.0f, 0.0f));
+
+// for rotate, the second parameter is angel, the third is rotate axis
+trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0,0.0,1.0));
+trans = glm::scale(trans, glm::vec3(0.0, 0.5, 0.5));
+
+// use the transform
+unsigned in transID = glGetUniformLocation(shderProgram.ID, "transform_name");
+glUniformMatrix4fv(transID, 1, GL_FALSE, glm::value_ptr(trans));
+```
+
+#### Coordinate Systems
+
+##### Transform  flow
+
+```mermaid
+graph LR
+a[local space]-->|model matrix|b[world space]
+b-->|view matrix|c[view space]
+
+```
+
+```mermaid
+graph LR
+a[view space]-->|projection matrix| b[clip space]
+b-->|viewport transform|c[screen space]
+```
+
+##### View space
+
+The view space is what people refer to as camera of OpenGL (camera space or eye space). It is the space as seen from the camera's point of view.
+
+##### Clip space
+
+At the end of each vertex shader run, OpenGL expects the coordinates to be within a specific range and any coordinate coordinate that falls outside this range is clipped. A projection matrix will creates a viewing box, which is called frustum.  The projection matrix transforms coordinates within this specified range to normalized device coordinates. **Perspective division** is the process that divide the x, y, z components of the position vectors by the vector's homogeneous w component.
+
++ Orthographic projection: This defines a cube-like frustum box. To create an orthographic projection matrix we make use of GLM's function ***glm::ortho.
+
+  ```
+  //        left, right, buttom, top, (near , for plane)
+  glm::ortho(0.0f, 800f, 0.0f, 600f, 0.1f, 100f)
+  ```
+
++ Perspective projection: The projection matrix map a given frustum range to clip space, but also manipulates the w value of each vertex coordinate in such a way that the further away a vertex coordinate from the viewer, the higher w component becomes. GLM function is
+
+  ```
+  glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)width/(float)height, 0.1f, 100.0f);
+  ```
+
+  The first parameter is field of view (fov).
+
+
+
