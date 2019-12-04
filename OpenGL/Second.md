@@ -238,7 +238,7 @@ The yaw and pitch values are obtained from mouse movement where horizontal move 
 
 ##### Zoom
 
-***Field of view*** defines how much we can see of the scene. When the field of view becomes smaller the scene's projected space gets smaller giving the illusion of zooming in.
+***Field of view*** defines how much we can see of the scene. When the field of view becomes smaller the scene's projected space gets smaller giving the illusion of zooming in. This affects the projection matrix.
 
 ```c++
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
