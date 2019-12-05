@@ -199,3 +199,58 @@ glm::mat4 view
 //camera postion, camera look target, up vector
 view = glm::lookAt(position, target, up_vec);
 ```
+
+#### Look around
+
++ **pitch**: Rotate around the x axis
++ **yaw**: Rotate around the y axis
++ roll: Rotate around the z axis
+
+By conduction, we have
+
+```c++
+direction.x = cos(glm::radian(pitch)) * cos(glm::radian(yaw));
+direction.y = sin(glm::radian(pitch));
+direction.z = cos(glm::radian(pitch)) * sin(glm::radian(yaw));
+```
+
+##### Mouse input
+
+The yaw and pitch values are obtained from mouse movement where horizontal move affects yaw and vertical move affects the pitch.
+
++ First tell the GLFW it should hide the cursor and capture it. Capturing a cursor means that once the application has focus the mouse cursor stays within the window. By calling
+
+  ```
+  // after set, the mouse won't be visible and shouldn't leave the window.
+  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISCARD);
+  ```
+
++ Set a mouse callback.
+
+  ```
+  // mouse movement callback function prototype
+  void mouse_callback(GLFWwindow *window, double xpos, double ypos);
+  // register callback
+  glfwSetCursorPosCallback(window, mouse_callback);
+  ```
+
+  Furthermore, we should constraint the pitch value to (-90, 90).
+
+##### Zoom
+
+***Field of view*** defines how much we can see of the scene. When the field of view becomes smaller the scene's projected space gets smaller giving the illusion of zooming in. This affects the projection matrix.
+
+```c++
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
+{
+	if(fov>=1.0f && fov<=45.0f)
+		fov -= yoffset;
+	if(fov<=1.0f)
+		fov = 1.0f;
+	if(fov>=45.f)
+		fov = 45.0f;
+}
+// set
+glfwSetScrollCallback(window, scroll_callback)
+```
+
