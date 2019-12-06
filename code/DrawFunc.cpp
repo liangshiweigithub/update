@@ -168,8 +168,8 @@ void Chapter_2_draw(GLFWwindow* window)
 {
 	glEnable(GL_DEPTH_TEST);
 
-	Shader lightShader("light.vs", "light.ps");
-	Shader lampShader("light.vs", "cubelight.ps");
+	Shader lightShader("colorCube.vs", "colorCube.ps");
+	Shader lampShader("cubeLight.vs", "cubeLight.ps");
 
 	unsigned int lightVAO, VBO, cubeVAO;
 	glGenVertexArrays(1, &lightVAO);
