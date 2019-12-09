@@ -238,3 +238,33 @@ $$
 F_{att}=\frac{1.0}{K_c+K_l*d+K_q*d^2}
 $$
 Here $$d$$ represents the distance from the fragment to the light source. $$K_c, K_l, k_q$$ are constants. Due to the quadratic term the light will diminish mostly at a linear fashion until the distance becomes large enough for the quadratic term to surpass the linear term and then the light intensity will decrease a lot faster.
+
+##### Implementing attenuation
+
+```c
+struct PointLight{
+	vec3 position;
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+    
+    float constant;
+    float linear;
+    float quadratic;
+}
+```
+
+#### Spotlight
+
+![avatar](../image/light_casters_spotlight_angles.png)
+
+Components of spotlight:
+
++ $LightDir$: the vector pointing from the fragment to the light source
++ $SpotDir$: the direction the spotlight is aiming at
++ Phi $\phi$: the cutoff angle that specifies the spotlight's radius. Everything outside this angle is not lit by the spotlight.
++ Theta $\theta$: angle between the $LightDir$ and $SpotDir$ which should smaller than $\phi$.
+
+##### Flashlight
+
+A flashlight is a spotlight located at the viewer's position and usually aimed straight ahead from the player's perspective.
