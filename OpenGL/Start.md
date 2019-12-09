@@ -113,7 +113,11 @@ The function glVertexAttribuPointer has quite a few parameters:
 
 ##### Vertex Array Object
 
-A vertex array object (**VAO**) can be bound just like a vertex buffer object and any subsequent vertex attribute calls from that point on will be stored inside the VAO. So when configuring vertex attribute pointers you only have to make those calls once and whenever we want to draw object, we can just bind the corresponding VAO. All the state is set inside VAO.
+A vertex array object (**VAO**) can be bound just like a vertex buffer object and any subsequent vertex attribute calls from that point on will be stored inside the VAO. So when configuring vertex attribute pointers you only have to make those calls once and whenever we want to draw object, we can just bind the corresponding VAO. All the state is set inside VAO. A vertex array object stores:
+
++ Calls to glEnableVertexAttribArray or glDisableVertexAttribArray
++ Vertex attribute configurations via glVertexAttribPointer
++ Vertex buffer objects associated with vertex attributes by calls to glVertexAttribPointer.
 
 ```
 unsigned int VAO;

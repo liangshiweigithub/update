@@ -1,6 +1,5 @@
 #pragma once
-#include<glad/glad.h>
-#include <GLFW/glfw3.h>
+#include "utils.h"
 
 void Chapter_1_draw(GLFWwindow* window);
 void Chapter_2_draw(GLFWwindow* window);

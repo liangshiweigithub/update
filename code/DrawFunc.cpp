@@ -1,8 +1,6 @@
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
 #include "DrawFunc.h"
 #include "Shader.h"
 #include "Camera.h"
@@ -10,7 +8,7 @@
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
-glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+glm::vec3 lightPos(1.0f, 1.2f, 2.0f);
 
 Camera camera(glm::vec3(0, 0, 3));
 
@@ -27,6 +25,10 @@ void processInput(GLFWwindow* window)
 		camera.ProcessKeyboard(LEFT, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		camera.ProcessKeyboard(RIGHT, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+		camera.ProcessKeyboard(UP, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+		camera.ProcessKeyboard(DOWN, deltaTime);
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -78,42 +80,8 @@ void Chapter_1_draw(GLFWwindow* window)
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 	unsigned int texture1, texture2;
-	glGenTextures(1, &texture1);
-	glBindTexture(GL_TEXTURE_2D, texture1);
-	glTexParameteri(texture1, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(texture1, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(texture1, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(texture1, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	int width, height, nrChannels;
-
-	unsigned char* data = stbi_load("container.jpg", &width, &height, &nrChannels, 0);
-	if (data)
-	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else
-	{
-		std::cout << "load container.jpg failed" << std::endl;
-	}
-	stbi_image_free(data);
-	// the second texture
-	glGenTextures(1, &texture2);
-	glBindTexture(GL_TEXTURE_2D, texture2);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	data = stbi_load("awesomeface.png", &width, &height, &nrChannels, 0);
-	if (data)
-	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else
-		std::cout << "load texture awesomeface.png failed" << std::endl;
-	stbi_image_free(data);
+	texture1 = loadTexture("container.jpg");
+	texture2 = loadTexture("awesomeface.png");
 
 	// use shader
 	ourShader.use();
@@ -171,21 +139,40 @@ void Chapter_2_draw(GLFWwindow* window)
 	Shader lightShader("colorCube.vs", "colorCube.ps");
 	Shader lampShader("cubeLight.vs", "cubeLight.ps");
 
-	unsigned int lightVAO, VBO, cubeVAO;
-	glGenVertexArrays(1, &lightVAO);
+	unsigned int VBO, cubeVAO;
+	glGenVertexArrays(1, &cubeVAO);
 	glGenBuffers(1, &VBO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(verticesNormalTex), verticesNormalTex, GL_STATIC_DRAW);
 
-	glBindVertexArray(lightVAO);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-
-	glGenVertexArrays(1, &cubeVAO);
 	glBindVertexArray(cubeVAO);
+
+	// position attribute
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	// normal attribute
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+	// texture coordinates
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+
+	// texture settings
+	unsigned int diffuseTexture = loadTexture("container2.png");
+	unsigned int specularTexture = loadTexture("container2_specular.png");
+	lightShader.use();
+	lightShader.setInt("material.diffuse", 0);
+	lightShader.setInt("material.specular", 1);
+
+	// second, configure the light's VAO (VBO stays the same; the vertices are the same for the light object which is also a 3D cube)
+	unsigned int lightVAO;
+	glGenVertexArrays(1, &lightVAO);
+	glBindVertexArray(lightVAO);
+
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	// note that we update the lamp's position attribute's stride to reflect the updated buffer data
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
 	while (!glfwWindowShouldClose(window))
@@ -199,8 +186,15 @@ void Chapter_2_draw(GLFWwindow* window)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		lightShader.use();
-		lightShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
-		lightShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+		lightShader.setVec3("viewPos", camera.Position);
+
+		lightShader.setVec3("light.position", lightPos);
+		lightShader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
+		lightShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
+		lightShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+
+		lightShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+		lightShader.setFloat("material.shininess", 32);
 
 		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SRC_WIDTH / SRC_HEIGHT, 0.1f, 100.0f);
 		glm::mat4 view = camera.GetViewMatrix();
@@ -208,6 +202,11 @@ void Chapter_2_draw(GLFWwindow* window)
 		lightShader.setMat4("view", view);
 		glm::mat4 model(1.0f);
 		lightShader.setMat4("model", model);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, diffuseTexture);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, specularTexture);
 
 		glBindVertexArray(cubeVAO);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
