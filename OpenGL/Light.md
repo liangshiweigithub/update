@@ -267,4 +267,19 @@ Components of spotlight:
 
 ##### Flashlight
 
-A flashlight is a spotlight located at the viewer's position and usually aimed straight ahead from the player's perspective.
+A flashlight is a spotlight located at the viewer's position and usually aimed straight ahead from the player's perspective. To smooth the edges, we want to simulate a spotlight having an inner and outer cone. The intensity is calculated as:
+$$
+I = \frac{\theta-\gamma}{\phi-\gamma}
+$$
+where $\theta$ is the current angle, $\phi$ is the inner cone and $\gamma$ is the outer cone. These values are all cosine value of the angle. The calculation is:
+
+```c
+float theta     = dot(lightDir, normalize(-light.direction));
+float epsilon   = light.cutOff - light.outerCutOff;
+float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);    
+...
+// we'll leave ambient unaffected so we always have a little light.
+diffuse  *= intensity;
+specular *= intensity;
+```
+

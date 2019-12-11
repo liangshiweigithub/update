@@ -173,19 +173,20 @@ void Chapter_2_draw(GLFWwindow* window)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		objectShader.use();
-		objectShader.setVec3("viewPos", camera.Position);
 
 		objectShader.setVec3("spotLight.position", camera.Position);
-		objectShader.setVec3("spotLight.ambient", 0.2f, 0.2f, 0.2f);
-		objectShader.setVec3("spotLight.diffuse", 0.5f, 0.5f, 0.5f);
-		objectShader.setVec3("spotLight.specular", 1.0f, 1.0f, 1.0f);
 		objectShader.setVec3("spotLight.direction", camera.Front);
-		objectShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
+		objectShader.setFloat("spotLight.cutoff", glm::cos(glm::radians(12.5f)));
+		objectShader.setVec3("viewPos", camera.Position);
+
+		objectShader.setVec3("spotLight.ambient", 0.1f, 0.1f, 0.1f);
+		objectShader.setVec3("spotLight.diffuse", 0.8f, 0.8f, 0.8f);
+		objectShader.setVec3("spotLight.specular", 1.0f, 1.0f, 1.0f);
+		
 		objectShader.setFloat("spotLight.constant", 1.0f);
 		objectShader.setFloat("spotLight.linear", 0.09f);
 		objectShader.setFloat("spotLight.quadratic", 0.032f);
 
-		objectShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
 		objectShader.setFloat("material.shininess", 32);
 
 		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SRC_WIDTH / SRC_HEIGHT, 0.1f, 100.0f);
