@@ -2,6 +2,7 @@
 #include <glm.hpp>
 #include <string>
 #include <vector>
+#include "Shader.h"
 
 struct Vertex {
 	glm::vec3 Position;
@@ -24,6 +25,8 @@ public:
 	std::vector<unsigned int> indices;
 	std::vector<Texture> textures;
 	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures);
+
+	void Draw(Shader);
 
 private:
 	unsigned int VAO, VBO, EBO;
