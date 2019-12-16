@@ -14,5 +14,16 @@ Assimp is a model importing library. After Assimp has loaded the model, we can r
 
 + Material in the Mesh hosts several functions to retrieve the material properties of an object. 
 
-  ### 									Mesh
+  ### 									                                        Mesh
 
+See code for detail
+
+### 											Model
+
+```c++
+// Code load a model using assimp
+Assimp::Importer imported;
+const aiScene *scene = importer.ReadFile(path, aiProcess_Triangulate|aiProcess_FlipUVs);
+```
+
+The first parameter of **Assimp::Importer::ReadFile** is the model file path, while the second is several post-processing options.
