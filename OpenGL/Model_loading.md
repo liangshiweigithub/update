@@ -2,7 +2,7 @@
 
 Assimp is a model importing library. After Assimp has loaded the model, we can retrieve all the data we need from Assimp's data structures. 
 
-![avatar](D:\git-proj\learn_note\image\assimp_structure.png)
+![avatar](..\image\assimp_structure.png)
 
 + All the data of the scene/model is contained in the Scene object like all the materials and the meshes. It also contains a reference to the root node of the scene.
 
