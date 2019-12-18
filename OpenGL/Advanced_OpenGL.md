@@ -30,7 +30,55 @@ glDepthMask(GL_FALSE);
 
 #####  Depth value precision
 
-The z-values in the view space can be any value between the projection frustum's near and far value. We need some way to transform these view-space z-value to the range of [0, 1] and one way is to linearly transform them to [0, 1]
+The z-values in the view space can be any value between the projection frustum's near and far value. We need some way to transform these view-space z-value to the range of [0, 1] and one way is to linearly transform them to [0, 1]. This is not commonly used.
 $$
 F_{depth} = \frac{z-near}{far-near}
 $$
+
+A non-linear version is
+$$
+F_{depth} = \frac{1/z - 1/near}{1/far-1/near}
+$$
+The values in the depth buffer are not linear in screen-space. The depth values are greatly determined by the small z-values thus giving enormous depth precision to the object close by.
+
+##### Visualizing the depth buffer
+
+The built-in ***gl_FragCoord*** in the fragment shader contains the depth value of that particular fragment. Output this depth value of the fragment as a color we could display the depth values of all the fragments in the scene
+
+```c
+// pixel shader shows the depth color
+void main()
+{
+    FragColor = vec4(vec3(gl_FragCoord.z), 1.0);
+}
+```
+
+This is code convert the z value to linear.
+
+```c
+out vec4 FragColor;
+
+float near = 0.1; 
+float far  = 100.0; 
+  
+float LinearizeDepth(float depth) 
+{
+    float z = depth * 2.0 - 1.0; // back to NDC 
+    return (2.0 * near * far) / (far + near - z * (far - near));	
+}
+
+void main()
+{   
+    // divide by far for demonstration
+    float depth = LinearizeDepth(gl_FragCoord.z) / far; 
+    FragColor = vec4(vec3(depth), 1.0);
+}
+```
+
+##### Z-fighting
+
+When two planes or triangles are so closely aligned to each other that the depth buffer does not have enough precision to figure out which one of the two shapes is in front of the other. The result is that two shapes are continually seem to switch which causes weird glitchy patterns. This is more common when object is far away. To prevent this:
+
++ Never place object so close.
++ Set the near plane as far as possible.
++ Use a higher precision depth buffer.
