@@ -1,12 +1,14 @@
-### 									Advanced OpenGL
+### 																Advanced OpenGL
 
-#### Depth testing
+
+
+#### 																					Depth testing
 
 The depth buffer is a buffer that just like the color buffer (that stores all the fragment colors), stores information per fragment and has the same width and height as the color buffer. It is created automatically and stores its depth values as 16, 24 or 32 bit floats.
 
 + When depth testing is enabled OpenGL tests the depth value of a fragment against the content of the depth buffer. If this test  passes, the depth buffer is updated with the new depth value. If not, the fragment is discarded.
 
-+ Depth testing is done in screen space after fragment shader has run (also stencil testing).
++ Depth testing is done in screen space after fragment shader has run (and after stencil testing).
 + The screen space coordinates relate directly to the viewport defined by OpenGL ***glViewPort*** and can be accessed via GLSL's built-in ***gl_FragCoord*** variable in the fragment shader. The x and y components of the ***gl_FragCoord*** represent the fragment's screen-space coordinates ((0, 0) being the bottom-left corner). It also contains a z-component which contains the actual depth value of the fragment.
 
 Early depth testing: This technique allows the depth test to run before the fragment shader runs. Wherever it is clear a fragment is never going to be visible we can prematurely discard the fragment. The restriction is the fragment shader for early depth testing is that you shouldn't write to the fragment's depth value.
@@ -80,5 +82,236 @@ void main()
 When two planes or triangles are so closely aligned to each other that the depth buffer does not have enough precision to figure out which one of the two shapes is in front of the other. The result is that two shapes are continually seem to switch which causes weird glitchy patterns. This is more common when object is far away. To prevent this:
 
 + Never place object so close.
+
 + Set the near plane as far as possible.
+
 + Use a higher precision depth buffer.
+
+  
+  
+  #### 																			Stencil testing
+
+Stencil test has the ability to discarding fragments. It is based on the stencil buffer which contains 8 bit per stencil value. We can set these stencil value and then discard or keep fragments whenever a particular fragment has a certain stencil value. Steps to use stencil:
+
++ Enable writing to the stencil buffer.
++ Render objects, updating the content of the stencil buffer.
++ Disable writing to the stencil buffer
++ Render (other object), this time discard certain fragments based on the content of stencil buffer.
+
+By using the stencil buffer we can discard certain fragments based on the fragments of other drawn objects in the scene.
+
+```c
+glEnable(GL_STENCIL_TEST);
+
+while (rendring)
+{
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    renderSomething();
+}
+```
+
+The ***glStencilMask*** allows to set a bitmask that is **AND**ed with the stencil value about to be written to the buffer. By default the musk is $0xFF$ which will not effect the write value.
+
+```c
+// each bit is written
+glStencilMask(0xFF);
+// each bit ends up as 0 in the stencil buffer
+glStencilMask(0x00);
+```
+
+##### Stencil functions
+
+```c
+glStencilFunc(GLenum func, GLint ref, GLuint mask);
+```
+
++ func: sets the stencil test function. This test function is applied to the stored stencil value and the ***glStencilFunc***'s ref value. Possible options are ***GL_NEVER, GL_LESS, GL_LEQUAL, GL_GREATER, GL_GEQUAL, GL_EQUAL, GL_NOTEUAL, GL_ALWAYS***.
++ ref: specifies the reference value for the stencil test. The stencil buffer's content is compared to this value.
++ mask: specifies a mask that is ANDed with both the reference value and the stored stencil value before the test compares them. Initially set to 0xff.
+
+The ***glStenciFunc*** describes what OpenGL should do with the content of the stencil buffer. While the ***glStencilOp*** defines how to update the stencil buffer.
+
+```
+glStencilOp(GLenum sfail, GLenum dpfail, GLenum dppass);
+```
+
++ sfail: action to take is the stencil test fails.
++ dpfail: action to take is the stencil test passes, but the depth test fails.
++ dppass: action to take if both the stencil and the depth test pass.
+
+The actions includes ***GL_KEEP, GL_ZERO, GL_REPLACE, GL_INCR, GL_INCR_WRAP, GL_DECR, GL_DECR_WRAP, GL_INVERT***.
+
+##### Object Outline
+
+1. Set the stencil func to ***GL_ALWAYS*** before drawing the objects, update the stencil buffer with 1 whenever the objects fragments are rendered.
+
+2. Render Object. (the stencil buffer is also changed).
+
+3. Disable stencil writing and depth testing.
+
+4. Scale each object to outline by a small amount.
+
+5. Use a different fragment shader that output the border color.
+
+6. Draw the object again, but only if their fragment's stencil values are not equal to 1.
+
+7. Enable stencil writing and depth testing again.
+
+   
+   
+   #### 																				Blending
+
+Blending is a technique to implement transparency within objects. The amount of transparency of an object is defined by its color's **alpha** value. Enable blending is:
+
+```c
+glEnable(GL_BLEND);
+```
+
+The blending equation is:
+$$
+C_{result} = C_{source} * F_{source} + C_{destination} * F_{destination}
+$$
+
++ $C_{source}$: Color vector that originates from the texture.
++ $C_{destination}$: Color vector that is currently stored in the color buffer.
++ $F_{source}$: Source color factor. Can be set.
++ $F_{destination}$: Destination color factor. Can be set.
+
+The ***glBlendFunc(GLenum sfactor, GLenum dfactor)*** function set the option for the source and destination factor. Options are ignored here.
+
+```
+glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+```
+
+The ***glBlendFuncSeparate*** set different options for the RGB and alpha channel individually.
+
+```c
+glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
+```
+
+##### Order of Drawing transparent object
+
+Because depth testing works a bit tricky combined with blending. When writing to the depth buffer, the depth test does not core if the fragment has transparency or not so the transparent parts are written to the depth buffer as any other value. The result is that the entire quad of the window is checked for depth testing regardless of transparency. So the transparency object will block each other.
+
++ Draw all opaque objects first.
++ Sort all the transparent objects.
++ Draw all the transparent objects in sorted order. ( for farthest to nearest )
+
+The sort is cost of time. Advance techniques like ***order independent transparency*** can be used.
+
+
+
+####                                              Face culling
+
+Face culling checks all the faces that are front facing towards the viewer and renders those while discarding all the faces that are back facing. By default, triangles defined with counter-clockwise vertices are processed as front-facing triangles. Enable face culling uses:
+
+```c
+glEnable(GL_CULL_FACE); // enable face culling
+glCullFace(GL_FRONT);  // face to cull.
+glFrontFace(GL_CCW);  // prefer counter clockwise winding
+```
+
+The initial value of ***glCullFace*** is ***GL_BACK***. There are also other type: ***GL_FRONT, GL_FRONT_AND_BACK***. **Face culling works with closed shapes like a cube.**
+
+The ***gFrontFace*** can set front face according to ***GL_CCW, GL_CW***, which are counter-clockwise and clock-wise.
+
+Remember: to specify vertices in a counter-clockwise winding order you need to visualize the triangle as if you're in front of the triangle and from that point of view, is where you set their order.
+
+
+
+#### 									Framebuffers
+
+The combination of a color buffer, a depth buffer and stencil buffer is framebuffer. All the operation before is done on the top of render buffers attached to the default framebuffer. The default framebuffer is created and configured when create window. OpenGL gives the flexibility to define our own framebuffers.
+
+##### Create framebuffer
+
+```c
+unsigned int fbo;
+glGenFrameBuffers(1, &fbo);
+// bind the framebuffer
+glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+...prepare operations
+// check status
+if(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE)
+    doSomethin;
+glBindFramebuffer(GL_FRAMEBUFFER, 0); // bind default framebuffer.
+glDeleteFramebuffer(1, &fbo);
+```
+
+The using of framebuffer is same as before. First create a framebuffer object, bind it, do some operation and unbind it. Except for ***GL_FRAMEBUFFER***, there are also ***GL_READ_FRAMEBUFFER*** and ***GL_DRAW_FRAMEBUFFER*** which we read data or render data from/to. Before using the framebuffer, we have to:
+
++ Attach at least one buffer (color, depth or stencil)
++ There should be at least one color attachment.
++ All attachments should be complete as well (reserved memory)
++ Each buffer should have the same number of samples.
+
+The ***glCheckFramebufferStatus*** checks the currently bound framebuffer is successfully setup. An **attachment** is a memory location that can act as a buffer for the framebuffer, think of it as an image. There two type attachment: **textures** or **renderbuffer** objects.
+
+##### Texture attachments
+
+When attaching a texture to a framebuffer, all rendering commands will write to the texture as if  it was a normal color/depth or stencil buffer. The advantage of using textures is that the result of all rendering operations will be stored as a texture image that can easily used in shaders.
+
+```c
+// code to create a texture attachments
+unsigned int texture;
+glGenTextures(1, &texture);
+glBindTexture(GL_TEXTURE_2D, texture);
+
+glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 800, 600, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+// attach the texture to framebuffer as color attachment.
+glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+
+// attach the texture as depth attachment
+unsigned int depthTex;
+glGenTextures(1, &depthTex);
+glBindTexture(GL_TEXTURE_2D, depthTex);
+glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 800, 600, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
+glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, texture, 0);
+
+unsigned int stencilTex;
+glGenTextures(1, &stencilTex);
+glBindTexture(GL_TEXTURE_2D, stencilTex);
+glTexImage2D(GL_TEXTURE_2D, 0, GL_STENCIL_COMPONENT, 800, 600, 0, GL_STENCIL_COMPONENT, GL_UNSIGNED_BYTE, NULL);
+glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, texture, 0);
+
+// attach depth buffer and stencil buffer as a single texture
+unsigned int stencilDepthTex;
+glGenTextures(1, &stencilDepthTex);
+glBindTexture(GL_TEXTURE_2D, stencilDepthTex);
+
+glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, 800, 600, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, null);
+
+glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, texture, 0);
+```
+
+During the texture creation, we only allocating memory and not actually filling it. Filling the texture will happen as soon as we render to the framebuffer. Use the ***glFramebufferTexture2D*** to attach the texture to framebuffer. It has
+
++ target: the framebuffer we're targeting.
++ attachment: type of attachment going to attach (this example is color attachment). 0 suggests we can attach more than 1 attachment.
++ textarget: type of texture you want to attach.
++ texture: the actual texture to attach
++ level: the mipmap level
+
+Note the method of attaching depth and stencil textures. The last method set the depth and stencil buffer  as  a single texture. Each 32 bit value of the texture then consist for 24 bits of depth information and 8 bits of stencil information.
+
+##### Renderbuffer object attachment
+
+A renderbuffer object stores its data in OpenGL's native rendering format (without any conversion to texture-specific formats) making them faster as a writable storage medium. Renderbuffer objects are generally write-only, thus can't read from them like texture-access. The  ***glReadPixels*** can read from them but returns a specific area of pixels from the currently bound framebuffer, not directly from the attachment itself.
+
+Render buffer object are generally write-only so they are often used as depth and stencil attachments. When we're not sampling from these buffers, a renderbuffer object is generally preferred.
+
+```c
+unsigned int rbo;
+glGenRenderbuffers(1, &rbo);
+glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 800, 600);
+
+//attach the renderbuffer
+glFramebufferRenderbuffer(GL_FRAMBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+```
+
+##### Post processing
+
