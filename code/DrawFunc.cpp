@@ -603,7 +603,7 @@ void FramebufferDraw(GLFWwindow* window)
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 
-	auto cubeTexture = loadTexture("resources/marble.jpg");
+	auto cubeTexture = loadTexture("resources/container.jpg");
 	auto floorTexture = loadTexture("resources/metal.png");
 
 	Shader shader("shaders/blending.vs", "shaders/blending.fs");
@@ -687,6 +687,7 @@ void FramebufferDraw(GLFWwindow* window)
 
 		// switch back to default framebuffer
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 		// begins sencond pass
 		glDisable(GL_DEPTH_TEST);
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);

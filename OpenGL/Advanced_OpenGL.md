@@ -315,3 +315,136 @@ glFramebufferRenderbuffer(GL_FRAMBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERB
 
 ##### Post processing
 
+##### Inversion
+
+```c
+void main()
+{
+	FragColor = vec4(vec3(1 - texture(screenTexture, TexCoors)), 1.0);
+}
+```
+
+##### Grayscale
+
+Remove all colors from the scene except the white, gray and black colors effectively grayscaling the entire image.
+
+```c
+// version 1: averaging results
+void main()
+{
+	FragColor = texture(screenTexture, TexCoords);
+    float average = (FragColor.r + FragColor.g + FragColor.b) / 3.0;
+    FragColor = vec4(average, average, average, 1.0);
+}
+
+// version: weighted channels. Because human eye tends to be more sensitive to // green color and at least blue.
+void main()
+{
+    FragColor = texture(screenTexture, TexCoords);
+    float average = 0.2126 * FragColor.r + 0.7152 * FragColor.g + 0.0722 * FragColor.b;
+    FragColor = vec4(average, average, average, 1.0);
+}
+```
+
+##### Kernel effects
+
+A kernel is a small matrix-like array of values centered on the current pixel that multiplies surrounding pixel values by its kernel values and adds them all together to form a single value.
+
+```c
+void KernaleEffect()
+{
+	const float offset = 1.0 / 300.0;
+	vec2 offsets[9] = vec2[](
+		vec2(-offset, offset),
+		vec2(0, offset),
+		vec2(offset, offset),
+		vec2(-offset, 0),
+		vec2(0, 0),
+		vec2(offset, 0),
+		vec2(-offset, -offset),
+		vec2(0, -offset),
+		vec2(offset, -offset)
+	);
+	
+	float kernal[9] = float[](
+		-1, -1, -1,
+		-1, 9, -1,
+		-1, -1, -1
+	);
+	vec3 sampleTex[9];
+	for(int i=0;i<9;++i)
+		sampleTex[i] = vec3(texture(texture1, TexCoords.st + offsets[i]));
+	vec3 col = vec3(0.0);
+	for(int i=0;i<9;++i)
+		col += sampleTex[i] * kernal[i];
+	FragColor = vec4(col, 1.0f);
+}
+```
+
+##### Blur
+
+A kernel that creates a blur effect is defined as below
+$$
+\left[ \begin{matrix} 1&&2&&1\\2&&4&&2\\1&&2&&1\end{matrix} \right] / 16
+$$
+
+##### Edge detection
+
+The kernel matrix is:
+$$
+\left[ \begin{matrix} 1&&1&&1\\1&&-8&&1\\1&&1&&1\end{matrix} \right]
+$$
+
+
+
+
+### Cubemaps
+
+A cubemap is a combination of multiple textures mapped into a single texture. A cubemap is basically a texture that contains 6 individual 2D textures that each form one side of a cube: a textured cube. A cube maps have the useful property that they can be indexed/sampled using a direction vector.
+
+#### Creating a cubemap
+
+```c
+unsigned int textureID;
+glGenTextures(1, &textureID);
+glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+```
+
+The creation of cubemap is similar to normal textures, except that we bind it to **GL_TEXTURE_CUBE_MAP**. For each face of cubemap, we call **glTexImage2D** with their parameters. We have to set the texture target parameter to a specific face of the cubemap which is:
+
+|         Texture target         | Orientation |
+| :----------------------------: | :---------: |
+| GL_TEXTURE_CUBE_MAP_POSITIVE_X |    right    |
+| GL_TEXTURE_CUBE_MAP_NEGATIVE_X |    left     |
+| GL_TEXTURE_CUBE_MAP_POSITIVE_Y |     top     |
+| GL_TEXTURE_CUBE_MAP_NEGATIVE_Y |   bottom    |
+| GL_TEXTURE_CUBE_MAP_POSITIVE_Z |    back     |
+| GL_TEXTURE_CUBE_MAP_NEGATIVE_Z |    front    |
+
+The code initialize the cubemap face like:
+
+```c
+int width, height, nrChannels;
+unsigned char *data;
+for(GLuint i=0;i<textures_faces.size();++i)
+{
+	data = stbi_load(textures_faces[i].c_str(), &width, &height, &nrChannels, 0);
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+}
+```
+
+The shader code that uses cubemap is
+
+```c
+in vec3 textureDir;
+uniform samplerCube cubemap;
+
+void main()
+{
+    FragColor = texture(cubemap, textureDir);
+}
+```
+
+#### Skybox
+
+A skybox is a large cube that encompasses the entire scene and contains 6 images of surrounding environment.
