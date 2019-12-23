@@ -29,7 +29,7 @@ int main()
 		std::cout << "Faied to intialize GLAD" << std::endl;
 		return -1;
 	}
-	FramebufferDraw(window);
+	CubemapReflectDraw(window);
 	// enable depth test
 
 	return 0;

@@ -1,8 +1,6 @@
 ### 																Advanced OpenGL
 
-
-
-#### 																					Depth testing
+### Depth testing
 
 The depth buffer is a buffer that just like the color buffer (that stores all the fragment colors), stores information per fragment and has the same width and height as the color buffer. It is created automatically and stores its depth values as 16, 24 or 32 bit floats.
 
@@ -24,13 +22,13 @@ glDepthMask(GL_FALSE);
 + If enables depth testing you should also clear the depth buffer before each render iteration using the GL_DPETH_BUFFER_BIT.
 + If you want to perform the depth test on all fragments but not update the depth buffer. This done by setting its depth mask to GL_FALSE.
 
-##### Depth test function
+#### Depth test function
 
 **glDepthFunc** is used to set comparison operator used for depth test. It parameters are
 
 ***GL_AWAYS, GL_NEVER, GL_LESS, GL_EQUAL, GL_LEQUAL, GL_GREATER, GL_NOTEQUAL, GL_EQUAL***. By default, **GL_LESS** is used that discards all the fragments that have a depth value higher than or equal the current depth buffer's value.
 
-#####  Depth value precision
+#### Depth value precision
 
 The z-values in the view space can be any value between the projection frustum's near and far value. We need some way to transform these view-space z-value to the range of [0, 1] and one way is to linearly transform them to [0, 1]. This is not commonly used.
 $$
@@ -43,7 +41,7 @@ F_{depth} = \frac{1/z - 1/near}{1/far-1/near}
 $$
 The values in the depth buffer are not linear in screen-space. The depth values are greatly determined by the small z-values thus giving enormous depth precision to the object close by.
 
-##### Visualizing the depth buffer
+#### Visualizing the depth buffer
 
 The built-in ***gl_FragCoord*** in the fragment shader contains the depth value of that particular fragment. Output this depth value of the fragment as a color we could display the depth values of all the fragments in the scene
 
@@ -77,7 +75,9 @@ void main()
 }
 ```
 
-##### Z-fighting
+#### 							
+
+### 									Z-fighting
 
 When two planes or triangles are so closely aligned to each other that the depth buffer does not have enough precision to figure out which one of the two shapes is in front of the other. The result is that two shapes are continually seem to switch which causes weird glitchy patterns. This is more common when object is far away. To prevent this:
 
@@ -88,8 +88,8 @@ When two planes or triangles are so closely aligned to each other that the depth
 + Use a higher precision depth buffer.
 
   
-  
-  #### 																			Stencil testing
+
+#### Stencil testing
 
 Stencil test has the ability to discarding fragments. It is based on the stencil buffer which contains 8 bit per stencil value. We can set these stencil value and then discard or keep fragments whenever a particular fragment has a certain stencil value. Steps to use stencil:
 
@@ -159,7 +159,11 @@ The actions includes ***GL_KEEP, GL_ZERO, GL_REPLACE, GL_INCR, GL_INCR_WRAP, GL_
 
    
    
-   #### 																				Blending
+   
+   
+   
+   
+   #### 																																		Blending
 
 Blending is a technique to implement transparency within objects. The amount of transparency of an object is defined by its color's **alpha** value. Enable blending is:
 
@@ -201,7 +205,7 @@ The sort is cost of time. Advance techniques like ***order independent transpare
 
 
 
-####                                              Face culling
+####                                              														Face culling
 
 Face culling checks all the faces that are front facing towards the viewer and renders those while discarding all the faces that are back facing. By default, triangles defined with counter-clockwise vertices are processed as front-facing triangles. Enable face culling uses:
 
@@ -448,3 +452,29 @@ void main()
 #### Skybox
 
 A skybox is a large cube that encompasses the entire scene and contains 6 images of surrounding environment.
+
+##### Displaying a skybox
+
+A cubemap used to texture a 3D cube can be sampled using the positions of the cube as the texture coordinates. When a cube is centered on the origin(0, 0, 0) each of its positions vector is also a direction vector from the origin. **To draw the skybox we're going to draw it as the first object in the scene and disable depth writing. This way the skybox will always be draw at the background of all the other objects**.
+
+##### An optimization: Early depth testing
+
+If render the skybox first we're running the fragment shader for each pixel on the screen even though only a small part of the skybox will eventually be visible. These fragments could have easily been discarded using **early depth testing**.  We have to change the depth function a little by setting it to GL_LEQUAL instead of GL_LESS when drawing skybox.
+
+The shader is:
+
+```c
+void mian()
+{
+    TexCoords = aPas;
+    vec4 pos = projection * view * vec4(aPos, 1.0);
+    gl_Position = pos.xyww; // here ensures the z is always 1 after devide the w.
+}
+```
+
+#### Environment mapping
+
+Using a cubemap with an environment, we could give objects reflective or refractive properties. Techniques that use an environment cubemap like this are called **environment mapping** techniques.
+
+##### Reflection
+

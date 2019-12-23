@@ -7,6 +7,8 @@ void StencilDraw(GLFWwindow* window);
 void BlendDraw(GLFWwindow* window);
 void CullFaceDraw(GLFWwindow* window);
 void FramebufferDraw(GLFWwindow* window);
+void CubemapDraw(GLFWwindow* window);
+void CubemapReflectDraw(GLFWwindow* window);
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
