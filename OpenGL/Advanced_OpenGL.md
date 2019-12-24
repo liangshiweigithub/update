@@ -478,3 +478,73 @@ Using a cubemap with an environment, we could give objects reflective or refract
 
 ##### Reflection
 
+The vertex shader that calculates reflection is
+
+```c
+#version 330 core
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec3 aNormal;
+
+out vec3 Normal;
+out vec3 Position;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+void main()
+{
+    Normal = mat3(transpose(inverse(model))) * aNormal;
+    Position = vec3(model * vec4(aPos, 1.0));
+    gl_Position = projection * view * model * vec4(aPos, 1.0);
+}
+```
+
+The fragment shader is:
+
+```c
+#version 330 core
+out vec4 FragColor;
+
+in vec3 Normal;
+in vec3 Position;
+
+uniform vec3 cameraPos;
+uniform samplerCube skybox;
+
+void main()
+{             
+    vec3 I = normalize(Position - cameraPos);
+    vec3 R = reflect(I, normalize(Normal));
+    FragColor = vec4(texture(skybox, R).rgb, 1.0);
+}
+```
+
+##### Refraction
+
+Refraction is the change in direction of light due to the change of the material the light flows through. The refractive index determines the amount light distorts/blends of a material where each material has its own refractive index. With right combination of lighting, reflection, refraction and vertex movement you can create pretty neat water graphic. The code is
+
+```c
+#version 330 core
+out vec4 FragColor;
+
+in vec3 Normal;
+in vec3 Position;
+
+uniform vec3 cameraPos;
+uniform samplerCube skybox;
+
+void main()
+{   
+	float ratio = 1.0/1.52;
+    vec3 I = normalize(Position - cameraPos);
+    vec3 R = refract(I, normalize(Normal), ratio);
+    FragColor = vec4(texture(skybox, R).rgb, 1.0);
+}
+```
+
+##### Dynamic environment maps
+
+The calculation so far doesn't include the actual scene with possible moving objects. If we have a mirror like objects with multiple surrounding objects, only the skybox would be visible in the mirror.
+
+Using framebuffers it is possible to create a texture of the scene for all 6 different angles from the object in question and store those in a cubemap each render iteration. We can use this cubemap to create realistic reflection and refractive surfaces that include all object. This is called **dynamic environment mapping** but this cost a lot.
