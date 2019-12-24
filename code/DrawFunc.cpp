@@ -810,18 +810,64 @@ void CubemapReflectDraw(GLFWwindow* window)
 {
 
 	glEnable(GL_DEPTH_TEST);
+	float cubeVertices[] = {
+		// positions          // normals
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+
+		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
+	};
 
 	// cubeVAO
-	unsigned int cubeVAO, cubeVBO;
-	glGenVertexArrays(1, &cubeVAO);
-	glGenBuffers(1, &cubeVBO);
-	glBindVertexArray(cubeVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(verticesWithNormal), &verticesWithNormal, GL_STATIC_DRAW);
+	unsigned int boxVAO, boxVBO;
+	glGenVertexArrays(1, &boxVAO);
+	glGenBuffers(1, &boxVBO);
+
+	glBindVertexArray(boxVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, boxVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), &cubeVertices, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glBindVertexArray(0);
 
 	// skybox VAO
 	unsigned int skyboxVAO, skyboxVBO;
@@ -835,7 +881,7 @@ void CubemapReflectDraw(GLFWwindow* window)
 
 	auto skyboxTexture = loadCubemap(faces);
 
-	Shader boxShader("shaders/ReflectionEnvironmentMapping.vs", "shaders/RefractionEnvironmentMapping.fs");;
+	Shader boxShader("shaders/ReflectionEnvironmentMapping.vs", "shaders/ReflectionEnvironmentMapping.fs");;
 	Shader skyShader("shaders/Cubemap.vs", "shaders/Cubemap.fs");
 
 	// use shader
@@ -859,7 +905,7 @@ void CubemapReflectDraw(GLFWwindow* window)
 
 		// draw box
 		boxShader.use();
-		glBindVertexArray(cubeVAO);
+		glBindVertexArray(boxVAO);
 		glm::mat4 model = glm::mat4(1.0f);
 		view = camera.GetViewMatrix();
 		projection = glm::perspective(glm::radians(camera.Zoom), float(SRC_WIDTH) / SRC_HEIGHT, 0.1f, 100.0f);
@@ -890,8 +936,8 @@ void CubemapReflectDraw(GLFWwindow* window)
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
-	glDeleteBuffers(1, &cubeVAO);
-	glDeleteBuffers(1, &cubeVBO);
+	glDeleteBuffers(1, &boxVAO);
+	glDeleteBuffers(1, &boxVBO);
 	glDeleteBuffers(1, &skyboxVAO);
 	glDeleteBuffers(1, &skyboxVBO);
 
