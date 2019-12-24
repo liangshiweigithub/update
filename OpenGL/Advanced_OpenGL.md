@@ -548,3 +548,71 @@ void main()
 The calculation so far doesn't include the actual scene with possible moving objects. If we have a mirror like objects with multiple surrounding objects, only the skybox would be visible in the mirror.
 
 Using framebuffers it is possible to create a texture of the scene for all 6 different angles from the object in question and store those in a cubemap each render iteration. We can use this cubemap to create realistic reflection and refractive surfaces that include all object. This is called **dynamic environment mapping** but this cost a lot.
+
+
+
+### Advanced Data
+
+A buffer in OpenGL is only an object that manages a certain piece of memory. Binding a buffer to a specific buffer target gives a meaning to a buffer. OpenGL internally stores a buffer per target and based on the target, processes the buffers differently. Way to get data in a buffer includes:
+
++ **glBufferData**: Allocates a piece of memory and adds data into this memory. If passes NULL as its data argument, the function would only allocate memory and not fill it.
+
++ **glBufferSubData**: This function can fill specific regions of the buffer instead of filling the entire buffer. This function expects a buffer target, an offset, the size of the data and the actual data as its arguments.  The buffer should have enough allocated memory so a call to glBufferData is necessary before calling glBufferSubData on the buffer.
+
+  ```c
+  // update range: [24, 24 + sizeof(data)]
+  glBufferSubData(GL_ARRAY_BUFFER, 24, sizeof(data), &data); 
+  ```
+
++ **glMapBuffer**: Ask for a pointer to the buffer's memory and directly copy the data to the buffer by yourself. By calling **glMapBuffer** OpenGL returns a pointer to the currently bound buffer's memory for us to operate.
+
+  ```c
+  float data[] = [....];
+  
+  glBindBuffer(GL_ARRAY_BUFFER, buffer);
+  void *ptr = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY); // get butter ptr
+  // copy data into memory
+  memcpy(ptr, data, sizeof(data));
+  //tell OpenGL we are done with the pointer.
+  glUnmapBuffer(GL_ARRAY_BUFFER);
+  ```
+
+#### Batching vertex attributes
+
+**glVertexAttribPointer** is used to specify the attribute layout of vertex array buffer's content. Within the vertex array buffer we interleaved the attributes. That is, the position, normal or texture coordinates were placed next to each other.
+
+What we could also do is batch all the vector data into large chunks per attribute type instead of interleaving them. Instead of an interleaved layout 123123 we take a batched approach 112233. This is done by **glBufferSubData**.
+
+```c
+float positions[] = {....};
+float normals[] = {...};
+float tex[] = {....};
+
+// fill the buffer.
+glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(positions), &positions);
+glBufferSubData(GL_ARRAY_BUFFER, sizeof(position), sizeof(normals), &normals);
+glBufferSubData(GL_ARRAY_BUFFER, sizeof(position) + sizeof(normals), 						sizeof(tex), &tex);
+
+// update vertex attribute pointers
+glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)						  (sizeof(positions)));
+glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)							(sizeof(positions) + sizeof(normals)));
+```
+
+#### Copying buffers
+
+The **glCopyBufferSubData** allows to copy the data from one buffer to another buffer with relative case.  The function prototype is:
+
+```
+void glCopyBufferSubData(GLenum readtarget, GLenum writetarget, GLintptr 							readoffset, GLintptr writeoffset, GLsizeiptr size);
+```
+
+The readtarget and writetarget parameters expect to give the buffer targets that we want to copy from and to. For example copy data from **VERTEX_ARRAY_BUFFER** to **VERTEX_ELEMENT_ARRAY_BUFFER**. When the buffers are bind to same target, we use **GL_COPY_READ_BUFFER** and **GL_COPY_WRITE_BUFFER**  as the buffer target.
+
+```c
+float vertexData[] = {...};
+glBindBuffer(GL_ARRAY_BUFFER, vbo1);
+glBindBuffer(GL_COPY_WRITE_BUFFER, vbo2);
+glCopyBufferSubData(GL_ARRAY_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, 								sizeof(vertexData));
+```
+
