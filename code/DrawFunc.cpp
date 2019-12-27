@@ -960,10 +960,10 @@ void UniformBufferDraw(GLFWwindow* window)
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glBindVertexArray(0);
 
-	Shader shaderRed = Shader("Advanced_red.vs", "Advanced_red.fs");
-	Shader shaderGreen = Shader("Advanced_green.vs", "Advanced_green.fs");
-	Shader shaderBlue = Shader("Advanced_blue.vs", "Advanced_blue.fs");
-	Shader shaderYellow = Shader("Advanced_yellow.vs", "Advanced_yellow.fs");
+	Shader shaderRed = Shader("shaders/Advanced_glsl.vs", "shaders/Advanced_red.fs");
+	Shader shaderGreen = Shader("shaders/Advanced_glsl.vs", "shaders/Advanced_green.fs");
+	Shader shaderBlue = Shader("shaders/Advanced_glsl.vs", "shaders/Advanced_blue.fs");
+	Shader shaderYellow = Shader("shaders/Advanced_glsl.vs", "shaders/Advanced_yellow.fs");
 
 	auto redIndex = glGetUniformBlockIndex(shaderRed.ID, "Matrices");
 	auto greendIndex = glGetUniformBlockIndex(shaderGreen.ID, "Matrices");
