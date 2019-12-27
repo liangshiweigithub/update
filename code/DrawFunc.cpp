@@ -943,3 +943,102 @@ void CubemapReflectDraw(GLFWwindow* window)
 
 	glfwTerminate();
 }
+
+void UniformBufferDraw(GLFWwindow* window)
+{
+	glEnable(GL_DEPTH_TEST);
+
+	// cubeVAO
+	unsigned int boxVAO, boxVBO;
+	glGenVertexArrays(1, &boxVAO);
+	glGenBuffers(1, &boxVBO);
+
+	glBindVertexArray(boxVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, boxVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), &cubeVertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glBindVertexArray(0);
+
+	Shader shaderRed = Shader("Advanced_red.vs", "Advanced_red.fs");
+	Shader shaderGreen = Shader("Advanced_green.vs", "Advanced_green.fs");
+	Shader shaderBlue = Shader("Advanced_blue.vs", "Advanced_blue.fs");
+	Shader shaderYellow = Shader("Advanced_yellow.vs", "Advanced_yellow.fs");
+
+	auto redIndex = glGetUniformBlockIndex(shaderRed.ID, "Matrices");
+	auto greendIndex = glGetUniformBlockIndex(shaderGreen.ID, "Matrices");
+	auto blueIndex = glGetUniformBlockIndex(shaderBlue.ID, "Matrices");
+	auto yellowIndex = glGetUniformBlockIndex(shaderYellow.ID, "Matrices");
+
+	// bind uniform block to bind point
+	glUniformBlockBinding(shaderRed.ID, redIndex, 0);
+	glUniformBlockBinding(shaderGreen.ID, greendIndex, 0);
+	glUniformBlockBinding(shaderBlue.ID, blueIndex, 0);
+	glUniformBlockBinding(shaderYellow.ID, yellowIndex, 0);
+
+	// create uniform buffer
+	unsigned int ubo;
+	glGenBuffers(1, &ubo);
+	glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+	glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
+	glBindBuffer(GL_UNIFORM_BUFFER ,0);
+
+	// bind uniform buffer to bind point
+	glBindBufferRange(GL_UNIFORM_BUFFER, 0, ubo, 0, 2 * sizeof(glm::mat4));
+	// glBindBufferBase(GL_UNIFORM_BUFFER, 0, ubo); a same method
+
+	// store data to uniform buffer
+	glm::mat4 projection = glm::perspective(45.0f, (float)SRC_WIDTH / SRC_HEIGHT, 0.1f, 100.0f);
+	glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+
+	while (!glfwWindowShouldClose(window))
+	{
+		float currentFrame = glfwGetTime();
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+		processInput(window);
+
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+
+		glm::mat4 view = camera.GetViewMatrix();
+		glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+		glBindVertexArray(boxVAO);
+		shaderRed.use();
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(-0.75f, 0.75f, 0.0f)); // move top-left
+		shaderRed.setMat4("model", model);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		// GREEN
+		shaderGreen.use();
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.75f, 0.75f, 0.0f)); // move top-right
+		shaderGreen.setMat4("model", model);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		// YELLOW
+		shaderYellow.use();
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(-0.75f, -0.75f, 0.0f)); // move bottom-left
+		shaderYellow.setMat4("model", model);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		// BLUE
+		shaderBlue.use();
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.75f, -0.75f, 0.0f)); // move bottom-right
+		shaderBlue.setMat4("model", model);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+		// -------------------------------------------------------------------------------
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
+	glDeleteVertexArrays(1, &boxVAO);
+	glDeleteBuffers(1, &boxVBO);
+}
