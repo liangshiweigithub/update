@@ -129,3 +129,59 @@ bitangent1 = glm::normalize(bitangent1);
 ```
 
 Because a triangle is always flat we only need to calculate a single tangent/bittangent pair per triangle. If triangles shader vertices, we usually average the vertex properties like normals and tangents/bittangents for each vertex to get a more smooth result.
+
+#### Tangent space normal mapping
+
+To get normal mapping working we have to create a TBN matrix shaders.
+
+```c
+layout(location=0) in vec3 aPos;
+layout(location=1) in vec3 aNormal;
+layout(location=2) in vec2 aTexCoords;
+layout(location=3) in vec3 tangent;
+layout(location=4) in vec3 aBitTangent;
+
+void main()
+{
+    [...]
+    // transform the T, B , N to proper coordinates system.
+    vec3 T = normalize(vec3(model * vec4(aTangent, 0.0)));
+    vec3 B = normalize(vec3(model * vec4(aBitTangent, 0.0)));
+    vec3 N = normalize(vec3(model) * vec4(aNormal, 0.0)));
+    mat3 TBN = mat3(T, B, N);
+}
+```
+
+The two ways of using TBN matrix is:
+
++ Take a TBN matrix that transforms any vector from tangent to world space, give it to the fragment shader and transform the sampled normal from tangent space to world space using the TBN matrix; the normal is then in the same space as the other lighting variables.
++ Take the inverse of the TBN matrix that transforms any vector from world space to tangent space and use this matrix to transform other relevant lighting variables to tangent space.
+
+Transforming vectors from world to tangent space has an added advantage in that we can transform all the relevant vectors to tangent space in the vertex shader instead of in the fragment shader. This works because ***LightPos*** and ***viewPos*** do not change each fragment run  and for FragPos we also calculate its tangent-space position in the vertex shader and let fragment interpolation do this work. Basically, there is no need to transform any vector to tangent space in the fragment shader.
+
+So instead of sending the inverse of the BTN matrix to the fragment shader, we send a tangent-space light position, view position and vertex position to the fragment shader. This is a nice optimization as vertex shader runs considerably less than the fragment shader. The code is:
+
+```c
+out VS_OUT {
+    vec3 FragPos;
+    vec2 TexCoords;
+    vec3 TangentLightPos;
+    vec3 TangentViewPos;
+    vec3 TangentFragPos;
+} vs_out;
+
+uniform vec3 lightPos;
+uniform vec3 viewPos;
+ 
+[...]
+  
+void main()
+{    
+    [...]
+    mat3 TBN = transpose(mat3(T, B, N));
+    vs_out.TangentLightPos = TBN * lightPos;
+    vs_out.TangentViewPos  = TBN * viewPos;
+    vs_out.TangentFragPos  = TBN * vec3(model * vec4(aPos, 0.0));
+}  
+```
+

@@ -75,9 +75,7 @@ void main()
 }
 ```
 
-#### 							
-
-### 									Z-fighting
+#### Z-fighting
 
 When two planes or triangles are so closely aligned to each other that the depth buffer does not have enough precision to figure out which one of the two shapes is in front of the other. The result is that two shapes are continually seem to switch which causes weird glitchy patterns. This is more common when object is far away. To prevent this:
 
@@ -89,7 +87,7 @@ When two planes or triangles are so closely aligned to each other that the depth
 
   
 
-#### Stencil testing
+### Stencil testing
 
 Stencil test has the ability to discarding fragments. It is based on the stencil buffer which contains 8 bit per stencil value. We can set these stencil value and then discard or keep fragments whenever a particular fragment has a certain stencil value. Steps to use stencil:
 
@@ -158,12 +156,8 @@ The actions includes ***GL_KEEP, GL_ZERO, GL_REPLACE, GL_INCR, GL_INCR_WRAP, GL_
 7. Enable stencil writing and depth testing again.
 
    
-   
-   
-   
-   
-   
-   #### 																																		Blending
+
+### Blending
 
 Blending is a technique to implement transparency within objects. The amount of transparency of an object is defined by its color's **alpha** value. Enable blending is:
 
@@ -205,7 +199,7 @@ The sort is cost of time. Advance techniques like ***order independent transpare
 
 
 
-####                                              														Face culling
+### Face culling
 
 Face culling checks all the faces that are front facing towards the viewer and renders those while discarding all the faces that are back facing. By default, triangles defined with counter-clockwise vertices are processed as front-facing triangles. Enable face culling uses:
 
@@ -223,7 +217,7 @@ Remember: to specify vertices in a counter-clockwise winding order you need to v
 
 
 
-#### 									Framebuffers
+### Framebuffers
 
 The combination of a color buffer, a depth buffer and stencil buffer is framebuffer. All the operation before is done on the top of render buffers attached to the default framebuffer. The default framebuffer is created and configured when create window. OpenGL gives the flexibility to define our own framebuffers.
 
@@ -614,5 +608,299 @@ float vertexData[] = {...};
 glBindBuffer(GL_ARRAY_BUFFER, vbo1);
 glBindBuffer(GL_COPY_WRITE_BUFFER, vbo2);
 glCopyBufferSubData(GL_ARRAY_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, 								sizeof(vertexData));
+```
+
+
+
+### GLSL's built-in variables
+
+#### Vertex Shader variables
+
++ **gl_Position**: The clip space output position vector of the vertex shader.
+
++ **gl_PointSize**: GL_POINTS is one of the render primitives we can choose in which case each single vertex is a primitive and rendered as a point. gl_PointSize is used to set the size of points being rendered via OpenGL's gl_PointSize function. First enable the attribute:
+
+  ```c
+  glEnable(GL_PROGRAM_POINT_SIZE);
+  ```
+
+  The shader code is:
+
+  ```c
+  void main()
+  {
+  	gl_Position = projection * view * model * vec4(aPos, 1.0);
+      gl_PointSize = gl_Position.z;
+  }
+  ```
+
++ **gl_VertexID**: This integer variable **gl_VertexID** holds the current ID of the vertex we are drawing. When doing indexed rendering this variable holds the current index of the vertex we are drawing. If without indices, this variable holds the number of the currently processed vertex since the start of the render call.
+
+#### Fragment shader variables
+
++ **gl_FragCoord**: The x and y component are the window space coordinates of the fragment, originating form the bottom-left of the window. If the window size set by **glViewPort** is 800x600, the x values are between 0 and 800 and y are between 0 and 600. The z component is equal to the depth value of that particular fragment. Using the fragment shader we can calculate a different color value based on the window coordinate of fragment. For example:
+
+  ```c
+  void main()
+  {
+      if(gl_FragCoord.x < 400)
+          return vec4(1.0, 0.0, 0.0, 1.0);
+      else
+          return vec4(0.0, 1.0, 0.0, 1.0);
+  }
+  ```
+
++ **gl_FrontFacing**:  If we are not using face culling (by enabling GL_FACE_CULL) then the gl_FrontFacing variable tells if the current fragment is part of a front-facing or a back-facing face. This is a bool value.
+
+  ```c
+  void main()
+  {
+      if(gl_FrontFacing)
+          FragColor = texture(frontTexture, TexCoords);
+      else
+          FragColor = texture(backTexture, TexCoords);
+  }
+  ```
+
++ **gl_FragDepth**: This variable is used to set the depth value of the fragment within the shader (we can't set the depth value by gl_FragCoord) .  Writing to gl_FragDepth is of peformance penalty. Beside, early depth testing is disabled.
+
+#### Interface blocks
+
+Interface block allows to group the data sent from vertex to fragment shader.
+
+```c
+# vertex shader
+out VS_OUTPUT
+{
+    vec2 TexCoords;
+}vs_out;
+
+void main()
+{
+    vs_out.TexCoords = aTexCoords;
+}
+
+# fragment shader
+
+in VS_OUT
+{
+    vec2 TexCoords;
+}fs_in;
+
+void main()
+{
+    FragColor = texture(texture1, fs_in.TexCoords);
+}
+```
+
+#### Uniform buffer objects
+
+Uniform buffer object allows to declare a set of global uniform variables that remain the same over several shader programs.
+
+```c
+layout(location=1) in vec3 aPos;
+layout(std140) uniform Matrices
+{
+	mat4 projection;
+    mat4 view;
+};
+uniform mat4 model;
+void main()
+{
+    gl_Position = projection * view * model * vec4(aPos, 1.0);
+}
+```
+
+Variables in uniform black can be directly accessed without the block name as a prefix. So here Matrices.projection = projection.
+
+#### Uniform block layout
+
+Uniform block layout says that currently defined uniform block uses a specific memory layout for its content. The content of uniform block is stored in a buffer object.
+
+The std140 layout explicitly states the memory layout for each variable type by stating their respective offsets governed by a set of rules. Each variable has a base alignment which is equal to the space a variable takes within a uniform block. The aligned byte offset of a variable must be equal to a multiple of its base alignment. Each scaler has a base alignment of N (N is four). Vector is either 2N or 4N. Array of scalars of vectors has base alignment of vec4. So is matrices and struct.
+
+#### Using uniform buffers
+
+```c
+unsigned int ubo;
+glGenBuffers(1, &ubo);
+// bind to GL_UNIFORM_BUFFER
+glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+// allocate memory without initialization
+glBufferData(GL_UNIFORM_BUFFER, 152, NULL, GL_STATIC_DRAW);
+
+// bind uniform block to bind point
+// first get the index of the uniform block
+unsigned int light_index = glGetUniformBlockIndex(shaderA.ID, "Lights");
+glUniformBlockBinding(ShaderA.ID, light_index, 2);
+
+// bind uniform buffer to bind point
+glBindBufferBase(GL_UNIFORM_BUFFER, 2, ubo);
+glBindBufferRange(GL_UNIFORM_BUFFER, 2, ubo, 0, 152);
+```
+
+Bind the buffer object to **GL_UNIFORM_BUFFER**. In the OpenGL context there is a number of **bind points** defined where we can link a uniform buffer to. Linking a uniform buffer to a binding point and link the uniform block in the shader to the same binding point links those to each other. The **glUniformBlockBinding** that takes a program object as its first argument, a uniform block index and the binding point to link to. From OpenGL 4.2 we can set uniform block point by shader like this:
+
+```
+layout(std140, binding=2) uniform Lights{...};
+```
+
+
+
+### Instancing
+
+Instancing is a technique where we draw many object at once with a single render call, saving us all the CPU->GPU communications each time we need to render an object; this only have to be done once. To render using instancing all we need to do is change the render calls **glDrawArrays** and **glDrawElements** to **glDrawArraysInstanced** and **glDrawElementsInstanced** respectively. The instances sent to GPU will be rendered with a single call. Because rendering the same object a thousand time is of no use because the object is rendered at the same position. So the function seems useless. So OpenGL offers a build-in variable in the vertex shader called **gl_InstanceID**. When drawing via one of the instanced rendering calls, **gl_InstanceID** is incremented for each instance staring from 0.
+
+#### Drawing example
+
+```c
+// example shader code
+uniform vec2 offsets[100];
+
+// c++ code that set the uniform variable
+shader.setVec2(("offsets[" + index + "]").c_str(), translations[i];
+```
+
+#### Instanced arrays
+
+The previous drawing method will hit a limit on the amount of uniform data we can send to shaders. Instanced arrays that is defined as a vertex attribute that is only updated whenever the vertex shader renders a new instance.
+
+With vertex attributes, each run of the vertex shader will cause GLSL to retrieve the next set of vertex attributes that belong to the current vertex. When defining a vertex attribute as an instanced array however, the vertex shader only updates the content of the vertex attribute per instance instead of per vertex. The vertex shader is like this
+
+```c
+#version 330 core
+
+layout(location=0) in vec2 aPos;
+layout(location=1) in vec2 aColor;
+// define the attributes as usual.
+layout(location=2) in vec3 aOffset;
+
+out vec3 fColor;
+
+void main()
+{
+	fColor = aColor;
+	gl_Position = vec4(aPos + aOffset, 0.0, 1.0);
+}
+```
+
+The instanced array is a vertex attribute, we also need to store its content  in a vertex buffer object and configure its attribute pointer.
+
+```c
+unsigned int intanceVBO;
+glGenBuffers(1, &instanceVBO);
+glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * 100, &translations[0], GL_STATCI_DRAW);
+glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+//set vertex attribute pointer
+glEnableVertexAttribArray(2);
+glBIndBuffer(GL_ARRAY_BUFFER, instanceVBO);
+glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+glBindBuffer(GL_ARRAY_BUFFER, 0);
+glVertexAttribDivisor(2, 1);
+```
+
+The **glVertexAttribDivisor** tells OpenGL when to update the content of a vertex attribute. Its first parameter is the vertex attribute in question and the second is **attribute divisor**. The meaning the number is:
+
++ 0: Update the content of the vertex attribute each iteration of the vertex shader.
++ 1: Update the content when start to render a new instance.
++ 2 or other: Update the content every 2 instance and so on.
+
+### Anti Aliasing
+
+The effect of seeing the pixel formations an edge is composed of, is called aliasing.
+
+#### Multisampling
+
+The rasterizer takes all the vertices belonging to a single primitive and transforms this to a set of fragments. The rasterizer will first calculate weather the pixel belongs to a primitive. If so, a fragment will be generated for that covered pixel.
+
+Multisampling does not use a single sampling point for determine coverage of the triangle, but use multiple sample points: **subsamples**. 
+
+When determine the color of the pixel, **MSAA (multiple sample anti-aliasing)** run the the fragment shader only once. The fragment shader is run with the vertex data interpolated to the center of the pixel and the resulting color is then stored inside each of the covered subsamples. Once the color buffer's subsamples are filled with all the colors of the primitives we've rendered, all these colors are then averaged per pixel resulting in a single color per pixel. So when using multi-sampling, the color buffer is multiplied too. The depth and stencil test also make use of multiple sample points.
+
+#### MSAA in OpenGL
+
+If we want to use MSAA in OpenGL, we need a new type of buffer that can store a given amount of multisamples which is **multisample buffer**
+
+To use MASS, before create window, we need to hint GLFW that we'd like to use a multisample buffer.
+
+```
+glfwWindowHint(GLFW_SAMPLES, 4);
+
+// truely enable
+glEnable(GL_MULTISAMPLE);
+```
+
+#### Off-screen MSAA
+
+Because GLFW takes care of creating the multisampled buffer before, enabling MASS is quiet easy. If we want to use our own framebuffer however, for some off-screen rendering, we have to take care of creating multisampled buffers.
+
+##### Multisampled texture attachments
+
+To create a texture that supports storage of multiple sample points we use **glTexImage2DMultisample** that accepts **GL_TEXTURE_2D_MULTISAMPLE**.
+
+```c
+glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, tex);
+// samples is the number of sample we want.
+glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_RGB, width, 							height, GL_TRUE);
+
+// bind to framebuffer
+glFrameBufferTexture2D(GL_FRAMBUFFER, GL_COLOR_ATTACHMENT0, 					                  GL_TEXTURE_2D_MULTISAMPLE, tex, 0);
+```
+
+##### Multisampled renderbuffer objects
+
+We use **glRenderbufferStorage** instead of **glRenderbufferStorageMultisample**.
+
+```c
+glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH24_STENCIL8,                                        width, height);
+```
+
+##### Render to multisampled framebuffer
+
+Because a multisampled buffer is special we can't directly use their buffer images for other operations like sampling them in a shader. We need to **downscale or resolve** the image. Resolving a multisampled framebuffer is generally done via **glBlitFramebuffer** that transfers a given source region defined by 4 screen-space coordinates to a given target region also defined by 4 screen-space coordinates.
+
+```c
+glBindFramebuffer(GL_READ_FRAMBUFFER, multisampledFBO);
+glBindFramebuffer(GL_DRAW_FRAMBUFFER, 0);
+glBlitFramebuffer(0, 0, width, height, 0, 0, width, height,                                       GL_COLOR_BUFFER_BIT, GL_NEAREST);
+```
+
+To sample the multisampled framebuffer content in fragment shader, we also need to blit the multisampled buffers to a different FBO with a non-multisampled texture attachment. 
+
+```c
+unsigned int msFBO = CreateFBOWithMultiSampledAttachments();
+// then create another FBO with a normal texture color attachment
+...
+glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,                            screenTexture, 0);
+...
+while (!glfwWindowShouldClose(window))
+{
+    ...
+    glBindFramebuffer(msFBO);
+    ClearFrameBuffer();
+    DrawScene();
+    
+    // now resolve multisampled buffer into intermediate FBO;
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, msFBO);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, intermediateFBO);
+    glBlitFramebuffer(0, 0, width, height, 0, 0, width, height,                                       GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    // now scene is stored as 2D texture image
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    ClearFramebuffer();
+    glBindTexture(GL_TEXTURE_2D, screenTexture);
+    DrawPostProcessingQuad();
+}
+```
+
+#### Custom Anti-Aliasing algorithm
+
+It is possible to directly pass a multisampled texture image to the shaders instead of first resolving them. To retrieve the color value per subsample we first define the texture uniform sampler as a **sampler2DMS**. Then use **texelFetch** to retrieve the color value.
+
+```
+uniform sampler2DMS screenTextureMS;
+// fetch the 4th subsample.
+vec4 colorSample = texelFetch(ScreenTextureMS, TexCoords, 3);
 ```
 
