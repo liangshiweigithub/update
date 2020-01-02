@@ -185,3 +185,22 @@ void main()
 }  
 ```
 
+#### Complex objects
+
+For complex object, Assimp has a very useful configuration bit we can set when loading a model called **aiProcess_CalcTangentSpace**. If the bit is supplied to Assimp's ReadFile function Assimp calculates smooth tangent and bittangent vectors for each of the loaded vertices. 
+
+The **aiProcess_CalcTangentSpace** doesn't always work because calculating tangents is based on texture coordinates. If the texture coordinate is tricked, this will not work.
+
+#### Gram-Schmidt process
+
+When tangent vectors are calculated on larger meshes that share a considerable amount of vertices the tangent vectors are generally averaged to give nice and smooth results when normal mapping is applied to these surfaces. The TBN vectors could end up non-perpendicular to each other. Using a mathematical trick called the Gram-Schmidt we can re-orthogonalize the BTN vector such that each vector is again perpendicular to each other.
+
+```
+mat3 normalMatrix = transpose(inverse(mat3(model)));
+vec3 T = normalize(vec3(normalMatrix * vec4(aTangent, 0.0)));
+vec3 N = normalize(vec3(normalMatrix * vec4(aNormal, 0.0)));
+T = normalize(T - dot(T, N) * N);
+vec3 B = cross(N, T);
+mat3 TBN = mat3(T, B, N);
+```
+
