@@ -4,5 +4,5 @@
 #include <vector>
 #include <string>
 
-unsigned int loadTexture(char const* path, GLint wrappingMode = GL_REPEAT);
+unsigned int loadTexture(char const* path, GLint wrappingMode = GL_REPEAT, bool grammaCorrection=false);
 unsigned int loadCubemap(std::vector<std::string> faces);

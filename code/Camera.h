@@ -43,6 +43,8 @@ public:
 	float lastY;
 	bool FirstMouse;
 
+	bool canRotate;
+
 	// Constructor with vectors
 	Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
 	{
@@ -51,6 +53,7 @@ public:
 		Yaw = yaw;
 		Pitch = pitch;
 		FirstMouse = true;
+		canRotate = false;
 		updateCameraVectors();
 	}
 	// Constructor with scalar values
@@ -61,6 +64,7 @@ public:
 		Yaw = yaw;
 		Pitch = pitch;
 		FirstMouse = true;
+		canRotate = false;
 		updateCameraVectors();
 	}
 
@@ -91,6 +95,8 @@ public:
 	// Processes input received from a mouse input system. Expects the offset value in both the x and y direction.
 	void ProcessMouseMovement(float xpos, float ypos, GLboolean constrainPitch = true)
 	{
+		if (!canRotate)
+			return;
 		if (FirstMouse)
 		{
 			lastX = xpos;
@@ -129,6 +135,12 @@ public:
 			Zoom = 1.0f;
 		if (Zoom >= 45.0f)
 			Zoom = 45.0f;
+	}
+
+	void ProcessMouseButtonDown(bool isDown)
+	{
+		canRotate = isDown;
+		FirstMouse = isDown;
 	}
 
 private:

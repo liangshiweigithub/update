@@ -11,7 +11,7 @@ $$
 The calculation code is:
 
 ```c
-vec3 lightDir = normalize(lightPos - FragPos);
+ vec3 lightDir = normalize(lightPos - FragPos);
 vec3 viewDir = normalize(viewPos - FragPos);
 vec3 halfwayDir = normalize(lightDir + viewDir);
 float spec = pow(max(dot(normal, halfwayDir), 0), shinness);
@@ -20,4 +20,4 @@ vec3 specular = lightColor * spec;
 
 The only difference between Blinn-Phong and Phong specular reflection is that we now measure the angle between the normal and the halfway vector compared to the angle between the view direction and reflection vector.
 
-Another difference is that the angle between the halfway vector and the surface normal is often shorted than the angle between the view and reflection vector. So the specular shininess exponent has to be set a bit higher. A general rule is set between 2 and 4 times of Phone shininess exponent.
+Another difference is that the angle between the halfway vector and the surface normal is often shorted than the angle between the view and reflection vector. So the specular shininess exponent has to be set a bit higher. A general rule is set between 2 and 4 times of Phone shininess exponent.6666666666666666666666666666666688888888888                                                  

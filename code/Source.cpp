@@ -23,13 +23,14 @@ int main()
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
+	glfwSetMouseButtonCallback(window, mouse_button_callback);
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
 		std::cout << "Faied to intialize GLAD" << std::endl;
 		return -1;
 	}
-	NormalMapDraw(window);
+	ShadowMapDebugDraw(window);
 	// enable depth test
 
 	return 0;
