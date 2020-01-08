@@ -254,3 +254,27 @@ shadowTransforms.push_back(shadowProj *
                  glm::lookAt(lightPos, lightPos + glm::vec3( 0.0, 0.0,-1.0), glm::vec3(0.0,-1.0, 0.0));
 ```
 
+#### Omnidirectional shadow maps
+
+The vertex shader and fragment shader are largely similar to the original shadow mapping shaders: the difference being that the fragment shader no longer requires a fragment position in light space as we can sample the depth values using a direction vector. The shadow calculate function is
+
+```c
+float ShadowCalculation(vec3 fragPos)
+{
+    vec3 fragToLight = fragPos - lightPos;
+    float closestDepth = texture(depthMap, fragToLight).r;
+    // tranform closestDepth from [0, 1] to [0, far_plane]
+    closestDepth *= far_plane;
+    float currentDepth = length(fragToLight);
+    float bias = 0.05;
+    float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+}
+```
+
+##### Visualizing cubemap depth buffer
+
+A simple trick to visualize the depth buffer is to take the normalized (in the range [0, 1]) closestDepth variable in the shadow collection:
+
+```c
+FragColor = vec4(vec3(closestDepth / far_plane), 1.0);
+```
