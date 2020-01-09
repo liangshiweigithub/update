@@ -254,3 +254,51 @@ shadowTransforms.push_back(shadowProj *
                  glm::lookAt(lightPos, lightPos + glm::vec3( 0.0, 0.0,-1.0), glm::vec3(0.0,-1.0, 0.0));
 ```
 
+#### Depth shaders
+
+To render depth values to a depth cubemap three shaders is needed: vertex, fragment and geometry. The vertex shader just transforms vertex to world space. The geometry shader is then responsible for transforming the vertices to the light space. It has a built-in variable called **gl_Layer** that specifies which cubemap face to emit a primitive to.
+
+```c
+#version 330 core
+layout(triangles) in;
+layout(triangle_strip, max_vertices=18)out;
+
+uniform mat4 shadowMatrices[6];
+out vec4 FragPos;
+
+void main()
+{
+    for(int face=0;face<6;++face)
+    {
+        gl_layer=face;
+        for(int i=0;i<3;++i)
+        {
+            FragPos = gl_in[i].gl_Position;
+            gl_Position = shadowMatrices[face] * FragPos;
+            EmitVertex();
+        }
+        EndPrimitve();
+    }
+}
+```
+
+We take a triangle as input and output a total of 6 triangles here. The fragment shader is
+
+```c
+#version 330 core
+in vec4 FragPos;
+
+uniform vec3 lightPos;
+uniform float far_plane;
+
+void main()
+{
+    float lightDistance = length(FragPos.xyz - lightPos);
+    // map to [0, 1]
+    lightDistance = lightDistance / far_plane;
+    gl_FragDepth = lightDistance;
+}
+```
+
+We take the distance between the fragment and the light source, map to [0, 1] and write it as the fragment's depth value.
+
