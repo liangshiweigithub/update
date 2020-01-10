@@ -55,3 +55,23 @@ void main()
 }
 ```
 
+The shader code is something like before. The code of parallax mapping is
+
+```c
+vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
+{
+    float height = texture(depthMap, texCoords).r;
+    vec2 p = viewDir.xy / viewDir.z * (height * height_scale);
+    return texCoords - p;
+}
+```
+
+As the viewDir vector is normalized viewDir.z will be somewhere in the range between 0.0 and 1.0. When viewDir is largely parallel to the surface its z component is close to 0.0 and the division returns a much large vector $\vec P$ compared to when viewDir is largely perpendicular to the surface. So basically we're increasing the size of $\vec P$ in such a way that it offsets the texture coordinates at a large scale when looking at a surface from an angle compared to when looking at it from the top. Some prefer to leave the division by viewDir.z out of  the equation as normal Parallax Mapping could produce undesirable results at angles. This is called Parallax Mapping with offset limiting.
+
+At the edge of the parallax mapped plane the border is weird. This is because the displaced texture coordinates could oversample outside the range [0, 1] and this gives unrealistic results based on the texture's wrapping mode. One trick is to discard the fragment outside the default texture coordinate range.
+
+```c
+if(texCoords.x > 1.0 || texCoords.y > 1.0 || texCoords.x < 0.0 || texCoords.y < 	0.0 ||)
+	discard;
+```
+

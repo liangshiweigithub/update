@@ -13,6 +13,7 @@ float lastFrame = 0.0f;
 glm::vec3 lightPos(1.0f, 1.2f, 2.0f);
 bool gammaEnabled = false;
 bool gammaKeyPressed = false;
+float height_scale = 0.1f;
 
 Camera camera(glm::vec3(0, 0, 3));
 
@@ -1160,7 +1161,7 @@ void RenderNormalMapQuad()
 
 	if (quadVAO == 0)
 	{
-		// postions
+		// positions
 		glm::vec3 pos1(-1.0f, 1.0f, 0.0f);
 		glm::vec3 pos2(-1.0f, -1.0f, 0.0f);
 		glm::vec3 pos3(1.0f, -1.0f, 0.0f);
@@ -1170,21 +1171,24 @@ void RenderNormalMapQuad()
 		glm::vec2 uv2(0.0f, 0.0f);
 		glm::vec2 uv3(1.0f, 0.0f);
 		glm::vec2 uv4(1.0f, 1.0f);
-
+		// normal vector
 		glm::vec3 nm(0.0f, 0.0f, 1.0f);
-		glm::vec3 tangent1, bitangent1, tangent2, bitangent2;
 
+		// calculate tangent/bitangent vectors of both triangles
+		glm::vec3 tangent1, bitangent1;
+		glm::vec3 tangent2, bitangent2;
 		// triangle 1
+		// ----------
 		glm::vec3 edge1 = pos2 - pos1;
-		glm::vec3 edge2 = pos3 - pos2;
-
+		glm::vec3 edge2 = pos3 - pos1;
 		glm::vec2 deltaUV1 = uv2 - uv1;
 		glm::vec2 deltaUV2 = uv3 - uv1;
 
-		GLfloat f = 1 / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+		float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
 		tangent1.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
 		tangent1.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
-		tangent1.z = f * (deltaUV2.y * edge1.z - deltaUV2.y * edge2.z);
+		tangent1.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
 		tangent1 = glm::normalize(tangent1);
 
 		bitangent1.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
@@ -1212,6 +1216,7 @@ void RenderNormalMapQuad()
 		bitangent2.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
 		bitangent2 = glm::normalize(bitangent2);
 
+
 		float quadVertices[] = {
 			// positions            // normal         // texcoords  // tangent                          // bitangent
 			pos1.x, pos1.y, pos1.z, nm.x, nm.y, nm.z, uv1.x, uv1.y, tangent1.x, tangent1.y, tangent1.z, bitangent1.x, bitangent1.y, bitangent1.z,
@@ -1222,6 +1227,7 @@ void RenderNormalMapQuad()
 			pos3.x, pos3.y, pos3.z, nm.x, nm.y, nm.z, uv3.x, uv3.y, tangent2.x, tangent2.y, tangent2.z, bitangent2.x, bitangent2.y, bitangent2.z,
 			pos4.x, pos4.y, pos4.z, nm.x, nm.y, nm.z, uv4.x, uv4.y, tangent2.x, tangent2.y, tangent2.z, bitangent2.x, bitangent2.y, bitangent2.z
 		};
+		// configure plane VAO
 		glGenVertexArrays(1, &quadVAO);
 		glGenBuffers(1, &quadVBO);
 		glBindVertexArray(quadVAO);
@@ -1659,4 +1665,76 @@ void ShadowMapDebugDraw(GLFWwindow *window)
 		glfwPollEvents();
 		
 	}
+}
+
+void ParallaxDraw(GLFWwindow* window)
+{
+	glEnable(GL_DEPTH_TEST);
+
+	Shader shader("shaders/ParallaxMapping.vs", "shaders/ParallaxMapping.fs");
+
+	unsigned int diffuseMap = loadTexture("resources/bricks2.jpg");
+	unsigned int normalMap = loadTexture("resources/bricks2_normal.jpg");
+	unsigned int heightMap = loadTexture("resources/bricks2_disp.jpg");
+
+	shader.use();
+	shader.setInt("diffuseMap", 0);
+	shader.setInt("normalMap", 1);
+	shader.setInt("heightMap", 2);
+
+	glm::vec3 lightPos(0.5f, 1.0f, 0.3f);
+
+	// render loop
+	// -----------
+	while (!glfwWindowShouldClose(window))
+	{
+		// per-frame time logic
+		// --------------------
+		float currentFrame = glfwGetTime();
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+
+		// input
+		// -----
+		processInput(window);
+
+		// render
+		// ------
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		// configure view/projection matrices
+		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SRC_WIDTH / (float)SRC_HEIGHT, 0.1f, 100.0f);
+		glm::mat4 view = camera.GetViewMatrix();
+		shader.use();
+		shader.setMat4("projection", projection);
+		shader.setMat4("view", view);
+		// render parallax-mapped quad
+		glm::mat4 model = glm::mat4(1.0f);
+		//model = glm::rotate(model, glm::radians((float)glfwGetTime() * -10.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0))); // rotate the quad to show parallax mapping from multiple directions
+		shader.setMat4("model", model);
+		shader.setVec3("viewPos", camera.Position);
+		shader.setVec3("lightPos", lightPos);
+		shader.setFloat("heightScale", height_scale); // adjust with Q and E keys
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, diffuseMap);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, normalMap);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, heightMap);
+		RenderNormalMapQuad();
+
+		// render light source (simply re-renders a smaller plane at the light's position for debugging/visualization)
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, lightPos);
+		model = glm::scale(model, glm::vec3(0.1f));
+		shader.setMat4("model", model);
+		RenderNormalMapQuad();
+
+		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+		// -------------------------------------------------------------------------------
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
+
 }
