@@ -75,3 +75,42 @@ if(texCoords.x > 1.0 || texCoords.y > 1.0 || texCoords.x < 0.0 || texCoords.y < 
 	discard;
 ```
 
+#### Steep Parallax Mapping
+
+Steep Parallax Mapping is an extension on top of Parallax mapping  in that it uses the same principles, but instead of 1 sample it takes multiple samples to better pinpoint vector $\vec P$ to $B$.
+
+![avatar](..\image\parallax_mapping_steep_parallax_mapping_diagram.png)
+
+The general idea of Steep Parallax Mapping is that it divides the total depth range into multiple layers of the same height/depth. We traverse the depth layers from the top down and for each layer we compare its depth value to the depth value stored in the depthmap. If the layer's depth value is less than the depthmap's value it means this layer's part of vector $\vec P$ is not below the surface. We continue this process until the layer's depth is higher than the value stored in the depthmap: this point is below the geometric surface.
+
+##### Improvement
+
+When looking straight onto a surface there isn't much texture displacement going on while there is a lot of displacement when looking at a surface from an angle. By taking les samples when looking straight at a surface and more samples when looking at an angle we only sample the necessary amount:
+
+```c
+const float minLayers = 8.0;
+const float maxLayers = 32.0;
+float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), 						viewDir)));
+```
+
+##### Problems
+
+Because this technique is based on a finite number of samples we get aliasing effects and the clear distinction between layers can be easily be spotted. This problem can be reduced by take a larger number of samples, but this quickly becomes too heavy a burden on performance. There are several approaches that aim to fix this issue by not taking the first position that below the surface, but by interpolating between the position's tow closest depth layers to find a  much closer match to $B$. Tow of the approaches are **Relief Parallax Mapping** and **Parallax Occlusion Mapping**.
+
+#### Parallax Occlusion Mapping
+
+Parallax Occlusion Mapping is similar to Steep Parallax Mapping with an extra step the linear interpolation between the two depth layer's texture coordinates surrounding the interested point.
+
+```c
+[....] // steep parallax mapping code here
+// get texture coordinates before collision
+vec2 prevTexCoords = currentTexCoords - deltaTexCoords;
+
+float afterDepth = currentDepthMapValue - currentLayerDepth;
+float beforeDepth = texture(depthMap, prevTexCoords).r - (currentLayerDepth - layerDepth);
+
+float weight = afterDepth / (afterDepth - beforeDepth);
+vec2 finalTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
+return finalTexCoords;
+```
+

@@ -121,5 +121,6 @@ void EdgeDetection()
 
 void main()
 {
-    EdgeDetection();
+    //EdgeDetection();
+	NormalColor();
 }

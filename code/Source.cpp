@@ -30,7 +30,7 @@ int main()
 		std::cout << "Faied to intialize GLAD" << std::endl;
 		return -1;
 	}
-	ParallaxDraw(window);
+	BloomDraw(window);
 	// enable depth test
 
 	return 0;

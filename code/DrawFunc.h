@@ -20,3 +20,5 @@ void NormalMapDraw(GLFWwindow* window);
 void GammaCorrectionDraw(GLFWwindow *window);
 void ShadowMapDebugDraw(GLFWwindow *window);
 void ParallaxDraw(GLFWwindow* window);
+void HDRDraw(GLFWwindow* window);
+void BloomDraw(GLFWwindow* window);
