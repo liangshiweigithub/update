@@ -58,6 +58,29 @@ L_0(p, w_0) = \int_{\Omega}^{}f_r(p,w_i,w_0)L_i(p,w_i)n\cdot w_idw_i
 $$
 $L$ in the equation represents the radiance of some point $p$ and some incoming infinitely small solid angle $w_i$ which can be thought of as an incoming direction vector $w_i$. The $cos\theta$ here is represented as $n\cdot w_i$. The reflectance equation calculates the sum of reflected radiance $L_o(p, w_o)$ of a point $p$ in the direction $w_o$ which is the outgoing direction to the viewer. $L_o$ measures the reflected sum of the light's irradiance onto point $p$ as view from $w_o$.
 
+As the reflectance equation is based around irradiance which is the sum of all incoming radiance we measure light light of not just a single incoming light direction, but all incoming light directions within a hemisphere $\Omega$ centered around point $p$. 
+
+To calculate the total of values inside an area or, in the case of a hemisphere, a volume we use a mathematical construct called an integral denoted in the reflectance equation as $\int$ over all incoming directions $dw_i$ within the hemisphere $\Omega$. We take the result of small discrete steps of the reflectance equation over the hemisphere $\Omega$ and averaging there their results over the step size. This is **Riemann sum**.
+
+```c
+int steps = 100;
+float sum = 0.0f;
+vec3 P = ...;
+vec3 Wo = ...;
+vec3 N = ...;
+
+float dw = 1.0f / steps;
+for(int i=0;i<steps;++i)
+{
+    vec3 Wi = getNextIncomingLightDir(i);
+    sum += Fr(P, Wi, Wo) * L(P, Wi) * dot(N, Wi) * dw;
+}
+```
+
+**The reflectance equation sum the radiance of all incoming light directions $w_i$  over the hemisphere scaled by $f_r$ that hits point p and returns the sum of reflected light $L_o$ in the viewer's direction**.
+
+#### BRDF
+
 
 
 
