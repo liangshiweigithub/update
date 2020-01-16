@@ -58,7 +58,29 @@ L_0(p, w_0) = \int_{\Omega}^{}f_r(p,w_i,w_0)L_i(p,w_i)n\cdot w_idw_i
 $$
 $L$ in the equation represents the radiance of some point $p$ and some incoming infinitely small solid angle $w_i$ which can be thought of as an incoming direction vector $w_i$. The $cos\theta$ here is represented as $n\cdot w_i$. The reflectance equation calculates the sum of reflected radiance $L_o(p, w_o)$ of a point $p$ in the direction $w_o$ which is the outgoing direction to the viewer. $L_o$ measures the reflected sum of the light's irradiance onto point $p$ as view from $w_o$.
 
+As the reflectance equation is based around irradiance which is the sum of all incoming radiance we measure light light of not just a single incoming light direction, but all incoming light directions within a hemisphere $\Omega$ centered around point $p$. 
+
+To calculate the total of values inside an area or, in the case of a hemisphere, a volume we use a mathematical construct called an integral denoted in the reflectance equation as $\int$ over all incoming directions $dw_i$ within the hemisphere $\Omega$. We take the result of small discrete steps of the reflectance equation over the hemisphere $\Omega$ and averaging there their results over the step size. This is **Riemann sum**.
+
+```c
+int steps = 100;
+float sum = 0.0f;
+vec3 P = ...;
+vec3 Wo = ...;
+vec3 N = ...;
+
+float dw = 1.0f / steps;
+for(int i=0;i<steps;++i)
+{
+    vec3 Wi = getNextIncomingLightDir(i);
+    sum += Fr(P, Wi, Wo) * L(P, Wi) * dot(N, Wi) * dw;
+}
+```
+
+**The reflectance equation sum the radiance of all incoming light directions $w_i$  over the hemisphere scaled by $f_r$ that hits point p and returns the sum of reflected light $L_o$ in the viewer's direction**.
+
 #### BRDF
+
 
 The BRDF, or bidirectional reflective distribution function, approximates how much each individual light ray $w_i$ contributes to the final reflected light of an opaque surface given its material properties. Although there are several physically base BRDFs, the most commonly used is Cook-Torrance BRDF. The Cook-Torrance BRDF contain both diffuse and specular part:
 $$
@@ -70,18 +92,33 @@ f_{lambert} = \frac {c}{\pi}
 $$
 With $c$ is the albedo or surface color. The divide by pi is to normalize the diffuse light as the earlier denoted integral that contains the BRDF is scaled by $\pi$.
 
+
+
+
+
 The specular part of the BRDF is:
 $$
 f_{cook-torrance} = \frac{DFG}{4(w_0 \cdot n)(w_i \cdot n)}
 $$
 
+
+
+
 ##### Normal distribution function
+
+
+
+
+
+
+
 
 The normal distribution function D approximates the amount the surface's microfacets are aligned to the halfway vector. The equation used here is Trowbridge-Reitz GGX:
 $$
 D(n, h, \alpha) = \frac{\alpha ^2}{\pi ((n\cdot h)^2(\alpha ^2-1) + 1)^2}
 $$
 When the roughness is low a highly concentrated number of microfacet are aligned to halfway vector over a small radius. The NDF displays a very bright spot. The code is:
+
 
 ```c
 float DistributionGGX(vec3 N, vec3 H, float a)
@@ -176,6 +213,64 @@ $$
 
 **Metallic**: This specifies per texel whether the texel is metallic or it isn't.
 
+#### Fresnel reflection
 **Roughness**: specifies how rough a surface is on a per texel basis.
 
+
+
+
+
+
+
+The fresnel equations describes the reflection and transmission of light when incident on an interface between different optical media. The ratio between incident light and reflected light can be calculated by Fresnel reflection.
+
+#### Schlick's approximation
+
+Schlick's approximation is a formula for approximating the contribution of the Fresnel factor in the specular reflection of light. The equation is:
+$$
+R(\theta) = R_0 + (1-R_0)(1-\vec v \cdot \vec n)^5\\
+R_0 = (\frac{n_1-n_2}{n_1+n_2})^2
+$$
+$n_1, n_2$ are the indices of refraction of the two media at the interface. In computer graphics, one the the interfaces is usually air, meaning that $n_1$ is 1.
+
+In microfacet model it is assumed that there is always a perfect reflection, but the normal changes according to a certain distribution, resulting in a non-perfect overall reflection. When using Schlick's approximation, the normal in the above computation is replaced by the halfway vector.
 **AO**: The ambient occlusion or AO map specifies an extra shadowing factor of the surface and potentially surrounding geometry.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#### Fresnel reflection
+
+The fresnel equations describes the reflection and transmission of light when incident on an interface between different optical media. The ratio between incident light and reflected light can be calculated by Fresnel reflection.
+
+#### Schlick's approximation
+
+Schlick's approximation is a formula for approximating the contribution of the Fresnel factor in the specular reflection of light. The equation is:
+$$
+R(\theta) = R_0 + (1-R_0)(1-\vec v \cdot \vec n)^5\\
+R_0 = (\frac{n_1-n_2}{n_1+n_2})^2
+$$
+$n_1, n_2$ are the indices of refraction of the two media at the interface. In computer graphics, one the the interfaces is usually air, meaning that $n_1$ is 1.
+
+In microfacet model it is assumed that there is always a perfect reflection, but the normal changes according to a certain distribution, resulting in a non-perfect overall reflection. When using Schlick's approximation, the normal in the above computation is replaced by the halfway vector.
