@@ -107,12 +107,6 @@ $$
 ##### Normal distribution function
 
 
-
-
-
-
-
-
 The normal distribution function D approximates the amount the surface's microfacets are aligned to the halfway vector. The equation used here is Trowbridge-Reitz GGX:
 $$
 D(n, h, \alpha) = \frac{\alpha ^2}{\pi ((n\cdot h)^2(\alpha ^2-1) + 1)^2}
@@ -169,7 +163,7 @@ float GeometrySmith(vec3 N, vec3 L, vec3 V, float k)
 
 ##### Fresnel equation
 
-The Fresnel equation describes the ratio of surface reflection at different surface angles. The moment light hits a surface, based on the surface to view angle the Fresnel equation tells us the percentage of light that get reflected.
+The Fresnel equation describes the ratio of light that gets reflect over the light that get refracted, which varies over the angle we're looking at a surface. The moment light hits a surface, based on the surface to view angle the Fresnel equation tells us the percentage of light that get reflected.
 
 Every surface or material has a level of base reflectivity when lookin straight at its surface, but when looking at the surface form an angle all reflections become more apparent compared to the surface's base reflectivity. The phenomenon is described by Fresh equation. An approximation of  it is Fresnel-Schlick:
 $$
@@ -213,28 +207,7 @@ $$
 
 **Metallic**: This specifies per texel whether the texel is metallic or it isn't.
 
-#### Fresnel reflection
 **Roughness**: specifies how rough a surface is on a per texel basis.
-
-
-
-
-
-
-
-The fresnel equations describes the reflection and transmission of light when incident on an interface between different optical media. The ratio between incident light and reflected light can be calculated by Fresnel reflection.
-
-#### Schlick's approximation
-
-Schlick's approximation is a formula for approximating the contribution of the Fresnel factor in the specular reflection of light. The equation is:
-$$
-R(\theta) = R_0 + (1-R_0)(1-\vec v \cdot \vec n)^5\\
-R_0 = (\frac{n_1-n_2}{n_1+n_2})^2
-$$
-$n_1, n_2$ are the indices of refraction of the two media at the interface. In computer graphics, one the the interfaces is usually air, meaning that $n_1$ is 1.
-
-In microfacet model it is assumed that there is always a perfect reflection, but the normal changes according to a certain distribution, resulting in a non-perfect overall reflection. When using Schlick's approximation, the normal in the above computation is replaced by the halfway vector.
-**AO**: The ambient occlusion or AO map specifies an extra shadowing factor of the surface and potentially surrounding geometry.
 
 
 
