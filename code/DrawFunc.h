@@ -23,3 +23,4 @@ void ParallaxDraw(GLFWwindow* window);
 void HDRDraw(GLFWwindow* window);
 void BloomDraw(GLFWwindow* window);
 void PbrDraw(GLFWwindow* window);
+void PbrIBLDraw(GLFWwindow* window);
