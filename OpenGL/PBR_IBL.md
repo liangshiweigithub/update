@@ -312,5 +312,5 @@ float mipLevel = roughness == 0.0?0.0:0.5*log2(saSample/saTexel);
 
 #### Pre-computing the BRDF
 
-pass for now.
+The process of deducing the equation is ignored.
 
