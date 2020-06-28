@@ -477,6 +477,16 @@ Custom co_await operator will only modify the way awaiter object is obtained.
 
 
 
+### Coroutine Theory
+
+#### Activation Frames
+
+**Activation frame** is a block of memory that holds the current state of a particular invocation of a function. The data structure used for allocating and freeing the activation frames for function calls are called the stack. When an activation frame is allocated on this stack it is called the **stack frame.**
+
+With coroutines there are some parts of the activation frame that need to be preserved across coroutine suspension. This is the **coroutine frame**. Other parts only need to be kept around while the coroutine  is executing. This the the **stack frame**.
+
+When a coroutine is called, the first thing the coroutine does is  allocate a coroutine-frame on the heap and copy/move the parameters from the stack-frame into the coroutine frame so that the lifetime of the parameters extends beyond the first suspend-point.
+
 
 
 ### 				Operator co_await
@@ -489,12 +499,12 @@ The coroutines defines two kinds of interfaces:
 
 ####  Awaitables and Awaiters
 
-**A type that supports the co_await operator is called an Awaitable type**. The promise type used for a coroutine can alter the meaning of a co_await expression within the coroutine  via its await_transform method.
+**A type that supports the co_await operator is called an Awaitable type**. The promise type used for a coroutine can alter the meaning of a co_await expression within the coroutine  via its **await_transform** method.
 
 + **Normally Awaitable**: a type that supports the co_await operator whose promise type does not have an await_tranform
 + **Contextually Awaitable** : promise have await_transform
 
-**Awaiter** type is a type that implements the three special methods that called as part of a co_await expression: await_ready, await_suspend, await_resume.
+**Awaiter** type is a type that implements the three special methods that are called as part of a co_await expression: await_ready, await_suspend, await_resume.
 
 A type can be both an Awaitable type and An Awaiter type.
 
@@ -661,6 +671,11 @@ Additional steps executed when reaches a **co_return** statement:
 2. Destroy all variables with automatic storage duration in reverse order they were created.
 3. Call promise.final_suspend() and co_await the result.
 
+if instead, execution leaves \<body-statements> due to an unhandled exception then:
+
+1. catch the exception and call promise.unhandled_exception from within the catch-block.
+2. Call promise.final_suspend() and co_await the result.
+
 Destroying the coroutine frame involves:
 
 1. Call the destructor of the promise object.
@@ -797,10 +812,43 @@ The coroutine_handle is not an RAII object. Generally use a higher level types t
 
 #### Customizing the behavior of co_await
 
-If the promise type have await_transform defined, the compiler will transform every co_await\<expr>  into promise.await_transform(\<expr>).
+If the promise type have await_transform defined, the compiler will transform every co_await\<expr> into co_await promise.await_transform(\<expr>).
 
-not completed.
+**It lets you enbale awaiting types that would not normally be awaitable**.
+
+```c++
+template<typneame T> 
+class optional_promise{
+    
+    template<typename U>
+    auto await_transform(std::optional<U>& value)
+    {
+        class awaiter
+        {
+            std::optional<U>& value;
+         public:
+            explicit awaiter(std::optional<U>& x) noexcept: value(x){}
+            bool await_ready() noexcept{
+                return value.has_value();
+            }
+            
+            void await_transform(std::experimental::coroutine<>) noexcept{}
+            U& await_resume() noexcept{return *value;}
+        }
+        return awaiter{value};
+    }
+}
+```
+
+
 
 #### Customizing the behavior of co_yield
 
-The co_yield keyword is translated into co_await promise.yield_value(\<expr>). Customize the behavior of the co_yield by defining yield_value methods
+The co_yield keyword is translated into co_await promise.yield_value(\<expr>). Customize the behavior of the co_yield by defining yield_value methods 
+
+
+
+
+
+
+

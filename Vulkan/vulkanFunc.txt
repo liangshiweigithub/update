@@ -1,0 +1,133 @@
+vkEnumerateInstanceExtensionProperties  -->VkExtensionProperties
+vkCreateInstance  -->VKInstanceCreateInfo, VkApplicationInfo
+vkCreateWin32SurfaceKHR  -->VKWin32SurfaceCreateInfoKHR
+
+vkEnumeratePhysicalDevices  --> VkPhysicalDevice
+vkEnumerateDeviceExtensionProperties  --> VkExtensionProperties
+
+vkGetPhysicalDeviceProperties  --> VkPhysicalDeviceProperties
+vkGetPhysicalDeviceFeatures   --> VkPhysicalDeviceFeatures
+
+vkGetPhysicalDeviceQueueFamilyProperties  --> VkQueueFamilyProperties
+vkGetPhysicalDeviceSurfaceSupportKHR
+vkCreateDevice  --> VkDeviceCreateInfo
+vkGetDeviceQueue
+
+// create swap chain
+
+vkGetPhysicalDeviceSurfaceCapabilitiesKHR  --> VkSurfaceCapabilitiesKHR
+vkGetPhysicalDeviceSurfaceFormatsKHR  --> VkSurfaceFormatKHR
+vkGetPhysicalDeviceSurfacePresentModesKHR  -->VkPresentModeKHR
+
+// selecting image count, swapchain format, swapchain extent, swapchain usage flags, transform, 
+// presentmodes
+vkCreateSwapchainKHR  --> VkSwapchainCreateInfoKHR
+
+// create render pass
+						VkAttachmentDescription
+						VkAttachmentReference
+vkCreateRenderPass  --> VkSubpassDescription    -->VkRenderPass
+						VkSubpassDependency
+						VkRenderPassCreateInfo  
+
+// create frame buffer
+vkCreateImageView  -->  VkImageViewCreateInfo  --> VkImageView
+
+// create pipeline
+vkCreateShaderModule --> VkShaderModuleCreateInfo  -->VkShaderModule
+
+							VkPipelineShaderStageCreateInfo
+							// be contained by VkPipelineVertexInputStateCreateInfo
+							VkVertexInputBindingDescription
+							VkVertexInputAttributeDescription
+							VkPipelineVertexInputStateCreateInfo  --> 
+							VkPipelineInputAssemblyStateCreateInfo
+							VkPipelineViewportStateCreateInfo  --> VkViewport, VkRect2D  // can be set to dynamic state
+							VkPipelineRasterizationStateCreateInfo
+							VkPipelineMultisampleStateCreateInfo
+							VkPipelineColorBlendStateCreateInfo  --> VkPipelineColorBlendAttachmentState
+							// dynamic state
+							VkPipelineDynamicStateCreateInfo  --> VkDynamicState
+	// create pipeline layout
+	vkCreatePipelineLayout  --> VkPipelineLayoutCreateInfo
+	
+vkCreateGraphicsPipeline  -->	VkGraphicsPipelineCreateInfo  --> VkPipeline
+
+// Buffer memory allocation
+  // buffer creation
+vkCreateBuffer  --> VkBufferCreateInfo  -->   VkBuffer
+  // memory allocation
+vkGetBufferMemoryRequirements     -->   VkMemoryRequirements
+vkGetPhysicalDeviceMemoryProperties    -->  VkPhysicalDeviceMemoryProperties
+vkAllocateMemory  --> VkMemoryAllocateInfo  --> VkDeviceMemory
+  // binding a buffer's memory
+vkBindBufferMemory  // offset is very important
+  // uploading vertex data
+vkMapMemory
+memcpy
+vkFlushMappedMemoryRanges  --> VkMappedMemoryRange
+vkUnmapMemory
+
+
+// begins render resouce creation: command buffer, semaphore, Fence
+// create command buffers
+vkCreateCommandPool       --> VkCommandPoolCreateInfo
+vkAllocateCommandBuffers   --> VkCommandBufferAllocateInfo
+// semaphore
+vkCreateSemaphore       -->   VkSemophoreCreateInfo  VkSemaphore
+// fence
+vkCreateFence          -->    VkFenceCreateInfo    VkFence
+
+// draw begins
+// get render resource
+vkWaitForFences
+vkResetFences
+vkAcquireNextImageKHR
+	// prepareFrame
+vkDestroyFramebuffer
+vkCreateFramebuffer  --> VkFramebufferCreateInfo  --> VkFramebuffer
+		// record command buffer
+vkBeginCommandBuffer  --> VkCommandBufferBeginInfo
+vkCmdPipelineBarrier  --> VkImageMemoryBarrier
+vkCmdBeginRenderPass  --> VkRenderPassBeginInfo
+vkCmdBindPipeline
+
+vkCmdSetViewport
+vkCmdSetScissor
+vkCmdBindVertexBuffers
+vkCmdDraw
+
+vkCmdEndRenderPass
+vkCmdPipelineBarrier
+vkEndCommandBuffer
+
+vkQueueSubmit   --> VkSubmitInfo
+vkQueuePresentKHR  --> VkPresentInfoKHR
+
+vkGetSwapchainImageKHR
+VkClearColorValue
+VkImageSubresourceRange
+
+
+
+//  Destroy begins
+
+vkDeviceWaitIdle
+vkFreeCommandBuffers
+vkDestroyCommandPool
+vkDestroyPipeline
+vkDestroyRenderPass
+vkDestroyFramebuffer
+
+vkDestroySemophore
+vkDestroyFence
+vkDestroyBuffer
+vkFreeMemory
+vkDestroySwapchainKHR
+vkDestroyDevice
+vkDestroySurfaceKHR
+vkDestroyInstance
+FreeLibrary or dlclose
+
+VK_SUBOPTIMAL_KHR 
+VK_ERROR_OUT_OF_DATE_KHR to recreate swapchain
