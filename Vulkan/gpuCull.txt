@@ -1,0 +1,23 @@
+
+https://km.netease.com/article/267587
+https://km.netease.com/article/280096
+https://km.netease.com/article/300709
+
+https://miketuritzin.com/post/hierarchical-depth-buffers/
+https://github.com/sydneyzh/gpu_occlusion_culling_vk
+https://developer.download.nvidia.com/books/HTML/gpugems/gpugems_ch29.html
+https://docs.unrealengine.com/en-US/Engine/Rendering/VisibilityCulling/index.html
+https://developer.nvidia.com/gpugems/gpugems2/part-i-geometric-complexity/chapter-6-hardware-occlusion-queries-made-useful
+https://www.graphicon.ru/html/2017/papers/pp32-36.pdf
+
+after query: 13.8201
+[2020-07-23 16:11:50.532] [info] Get query result takes: 0.0427
+[2020-07-23 16:11:50.537] [info] add rel: 5.0138
+[2020-07-23 16:11:50.538] [info] in boundingbox: 6.036
+[2020-07-23 16:11:50.539] [info] before query: 7.9199
+[2020-07-23 16:11:50.543] [info] after query: 12.1543
+[2020-07-23 16:11:50.554] [info] Get query result takes: 0.0415
+[2020-07-23 16:11:50.559] [info] add rel: 5.3808
+[2020-07-23 16:11:50.560] [info] in boundingbox: 6.638
+[2020-07-23 16:11:50.563] [info] before query: 9.7997
+[2020-07-23 16:11:50.567] [info] after query: 14.1158

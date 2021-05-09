@@ -1,3 +1,7 @@
+原文链接：https://blog.csdn.net/harman_zjc/article/details/70255960
+
+
+
 ### 													模板
 
 #### 模板特化和偏特化:(template specialization and partical specialization)
@@ -18,7 +22,7 @@ template<class T>
 struct PrimaryDef{
     void f(){std::cout<<1<<std::endl;}
     void g(){std::cout<<2<<std::endl;}
-;
+};
 
 //针对bool类型的显示特化
 template<>

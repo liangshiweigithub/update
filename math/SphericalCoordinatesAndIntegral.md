@@ -28,3 +28,11 @@ Formally, the derivative of the function f at x is the limit of the difference q
 
 
 https://www.scratchapixel.com/lessons/mathematics-physics-for-computer-graphics/mathematics-of-shading?url=mathematics-physics-for-computer-graphics/mathematics-of-shading
+
+
+
+
+
+edge dectection：判断一个点是否在三角形内
+
+https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/rasterization-stage
