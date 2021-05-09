@@ -1,7 +1,19 @@
+							
+							
+				//////////////////////////////////////
+				// stage 1: prepare vulkan//
+				///////////////////////////////////////
+
+LoadLibrary("vulkan-1.dll") or dlopen(libvulkan.so.1")
+// LoadExportedEntryPoints
+GetProcAddress or dlsym
+//LoadGlobalLevelEntryPoints and create instance 
 vkEnumerateInstanceExtensionProperties  -->VkExtensionProperties
 vkCreateInstance  -->VKInstanceCreateInfo, VkApplicationInfo
+// create presentation surface
 vkCreateWin32SurfaceKHR  -->VKWin32SurfaceCreateInfoKHR
 
+// create device
 vkEnumeratePhysicalDevices  --> VkPhysicalDevice
 vkEnumerateDeviceExtensionProperties  --> VkExtensionProperties
 
@@ -22,18 +34,77 @@ vkGetPhysicalDeviceSurfacePresentModesKHR  -->VkPresentModeKHR
 // selecting image count, swapchain format, swapchain extent, swapchain usage flags, transform, 
 // presentmodes
 vkCreateSwapchainKHR  --> VkSwapchainCreateInfoKHR
+vkCreateImageView  -->  VkImageViewCreateInfo  --> VkImageView
 
-// create render pass
+
+				///////////////////////////////////////
+				// stage 2: create rendering resource//
+				///////////////////////////////////////
+// begins render resouce creation: command buffer, semaphore, Fence
+// create command buffers
+vkCreateCommandPool       --> VkCommandPoolCreateInfo
+vkAllocateCommandBuffers   --> VkCommandBufferAllocateInfo
+// semaphore
+vkCreateSemaphore       -->   VkSemophoreCreateInfo  VkSemaphore
+// fence
+vkCreateFence          -->    VkFenceCreateInfo    VkFence
+
+
+				///////////////////////////////////////
+				// stage 3: create texture ////////////
+				/////////////////////////////////////
+// create image
+vkCreateImage   -->  VkImageCreateInfo		
+// allocate and bind memory
+vkGetImageMemoryRequirements   -->  VkMemoryRequirements
+vkGetPhysicalDeviceMemoryProperties  --> VkPhysicalDeviceMemoryProperties
+vkAllocateMemory   -->   VkMemoryAllocateInfo
+vkBindImageMemory
+// create image view
+vkCreateImageView  -->   VkImageViewCreateInfo
+
+// copyTextureData
+vkMapMemory
+memcpy
+vkFlushMappedMemoryRanges  -->  VkMappedMemoryRange
+vkUnmapMemory
+
+vkBeginCommandBuffer
+vkCmdPipelineBarrier    -->   VkImageMemoryBarrier
+vkCmdCopyBufferToImage   -->  VkBufferImageCopy
+// create sampler
+vkCreateSampler       -->  VkSamplerCreateInfo   --> VkSampler
+		
+				/////////////////////////////////////
+				// stage 4: creating uniform buffer//////
+				/////////////////////////////////////
+
+// this is same as create vertex buffer
+
+				/////////////////////////////////////
+				// stage 5: creating descriptor set//////
+				/////////////////////////////////////
+// create descriptor layout
+vkCreateDescriptorSetLayout  -->  VkDescriptorSetLayoutCreateInfo  -->  VkDescriptorSetLayoutBinding
+vkCreateDescriptorPool   -->  VkDescriptorPoolCreateInfo   -->  VkDescriptorPoolSize 
+vkAllocateDescriptorSets  --> VkDescriptorSetAllocateInfo  -->  VkDescriptorSet
+vkUpdateDescriptorSets  -->  VkWriteDescriptorSet  -->  (VkDescriptorImageInfo, VkDescriptorBufferInfo, VkBufferView)
+// the shader usage is: layout(set=S, binding=B) uniform <variable type> <variable name>
+
+
+				/////////////////////////////////////
+				// stage 6: create render pass //////
+				/////////////////////////////////////
 						VkAttachmentDescription
 						VkAttachmentReference
 vkCreateRenderPass  --> VkSubpassDescription    -->VkRenderPass
 						VkSubpassDependency
-						VkRenderPassCreateInfo  
+						VkRenderPassCreateInfo 
 
-// create frame buffer
-vkCreateImageView  -->  VkImageViewCreateInfo  --> VkImageView
-
-// create pipeline
+						
+				/////////////////////////////////////
+				//stage 7: create render pipeline////
+				////////////////////////////////////
 vkCreateShaderModule --> VkShaderModuleCreateInfo  -->VkShaderModule
 
 							VkPipelineShaderStageCreateInfo
@@ -50,9 +121,14 @@ vkCreateShaderModule --> VkShaderModuleCreateInfo  -->VkShaderModule
 							VkPipelineDynamicStateCreateInfo  --> VkDynamicState
 	// create pipeline layout
 	vkCreatePipelineLayout  --> VkPipelineLayoutCreateInfo
-	
 vkCreateGraphicsPipeline  -->	VkGraphicsPipelineCreateInfo  --> VkPipeline
-
+						
+						
+						////////////////////////////////////
+						// stage 8: create vertex buffers//
+						////////////////////////////////////
+// usage: VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT 
+// property: VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
 // Buffer memory allocation
   // buffer creation
 vkCreateBuffer  --> VkBufferCreateInfo  -->   VkBuffer
@@ -62,21 +138,42 @@ vkGetPhysicalDeviceMemoryProperties    -->  VkPhysicalDeviceMemoryProperties
 vkAllocateMemory  --> VkMemoryAllocateInfo  --> VkDeviceMemory
   // binding a buffer's memory
 vkBindBufferMemory  // offset is very important
-  // uploading vertex data
+  
+	// uploading vertex data, used when there is not staging buffers
+		// vkMapMemory
+		// memcpy
+		// vkFlushMappedMemoryRanges  --> VkMappedMemoryRange
+		// vkUnmapMemory
+		
+						
+						
+						////////////////////////////////////
+						// stage 9: create staging buffers//
+						////////////////////////////////////
+// usage: VK_BUFFER_USAGE_TRANSFER_SRC_BIT, property: VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+vkCreateBuffer  --> VkBufferCreateInfo  --> VkBuffer
+vkGetBufferMemoryRequirements  -->  VkMemoryRequirements
+vkGetPhysicalDeviceMemoryProperties    -->    VkPhysicalDeviceMemoryProperties
+vkAllocateMemory       --> VkMemoryAllocateInfo   --> VkDeviceMemory
+
+
+
+						////////////////////////////////////////////////////////////////////////////////////////////////////////////
+						// stage 10: upload vetex data to staging buffer and copy data from staging buffer to vertext buffer//
+						////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// upload vertex data to staging buffer
 vkMapMemory
 memcpy
 vkFlushMappedMemoryRanges  --> VkMappedMemoryRange
 vkUnmapMemory
+// copy data from staging buffer to vertex buffer
+vkBeginCommandBuffer   -->   VkCommandBufferBeginInfo
+vkCmdCopyBuffer 	   --> 	 VkBufferCopy
+vkCmdPipelineBarrier   -->   VkBufferMemoryBarrier  // flags have: VK_ACCESS_MEMORY_WRITE_BIT to VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT
+vkEndCommandBuffer
+vkQueueSubmit  -->  VkSubmitInfo
 
-
-// begins render resouce creation: command buffer, semaphore, Fence
-// create command buffers
-vkCreateCommandPool       --> VkCommandPoolCreateInfo
-vkAllocateCommandBuffers   --> VkCommandBufferAllocateInfo
-// semaphore
-vkCreateSemaphore       -->   VkSemophoreCreateInfo  VkSemaphore
-// fence
-vkCreateFence          -->    VkFenceCreateInfo    VkFence
 
 // draw begins
 // get render resource
@@ -95,6 +192,7 @@ vkCmdBindPipeline
 vkCmdSetViewport
 vkCmdSetScissor
 vkCmdBindVertexBuffers
+vkCmdBindDescriptorSets   // when there is a decriptor sets
 vkCmdDraw
 
 vkCmdEndRenderPass
@@ -116,6 +214,13 @@ vkDeviceWaitIdle
 vkFreeCommandBuffers
 vkDestroyCommandPool
 vkDestroyPipeline
+vkDestroyPipelineLayout
+vkDestroyDescriptorPool
+vkDestroyDescriptorSetLayout
+vkDesroySampler
+vkDestroyImageView
+vkDestroyImage
+vkFreeMemory   // image memory
 vkDestroyRenderPass
 vkDestroyFramebuffer
 
