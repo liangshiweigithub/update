@@ -19,3 +19,17 @@ https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glViewport.xhtml
 投影矩阵的推导：
 
 http://www.songho.ca/opengl/gl_projectionmatrix.html
+
+alpha test和alpha blend
+
+https://answer.uwa4d.com/question/59c09367a3d42c411c37a0cd/
+
+https://blog.csdn.net/candycat1992/article/details/41599167
+
+https://www.gamedev.net/forums/topic/656826-why-the-alphablend-is-a-better-choice-than-alphatest-to-implement-transparent-on-mobile-device/
+
+https://zhuanlan.zhihu.com/p/33127345
+
+GPU 架构
+
+https://juejin.cn/post/6844904132864655367
