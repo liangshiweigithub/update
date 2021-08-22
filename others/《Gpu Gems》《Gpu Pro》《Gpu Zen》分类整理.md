@@ -1,3 +1,11 @@
+https://blog.csdn.net/poem_qianmo/article/details/79689041
+
+https://blog.csdn.net/puppet_master/article/details/87172148
+
+http://gpupro.blogspot.com/
+
+
+
 《Gpu Gems》《Gpu Pro》《Gpu Zen》分类整理
 以下是各项技术的分类整理，除Multi Topic可能包含若干章节是很多技术整合分享的，其余绝大部分章节都是单向技术的总结。
 
