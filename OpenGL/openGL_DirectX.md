@@ -33,3 +33,45 @@ https://zhuanlan.zhihu.com/p/33127345
 GPU 架构
 
 https://juejin.cn/post/6844904132864655367
+
+glViewport详解：
+
+https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glViewport.xhtml#:~:text=Description,nd)%20be%20normalized%20device%20coordinates.
+
+glDepthRange:
+
+https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glDepthRange.xhtml
+
+depthRange 和 glViewport解析:
+
+https://gamedev.stackexchange.com/questions/8050/in-opengl-how-can-i-discover-the-depth-range-of-a-depth-buffer
+
+Reversed Z：为什么用Reversed Z
+
+https://zhuanlan.zhihu.com/p/341495234
+
+https://zhuanlan.zhihu.com/p/75517534
+
+Linear depth
+
+https://stackoverflow.com/questions/51108596/linearize-depth
+
+https://stackoverflow.com/questions/6652253/getting-the-true-z-value-from-the-depth-buffer/6657284#6657284
+
+http://web.archive.org/web/20130416194336/http://olivers.posterous.com/linear-depth-in-glsl-for-real
+
+图形学简介：
+
+https://fgiesen.wordpress.com/2011/07/09/a-trip-through-the-graphics-pipeline-2011-index/
+
+metal的 projection matrix：
+
+https://metashapes.com/blog/opengl-metal-projection-matrix-problem/
+
+EVSM:
+
+https://zhuanlan.zhihu.com/p/382202359
+
+metal相关文档。
+
+https://developer.apple.com/documentation/metal
