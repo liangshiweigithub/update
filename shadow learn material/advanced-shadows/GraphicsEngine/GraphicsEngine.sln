@@ -1,0 +1,98 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shader Files", "Shader Files", "{19EFFB3A-BABF-48A6-BA75-9253033C81F8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Header Files", "Header Files", "{0BBBE9D0-C7F0-4832-A953-3E88F93318A1}"
+	ProjectSection(SolutionItems) = preProject
+		shaders\include\Basic2d.fx = shaders\include\Basic2d.fx
+		shaders\include\Basic3d.fx = shaders\include\Basic3d.fx
+		shaders\include\Common.fx = shaders\include\Common.fx
+		shaders\include\Poisson.fx = shaders\include\Poisson.fx
+		shaders\include\PSShadows.fx = shaders\include\PSShadows.fx
+		shaders\include\Shadows.fx = shaders\include\Shadows.fx
+		shaders\include\States.fx = shaders\include\States.fx
+		shaders\include\Structures.fx = shaders\include\Structures.fx
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Source Files", "Source Files", "{C42C48A6-0563-41BB-91C2-25D27D0B92A7}"
+	ProjectSection(SolutionItems) = preProject
+		shaders\DisplayMap.fx = shaders\DisplayMap.fx
+		shaders\GenDepthMap.fx = shaders\GenDepthMap.fx
+		shaders\GenSAT.fx = shaders\GenSAT.fx
+		shaders\PostProcess.fx = shaders\PostProcess.fx
+		shaders\PSPostProcess.fx = shaders\PSPostProcess.fx
+		shaders\RenderPSSM.fx = shaders\RenderPSSM.fx
+		shaders\RenderSingleSM.fx = shaders\RenderSingleSM.fx
+		shaders\RenderSky.fx = shaders\RenderSky.fx
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SceneGraph", "source\SceneGraph\SceneGraph.vcxproj", "{8AF677F5-9C20-4F8C-A520-1BE6C481B344}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GraphicsEngine", "source\GraphicsEngine\GraphicsEngine.vcxproj", "{4EE1028F-619C-441B-9A1E-81B47FC3BBF4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{DF460EAB-570D-4B50-9089-2E2FC801BF38} = {DF460EAB-570D-4B50-9089-2E2FC801BF38}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PluginCollada", "source\PluginCollada\PluginCollada.vcxproj", "{85EEBC50-2DA5-4F30-99EE-A8116024EF74}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Common", "source\Common\Common.vcxproj", "{687E230A-592E-4201-BAC5-DDA65C71E780}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Viewer", "source\Viewer\Viewer.vcxproj", "{9ACC119E-CD02-4B8B-8464-E83AFFAC8597}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "D3dRenderSystem", "source\D3dRenderSystem\D3dRenderSystem.vcxproj", "{9B64FE57-F6A9-448C-9E56-AC592C8511A1}"
+	ProjectSection(ProjectDependencies) = postProject
+		{DF460EAB-570D-4B50-9089-2E2FC801BF38} = {DF460EAB-570D-4B50-9089-2E2FC801BF38}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Effects11", "source\Effects11\Effects11.vcxproj", "{DF460EAB-570D-4B50-9089-2E2FC801BF38}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Qhull", "source\Qhull\Qhull.vcxproj", "{48D7AAA8-4414-479C-A7E0-0D260EABC070}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8AF677F5-9C20-4F8C-A520-1BE6C481B344}.Debug|Win32.ActiveCfg = Debug|Win32
+		{8AF677F5-9C20-4F8C-A520-1BE6C481B344}.Debug|Win32.Build.0 = Debug|Win32
+		{8AF677F5-9C20-4F8C-A520-1BE6C481B344}.Release|Win32.ActiveCfg = Release|Win32
+		{8AF677F5-9C20-4F8C-A520-1BE6C481B344}.Release|Win32.Build.0 = Release|Win32
+		{4EE1028F-619C-441B-9A1E-81B47FC3BBF4}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4EE1028F-619C-441B-9A1E-81B47FC3BBF4}.Debug|Win32.Build.0 = Debug|Win32
+		{4EE1028F-619C-441B-9A1E-81B47FC3BBF4}.Release|Win32.ActiveCfg = Release|Win32
+		{4EE1028F-619C-441B-9A1E-81B47FC3BBF4}.Release|Win32.Build.0 = Release|Win32
+		{85EEBC50-2DA5-4F30-99EE-A8116024EF74}.Debug|Win32.ActiveCfg = Debug|Win32
+		{85EEBC50-2DA5-4F30-99EE-A8116024EF74}.Debug|Win32.Build.0 = Debug|Win32
+		{85EEBC50-2DA5-4F30-99EE-A8116024EF74}.Release|Win32.ActiveCfg = Release|Win32
+		{85EEBC50-2DA5-4F30-99EE-A8116024EF74}.Release|Win32.Build.0 = Release|Win32
+		{687E230A-592E-4201-BAC5-DDA65C71E780}.Debug|Win32.ActiveCfg = Debug|Win32
+		{687E230A-592E-4201-BAC5-DDA65C71E780}.Debug|Win32.Build.0 = Debug|Win32
+		{687E230A-592E-4201-BAC5-DDA65C71E780}.Release|Win32.ActiveCfg = Release|Win32
+		{687E230A-592E-4201-BAC5-DDA65C71E780}.Release|Win32.Build.0 = Release|Win32
+		{9ACC119E-CD02-4B8B-8464-E83AFFAC8597}.Debug|Win32.ActiveCfg = Debug|Win32
+		{9ACC119E-CD02-4B8B-8464-E83AFFAC8597}.Debug|Win32.Build.0 = Debug|Win32
+		{9ACC119E-CD02-4B8B-8464-E83AFFAC8597}.Release|Win32.ActiveCfg = Release|Win32
+		{9ACC119E-CD02-4B8B-8464-E83AFFAC8597}.Release|Win32.Build.0 = Release|Win32
+		{9B64FE57-F6A9-448C-9E56-AC592C8511A1}.Debug|Win32.ActiveCfg = Debug|Win32
+		{9B64FE57-F6A9-448C-9E56-AC592C8511A1}.Debug|Win32.Build.0 = Debug|Win32
+		{9B64FE57-F6A9-448C-9E56-AC592C8511A1}.Release|Win32.ActiveCfg = Release|Win32
+		{9B64FE57-F6A9-448C-9E56-AC592C8511A1}.Release|Win32.Build.0 = Release|Win32
+		{DF460EAB-570D-4B50-9089-2E2FC801BF38}.Debug|Win32.ActiveCfg = Debug|Win32
+		{DF460EAB-570D-4B50-9089-2E2FC801BF38}.Debug|Win32.Build.0 = Debug|Win32
+		{DF460EAB-570D-4B50-9089-2E2FC801BF38}.Release|Win32.ActiveCfg = Release|Win32
+		{DF460EAB-570D-4B50-9089-2E2FC801BF38}.Release|Win32.Build.0 = Release|Win32
+		{48D7AAA8-4414-479C-A7E0-0D260EABC070}.Debug|Win32.ActiveCfg = Debug|Win32
+		{48D7AAA8-4414-479C-A7E0-0D260EABC070}.Debug|Win32.Build.0 = Debug|Win32
+		{48D7AAA8-4414-479C-A7E0-0D260EABC070}.Release|Win32.ActiveCfg = Release|Win32
+		{48D7AAA8-4414-479C-A7E0-0D260EABC070}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{0BBBE9D0-C7F0-4832-A953-3E88F93318A1} = {19EFFB3A-BABF-48A6-BA75-9253033C81F8}
+		{C42C48A6-0563-41BB-91C2-25D27D0B92A7} = {19EFFB3A-BABF-48A6-BA75-9253033C81F8}
+	EndGlobalSection
+EndGlobal

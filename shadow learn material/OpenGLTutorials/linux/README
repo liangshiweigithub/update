@@ -1,0 +1,43 @@
+README:
+-------
+
+Binaries for computers in 4220 and 4225 are included (see linux/lib). If you
+run this on a different system, you may have to rebuild DevIL and GLEW for that
+system. 
+
+This assumes that your directory tree is as follows (seen from $PATH/TO/labs)
+
+  ./
+  	./lab2-textures            \
+	./lab3-camera              |  Lab-projects
+	...                        |
+	./lab6-shadowmaps          /
+
+	./glutil                   } gl-related utilities & stuff
+
+	./inc                      \
+	./bin                      |  Windows-related files
+	[other windows files]      /
+
+	./linux                         \
+	  ./linux/lib                   |
+	  ./linux/lib64                 |
+	  ./linux/include               | Linux-related files
+	  ./linux/DevIL-1.7.8.tar.gz    |
+	  ./linux/glew-1.5.1-src.tgz    /
+
+- Building DevIL:
+
+ $ tar xvfz DevIL-1.7.8.tar.gz
+ $ cd devil-1.7.8
+ $ ./configure --prefix="$(cd .. && pwd)" --enable-ILU --enable-ILUT
+ $ make && make install
+
+- Building GLEW
+ 
+ $ tar xvfz glew-1.5.1-src.tgz
+ $ cd glew
+ $ dos2unix config/config.guess
+ $ make GLEW_DEST=".." && make install GLEW_DEST=".."
+
+(Note: if you use a different version of GLEW, you can maybe skip the third step)

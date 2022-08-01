@@ -1,0 +1,23 @@
+1.轻量级草地系统 : Done
+2.HLOD + billboard  :   Done
+3.风动 + 流体模拟：风动已完成，Done    
+4.导出NeoX->Messiah (模型，地形，场景，动画数据，简易物理生成) : Done
+5.sh阴影
+6.开镜优化: lod切换, 新dissolving, 开镜剪枝. Done
+
+7.知识技能: FrameGraph + ECS  almost Done
+
+8.67管线架构和67工作流程            
+9.occlusion query预研      Done
+
+10.俯仰角编辑器vhacd ?
+
+
+
+GPU架构: Done
+    1.on-chip memory
+    2.IMR, TBR, TBDR
+
+pbr光照算法？
+renderPipeline流程?
+vulkan?

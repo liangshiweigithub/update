@@ -1,0 +1,38 @@
+Quick Introduction To Labs on *NIX
+----------------------------------
+
+If you wish to use a Linux-based system (e.g. StuDAT on Chalmers), we
+provide some tools for compiling your applications. This is only 
+recomended for persons familiar with Linux.
+
+Programs will be compiled and run from the command line; the examples
+use bash-syntax. Commands you need to type are prefixed with a '$'-sign;
+you should not type the sign before the command ;-)
+
+All labs will include a 'makefile'. To start compilation, simply type
+
+  $ make
+
+in one of the directories containing a lab. If compilation and linking 
+was successfull, you can run the lab by typing
+
+  $ ./lab1
+
+NOTE: It is important that you keep the original directory structure
+intact, since the compiler will look for files in "../linux/include"; 
+the linker and the final application expect to find shared libraries in
+"../linux/lib".
+
+NOTE: All binaries are compiled as 32-bit binaries, even on a 64-bit 
+system, since the provided binaries are 32-bit only!
+
+ -- Troubleshooting:
+
+* Can't find includes for GLEW or IL
+  - Is there a ../linux/include/GL or ../linux/include/IL?
+
+* Can't find libraries for GLEW or IL (link-time)
+  - Is there a ../linux/lib?
+
+* Can't find libraries for GLEW or IL (run-time)
+  - Is there a ../linux/lib, as seen from CWD!

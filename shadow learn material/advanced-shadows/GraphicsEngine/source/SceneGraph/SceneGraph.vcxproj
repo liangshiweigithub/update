@@ -1,0 +1,201 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{8AF677F5-9C20-4F8C-A520-1BE6C481B344}</ProjectGuid>
+    <RootNamespace>SceneGraph</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)bin\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)bin\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>$(SolutionDir)include; $(SolutionDir)include\SceneGraph;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;SCENEGRAPH_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(ProjectName)D.dll</OutputFile>
+      <AdditionalLibraryDirectories>$(SolutionDir)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <ImportLibrary>$(SolutionDir)lib/$(TargetName).lib</ImportLibrary>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(SolutionDir)include; $(SolutionDir)include\SceneGraph;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;SCENEGRAPH_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <ImportLibrary>$(SolutionDir)lib\$(TargetName).lib</ImportLibrary>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="BoundingBox.cpp" />
+    <ClCompile Include="BoundingSphere.cpp" />
+    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Culler.cpp" />
+    <ClCompile Include="DrawableNode.cpp" />
+    <ClCompile Include="Frustum.cpp" />
+    <ClCompile Include="Geometry.cpp" />
+    <ClCompile Include="GroupNode.cpp" />
+    <ClCompile Include="Image.cpp" />
+    <ClCompile Include="Light.cpp" />
+    <ClCompile Include="Line.cpp" />
+    <ClCompile Include="LiSP.cpp" />
+    <ClCompile Include="Material.cpp" />
+    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="MeshNode.cpp" />
+    <ClCompile Include="Model.cpp" />
+    <ClCompile Include="ModelLoader.cpp" />
+    <ClCompile Include="ModelNode.cpp" />
+    <ClCompile Include="Node.cpp" />
+    <ClCompile Include="Ortho3d.cpp" />
+    <ClCompile Include="Pass.cpp" />
+    <ClCompile Include="Perspective.cpp" />
+    <ClCompile Include="Plane.cpp" />
+    <ClCompile Include="Polygon3d.cpp" />
+    <ClCompile Include="PolygonBody.cpp" />
+    <ClCompile Include="Projection.cpp" />
+    <ClCompile Include="RootNode.cpp" />
+    <ClCompile Include="SceneGraphDll.cpp" />
+    <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="StateNode.cpp" />
+    <ClCompile Include="stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="Transform.cpp" />
+    <ClCompile Include="TransformNode.cpp" />
+    <ClCompile Include="View.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\include\SceneGraph\BoundingBox.h" />
+    <ClInclude Include="..\..\include\SceneGraph\BoundingSphere.h" />
+    <ClInclude Include="..\..\include\SceneGraph\Camera.h" />
+    <ClInclude Include="..\..\include\SceneGraph\Culler.h" />
+    <ClInclude Include="..\..\include\SceneGraph\Drawable.h" />
+    <ClInclude Include="..\..\include\SceneGraph\DrawableNode.h" />
+    <ClInclude Include="..\..\include\SceneGraph\Frustum.h" />
+    <ClInclude Include="..\..\include\SceneGraph\Geometry.h" />
+    <ClInclude Include="..\..\include\SceneGraph\GroupNode.h" />
+    <ClInclude Include="..\..\include\SceneGraph\Image.h" />
+    <ClInclude Include="..\..\include\SceneGraph\Light.h" />
+    <ClInclude Include="..\..\include\SceneGraph\Line.h" />
+    <ClInclude Include="..\..\include\SceneGraph\LiSP.h" />
+    <ClInclude Include="..\..\include\SceneGraph\Material.h" />
+    <ClInclude Include="..\..\include\SceneGraph\Mesh.h" />
+    <ClInclude Include="..\..\include\SceneGraph\MeshNode.h" />
+    <ClInclude Include="..\..\include\SceneGraph\Model.h" />
+    <ClInclude Include="..\..\include\SceneGraph\ModelLoader.h" />
+    <ClInclude Include="..\..\include\SceneGraph\ModelNode.h" />
+    <ClInclude Include="..\..\include\SceneGraph\Node.h" />
+    <ClInclude Include="..\..\include\SceneGraph\Ortho3d.h" />
+    <ClInclude Include="..\..\include\SceneGraph\Pass.h" />
+    <ClInclude Include="..\..\include\SceneGraph\Perspective.h" />
+    <ClInclude Include="..\..\include\SceneGraph\Plane.h" />
+    <ClInclude Include="..\..\include\SceneGraph\Polygon3d.h" />
+    <ClInclude Include="..\..\include\SceneGraph\PolygonBody.h" />
+    <ClInclude Include="..\..\include\SceneGraph\Projection.h" />
+    <ClInclude Include="..\..\include\SceneGraph\RenderSystem.h" />
+    <ClInclude Include="..\..\include\SceneGraph\RootNode.h" />
+    <ClInclude Include="..\..\include\SceneGraph\SceneGraphExports.h" />
+    <ClInclude Include="..\..\include\SceneGraphSdk.h" />
+    <ClInclude Include="..\..\include\SceneGraph\Shader.h" />
+    <ClInclude Include="..\..\include\SceneGraph\State.h" />
+    <ClInclude Include="..\..\include\SceneGraph\StateNode.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="..\..\include\SceneGraph\Texture.h" />
+    <ClInclude Include="..\..\include\SceneGraph\Transform.h" />
+    <ClInclude Include="..\..\include\SceneGraph\TransformNode.h" />
+    <ClInclude Include="..\..\include\SceneGraph\View.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Common\Common.vcxproj">
+      <Project>{687e230a-592e-4201-bac5-dda65c71e780}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\Qhull\Qhull.vcxproj">
+      <Project>{48d7aaa8-4414-479c-a7e0-0d260eabc070}</Project>
+      <Private>true</Private>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
