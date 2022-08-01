@@ -14,7 +14,9 @@ https://docs.microsoft.com/en-us/windows/win32/api/d3d9helper/nf-d3d9helper-idir
 
 https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glViewport.xhtml
 
+vulkan的ndc：
 
+https://matthewwellings.com/blog/the-new-vulkan-coordinate-system/
 
 投影矩阵的推导：
 
@@ -75,3 +77,41 @@ https://zhuanlan.zhihu.com/p/382202359
 metal相关文档。
 
 https://developer.apple.com/documentation/metal
+
+
+
+glTexStorage2D and glTexImage2D区别:
+
+https://stackoverflow.com/questions/15405869/is-gltexstorage2d-imperative-when-auto-generating-mipmaps
+
+
+
+投影矩阵的推导，一下n和f皆为正值
+
+z映射到[-1, 1]时，投影矩阵如下：
+$$
+\begin{matrix}
+\frac{n}{r} & 0 & 0 & 0\\
+0 & \frac{n}{t} & 0 &0\\
+0 & 0 & -\frac{f+n}{f-n} & -\frac{2nf}{f-n}\\
+0 & 0 & -1 & 0
+\end{matrix}
+$$
+z映射到[0, 1]
+$$
+\begin{matrix}
+\frac{n}{r} & 0 & 0 & 0\\
+0 & \frac{n}{t} & 0 &0\\
+0 & 0 & -\frac{f}{f-n} & -\frac{fn}{f-n}\\
+0 & 0 & -1 & 0
+\end{matrix}
+$$
+z 映射到[1, 0]
+$$
+\begin{matrix}
+\frac{n}{r} & 0 & 0 & 0\\
+0 & \frac{n}{t} & 0 &0\\
+0 & 0 & \frac{n}{f-n} & \frac{fn}{f-n}\\
+0 & 0 & -1 & 0
+\end{matrix}
+$$

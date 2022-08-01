@@ -1,0 +1,2196 @@
+<!DOCTYPE html>
+<!-- saved from url=(0037)https://km.netease.com/article/299477 -->
+<html lang="en" style="font-size: 12px; background: rgb(245, 249, 249);"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Masked Software Occlusion Culling 算法介绍_网易KM</title>
+  <script type="text/javascript" async="" src="./soc_files/DATracker.globals.1.6.13.js.下载"></script><script>
+    !(function (n) {
+          let e = n.document,
+            t = e.documentElement,
+            i = 1920,
+            d = i / 16,
+            o = 'orientationchange' in n ? 'orientationchange' : 'resize',
+            st = null,
+            f = function () {},
+            a = function () {
+              f = function () {
+                // eslint-disable-next-line @typescript-eslint/no-shadow
+                let n = Math.max(t.clientWidth || 1440, 1440);
+                t.style.fontSize = n / d + 'px';
+              };
+              f();
+              st && clearTimeout(st);
+              st = setTimeout(f, 200);
+            };
+          e.addEventListener && (n.addEventListener(o, a, !1), e.addEventListener('DOMContentLoaded', a, !1));
+        })(window);
+
+  </script>
+  <link rel="stylesheet" href="./soc_files/shCore.css">
+  <link rel="stylesheet" href="./soc_files/shThemeDefault.css">
+  <!--  Markdown-->
+  <link rel="stylesheet" href="./soc_files/github.css">
+  <link rel="stylesheet" href="./soc_files/katex.min.css">
+
+  <!--[if lt IE 9]>
+  <link rel="stylesheet" href="/javascripts/ie-blocker/ie-blocker.css">
+  <script src="/javascripts/ie-blocker/ie-blocker.zhCN.js"></script>
+  <![endif]-->
+  <!-- Polyfills -->
+  <!--[if lt IE 10]>
+  <script src="https://as.alipayobjects.com/g/component/??console-polyfill/0.2.2/index.js,es5-shim/4.5.7/es5-shim.min.js,es5-shim/4.5.7/es5-sham.min.js,html5shiv/3.7.2/html5shiv.min.js,media-match/2.0.2/media.match.min.js"></script>
+  <![endif]-->
+  <script src="./soc_files/jquery.min.js.下载"></script>
+  <script src="./soc_files/ckeditor.js.下载"></script>
+  <script src="./soc_files/shCore.js.下载"></script>
+  <script src="./soc_files/shBrushAll.js.下载"></script>
+
+  <script type="text/javascript" src="./soc_files/offlights.js.下载"></script>
+  <script type="text/javascript" src="./soc_files/ckplayer.js.下载" charset="utf-8"></script>
+  <script type="text/javascript" src="./soc_files/flexpaper.js.下载"></script>
+  <script type="text/javascript" src="./soc_files/flexpaper_handlers.js.下载"></script>
+  <script type="text/javascript" src="./soc_files/nis-km.wm.js.下载"></script>
+
+
+  <!--markdown-->
+  <script src="./soc_files/highlight.pack.min.js.下载"></script>
+  <script src="./soc_files/raphael.min.js.下载"></script>
+  <script src="./soc_files/katex.min.js.下载"></script>
+  <script src="./soc_files/mermaid.min.js.下载"></script>
+  <script>
+    SyntaxHighlighter.config.clipboardSwf = '/javascripts/ckeditor/plugins/syntaxhighlight/scripts/clipboard.swf'
+    //SyntaxHighlighter.defaults['toolbar'] = false;
+    SyntaxHighlighter.all()
+    var watchtime = null
+    var watt = false
+    var ptime = 0
+    var timenow = 0
+    var totaltime = 0
+    var video_course_id = null
+    var v_crsf_token = null
+    var v_crsf_exp = null
+
+    function start_with_str (str, s) {
+      if (s == null || s == '' || str.length == 0 || s.length > str.length) {
+        return false
+      }
+
+      if (str.substr(0, s.length) == s) {
+        return true
+      } else {
+        return false
+      }
+
+      return false
+    }
+
+    function ckplayer_status (str) {
+      if (start_with_str(str, 'totaltime:')) {
+        if (!watt) {
+          watt = true
+          totaltime = parseInt(str.replace('totaltime:', ''))
+        }
+      }
+      if (start_with_str(str, 'time:')) {
+        timenow = parseInt(str.replace('time:', ''))
+        if (timenow > ptime) {
+          ptime = timenow
+        }
+      }
+    }
+
+    function update_study_record () {
+      if (video_course_id && video_course_id > 0 && ptime > 0 && totaltime > 0 && v_crsf_token && v_crsf_token != '' && v_crsf_exp && v_crsf_exp != '') {
+        jQuery.ajax({
+          url: '/mobile/video_time_submit',
+          async: false,
+          type: 'POST',
+          dataType: 'html',
+          data: { 'course_id': video_course_id, 'seconds': ptime, 'crsf_token': v_crsf_token, 'crsf_exp': v_crsf_exp },
+          success: function (data, st, ajax) {
+            //alert(data);
+          },
+          error: function (ajax, st, errorThrown) {
+            alert('HTTP ' + st + ': ' + errorThrown)
+          }
+        })
+      }
+    }
+  </script>
+  <script src="./soc_files/injectHubble.js.下载" type="text/javascript"></script>
+<link rel="shortcut icon" href="https://km.netease.com/react_apps/home/dist/favicon.ico"><link href="./soc_files/style.css" rel="stylesheet"><style type="text/css">.modal-popo-yjdk .ant-modal {
+  width: 680px !important;
+}
+.modal-popo-yjdk .ant-modal-header .ant-modal-title {
+  font-weight: normal;
+  color: #262626;
+}
+.modal-popo-yjdk .ant-modal-body {
+  padding: 20px;
+}
+.modal-popo-yjdk .ant-modal-body .edit-container {
+  position: relative;
+}
+.modal-popo-yjdk .ant-modal-body .edit-container .edit-move-input {
+  position: absolute;
+  box-shadow: 0 1px 10px 0 #ccc;
+  padding: 10px;
+  border-radius: 4px;
+  background: #fff;
+  width: 300px;
+}
+.modal-popo-yjdk .ant-modal-body .edit-actions {
+  margin-top: 14px;
+  display: flex;
+}
+.modal-popo-yjdk .ant-modal-body .edit-actions > span {
+  line-height: 24px;
+  height: 24px;
+  color: #BFBFBF;
+  cursor: pointer;
+  margin-right: 8px;
+}
+.modal-popo-yjdk .ant-modal-body .edit-actions > span svg {
+  font-size: 24px;
+}
+.modal-popo-yjdk .ant-modal-body .edit-actions > span:hover {
+  color: #595959;
+}
+.modal-popo-yjdk .ant-modal-body .edit-actions .edit-count {
+  flex: 1;
+  color: #BFBFBF !important;
+  text-align: right;
+  cursor: default;
+}
+.modal-popo-yjdk .ant-modal-body .article-desc {
+  margin: 20px auto;
+  background: #f7f7f7;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+}
+.modal-popo-yjdk .ant-modal-body .article-desc div {
+  width: 60px;
+  min-width: 60px;
+  height: 48px;
+  border-radius: 4px;
+  margin-right: 12px;
+  overflow: hidden;
+}
+.modal-popo-yjdk .ant-modal-body .article-desc div img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+.modal-popo-yjdk .ant-modal-body .article-desc p {
+  flex: 1;
+  width: 0;
+  margin-bottom: 0;
+  display: -webkit-box;
+  line-height: 24px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-all;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.modal-popo-yjdk .ant-modal-body .send-select {
+  padding: 12px;
+}
+.modal-popo-yjdk .ant-modal-body .ant-select-open .ant-select-selection {
+  outline: 0;
+}
+.modal-popo-yjdk .ant-modal-body .ant-select .ant-select-selection {
+  border-radius: 4px;
+}
+.modal-popo-yjdk .ant-modal-body .ant-select .ant-select-selection:active,
+.modal-popo-yjdk .ant-modal-body .ant-select .ant-select-selection:focus {
+  box-shadow: none;
+}
+.modal-popo-yjdk .ant-modal-body .ant-select-dropdown-menu-item-selected {
+  font-weight: normal;
+}
+.modal-popo-yjdk .ant-modal-body .ant-select-dropdown-menu-item:hover {
+  font-weight: normal;
+}
+.modal-popo-yjdk .ant-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+.modal-popo-yjdk .ant-modal-footer .ant-btn {
+  border-radius: 4px;
+  padding: 5px 16px;
+  line-height: 22px;
+  font-size: 14px;
+  font-weight: normal;
+  cursor: pointer;
+}
+.modal-popo-yjdk .ant-modal-footer .ant-btn-primary {
+  margin-left: 16px;
+}
+.modal-popo-yjdk .ant-modal-footer .ant-btn.ant-btn-gray {
+  color: #ccc;
+  background-color: #f7f7f7;
+  border-color: #d9d9d9;
+}
+.popo-share-popover {
+  z-index: 1100 !important;
+}
+.popo-share-popover .ant-popover-inner {
+  border: none;
+  filter: drop-shadow(0px 10px 32px rgba(0, 0, 0, 0.1));
+}
+.popo-share-popover .ant-popover-arrow {
+  display: none;
+}
+</style><style type="text/css">.popo-emoji .rock-popover-container {
+  display: flex;
+}
+.popo-emoji-popover .popo-emoji-popover-inner-content {
+  padding: 12px;
+}
+.popo-emoji-trigger.popo-emoji-popover-open {
+  color: #555;
+}
+.popo-emoji-list {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.popo-emoji-item {
+  display: inline-block;
+  padding: 4px;
+  margin: 4px;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.popo-emoji-item:hover {
+  background: #f5f5f5;
+}
+.popo-emoji-item > img {
+  width: 100%;
+  height: 100%;
+}
+</style><style type="text/css">.topic-key-popver {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  padding: 8px;
+}
+.topic-key-popver .ant-input {
+  border-radius: 4px;
+  color: #595959;
+  font-size: 14px;
+}
+.topic-key-popver .ant-btn {
+  margin-left: 16px;
+  padding: 5px 16px;
+  border-radius: 4px;
+  font-weight: normal;
+}
+.topic-key-popver .btn-disabled {
+  cursor: default !important;
+}
+</style><style type="text/css">.share-popo-editor {
+  height: 128px;
+}
+.share-popo-editor .ql-container {
+  font-size: 14px;
+}
+.share-popo-editor .ql-container.ql-snow {
+  background: #fff;
+  border: none;
+}
+.share-popo-editor .ql-container.ql-snow img {
+  vertical-align: middle;
+}
+.share-popo-editor .ql-container.ql-snow.ql-disabled {
+  opacity: 1;
+  cursor: not-allowed;
+}
+.share-popo-editor .ql-container.ql-snow:not(.ql-disabled) .ql-editor:focus {
+  border-right-width: 1px !important;
+  outline: 0;
+}
+.share-popo-editor .ql-editor {
+  padding: 5px 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  font-size: 14px;
+  line-height: 22px;
+  color: #595959;
+}
+.share-popo-editor .ql-editor::-webkit-scrollbar {
+  width: 6px;
+}
+.share-popo-editor .ql-editor::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+.share-popo-editor .ql-editor .quill-custom-tag {
+  font-weight: 600;
+  display: inline;
+}
+.share-popo-editor .ql-editor img {
+  height: 28px;
+  width: 28px;
+}
+.share-popo-editor .ql-editor.ql-blank::before {
+  left: 16px;
+  right: 16px;
+  color: #ccc;
+  font-style: normal;
+}
+</style><style type="text/css">.comment {
+  position: relative;
+}
+.comment-inner {
+  display: flex;
+  padding: 8px 0;
+}
+.comment-avatar {
+  position: relative;
+  flex-shrink: 0;
+}
+.comment-avatar img {
+  height: 36px;
+  width: 36px;
+  border-radius: 50%;
+}
+.comment-content {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 1px;
+  word-wrap: break-word;
+}
+.comment-content-author {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  margin-bottom: 4px;
+}
+.comment-content-author > * {
+  font-size: 12px;
+  line-height: 18px;
+}
+.comment-content-author > *:not(:last-child) {
+  padding-right: 12px;
+}
+.comment-content-author-name {
+  color: #333;
+}
+.comment-content-author-time {
+  color: #ccc;
+  white-space: nowrap;
+}
+.comment-content-detail {
+  white-space: pre-wrap;
+}
+.comment-actions {
+  margin-top: 12px;
+  margin-bottom: 0px;
+  padding: 0;
+}
+.comment-actions-flex {
+  display: flex;
+}
+.comment-actions li {
+  line-height: 1;
+}
+.comment-actions li .ant-btn {
+  padding: 3px 8px;
+}
+.comment-actions li .ant-btn-link {
+  color: rgba(0, 0, 0, 0.25);
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+.comment-actions li .ant-btn-link::after {
+  display: none;
+}
+.comment-nested {
+  margin-left: 44px;
+}
+</style><style type="text/css">.popo-emoji .rock-popover-container {
+  display: flex;
+}
+.popo-emoji-popover .popo-emoji-popover-inner-content {
+  padding: 12px;
+}
+.popo-emoji-trigger.popo-emoji-popover-open {
+  color: #555;
+}
+.popo-emoji-list {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.popo-emoji-item {
+  display: inline-block;
+  padding: 4px;
+  margin: 4px;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.popo-emoji-item:hover {
+  background: #f5f5f5;
+}
+.popo-emoji-item > img {
+  width: 100%;
+  height: 100%;
+}
+</style><style type="text/css">.comment-editor .ql-container.ql-snow {
+  background: #fff;
+  border: none;
+}
+.comment-editor .ql-container.ql-snow.ql-disabled {
+  opacity: 1;
+  cursor: not-allowed;
+}
+.comment-editor .ql-container.ql-snow:not(.ql-disabled) .ql-editor:focus {
+  border-right-width: 1px !important;
+  outline: 0;
+}
+.comment-editor .ql-toolbar.ql-snow {
+  border: 1px solid #ccc;
+  border-top-left-radius: 2px;
+  border-top-right-radius: 2px;
+  border-bottom: 0;
+}
+.comment-editor .ql-toolbar.ql-snow .ql-formats {
+  margin: 0;
+}
+.comment-editor .ql-toolbar.ql-snow input.ql-image[type='file'],
+.comment-editor .ql-toolbar.ql-snow input.ql-video[type='file'] {
+  display: none;
+}
+.comment-editor .ql-toolbar.ql-snow + .ql-container.ql-snow .ql-editor {
+  border-top: 1px solid #ccc;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+.comment-editor .ql-toolbar.ql-snow + .ql-container.ql-snow .ql-editor:focus {
+  border-color: #ccc;
+  box-shadow: none;
+}
+.comment-editor .ql-editor {
+  padding: 12px 16px;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  line-height: 16px;
+}
+.comment-editor .ql-editor.ql-blank::before {
+  left: 18px;
+  right: 16px;
+  color: #ccc;
+  font-style: normal;
+}
+</style><style type="text/css">@font-face {font-family: "iconfont";
+  src: url('iconfont.eot?t=1596096605050'); /* IE9 */
+  src: url('iconfont.eot?t=1596096605050#iefix') format('embedded-opentype'), /* IE6-IE8 */
+  url('data:application/x-font-woff2;charset=utf-8;base64,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') format('woff2'),
+  url('iconfont.woff?t=1596096605050') format('woff'),
+  url('iconfont.ttf?t=1596096605050') format('truetype'), /* chrome, firefox, opera, Safari, Android, iOS 4.2+ */
+  url('iconfont.svg?t=1596096605050#iconfont') format('svg'); /* iOS 4.1- */
+}
+
+.iconfont {
+  font-family: "iconfont" !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-d-angle-down:before {
+  content: "\d033";
+}
+
+.icon-d-angle-right:before {
+  content: "\d032";
+}
+
+.icon-d-badminton:before {
+  content: "\d031";
+}
+
+.icon-d-angle-left:before {
+  content: "\d030";
+}
+
+.icon-d-angle-up:before {
+  content: "\d029";
+}
+
+.icon-d-buildings:before {
+  content: "\d028";
+}
+
+.icon-d-check-circle:before {
+  content: "\d027";
+}
+
+.icon-d-caret-down:before {
+  content: "\d026";
+}
+
+.icon-d-caret-up:before {
+  content: "\d025";
+}
+
+.icon-d-camera:before {
+  content: "\d024";
+}
+
+.icon-d-caret-left:before {
+  content: "\d023";
+}
+
+.icon-d-caret-right:before {
+  content: "\d022";
+}
+
+.icon-d-comment:before {
+  content: "\d021";
+}
+
+.icon-d-hashtag-circle:before {
+  content: "\d020";
+}
+
+.icon-d-exclamation-circle:before {
+  content: "\d019";
+}
+
+.icon-d-download:before {
+  content: "\d018";
+}
+
+.icon-d-football:before {
+  content: "\d017";
+}
+
+.icon-d-ellipsis-v:before {
+  content: "\d016";
+}
+
+.icon-d-home:before {
+  content: "\d015";
+}
+
+.icon-d-minus-circle:before {
+  content: "\d014";
+}
+
+.icon-d-image:before {
+  content: "\d013";
+}
+
+.icon-d-mike:before {
+  content: "\d012";
+}
+
+.icon-d-lightbulb:before {
+  content: "\d011";
+}
+
+.icon-d-plus-circle:before {
+  content: "\d010";
+}
+
+.icon-d-pencil:before {
+  content: "\d009";
+}
+
+.icon-d-picture:before {
+  content: "\d008";
+}
+
+.icon-d-times-circle:before {
+  content: "\d007";
+}
+
+.icon-d-star:before {
+  content: "\d006";
+}
+
+.icon-d-upload:before {
+  content: "\d005";
+}
+
+.icon-d-times:before {
+  content: "\d004";
+}
+
+.icon-d-video-camera:before {
+  content: "\d003";
+}
+
+.icon-d-smile:before {
+  content: "\d002";
+}
+
+.icon-d-user:before {
+  content: "\d001";
+}
+
+.icon-d-bookmark:before {
+  content: "\d034";
+}
+
+.icon-d-file:before {
+  content: "\d035";
+}
+
+.icon-d-graduation-cap:before {
+  content: "\d037";
+}
+
+.icon-d-chevron-double-circle-down:before {
+  content: "\d036";
+}
+
+.icon-d-star-o:before {
+  content: "\d038";
+}
+
+.icon-d-check:before {
+  content: "\d039";
+}
+
+.icon-d-search:before {
+  content: "\d041";
+}
+
+.icon-d-spinner:before {
+  content: "\d040";
+}
+
+.icon-d-chevron-double-circle-up:before {
+  content: "\d042";
+}
+
+.icon-d-plus:before {
+  content: "\d043";
+}
+
+.icon-d-eye:before {
+  content: "\d051";
+}
+
+.icon-d-lock:before {
+  content: "\d050";
+}
+
+.icon-d-trash:before {
+  content: "\d049";
+}
+
+.icon-d-clock:before {
+  content: "\d048";
+}
+
+.icon-d-floppy:before {
+  content: "\d047";
+}
+
+.icon-d-commenting:before {
+  content: "\d046";
+}
+
+.icon-d-chevron-circle-up:before {
+  content: "\d045";
+}
+
+.icon-d-chevron-circle-down:before {
+  content: "\d044";
+}
+
+.icon-d-news-hashtag:before {
+  content: "\d052";
+}
+
+.icon-d-compress-square-o:before {
+  content: "\d054";
+}
+
+.icon-d-expand-square-o:before {
+  content: "\d053";
+}
+
+</style><style type="text/css">.icon-s-arrow-top {
+  background-image: url(../asset/icon-s-arrow-top.svg);
+}
+.icon-s-badminton {
+  background-image: url(../asset/icon-s-badminton.svg);
+}
+.icon-s-bookmark {
+  background-image: url(../asset/icon-s-bookmark.svg);
+}
+.icon-s-buildings {
+  background-image: url(../asset/icon-s-buildings.svg);
+}
+.icon-s-camera {
+  background-image: url(../asset/icon-s-camera.svg);
+}
+.icon-s-comment {
+  background-image: url(../asset/icon-s-comment.svg);
+}
+.icon-s-commenting {
+  background-image: url(../asset/icon-s-commenting.svg);
+}
+.icon-s-file {
+  background-image: url(../asset/icon-s-file.svg);
+}
+.icon-s-file-text {
+  background-image: url(../asset/icon-s-file-text.svg);
+}
+.icon-s-fire {
+  background-image: url(../asset/icon-s-fire.svg);
+}
+.icon-s-football {
+  background-image: url(../asset/icon-s-football.svg);
+}
+.icon-s-graduation-cap {
+  background-image: url(../asset/icon-s-graduation-cap.svg);
+}
+.icon-s-home {
+  background-image: url(../asset/icon-s-home.svg);
+}
+.icon-s-image {
+  background-image: url(../asset/icon-s-image.svg);
+}
+.icon-s-lightbulb {
+  background-image: url(../asset/icon-s-lightbulb.svg);
+}
+.icon-s-mike {
+  background-image: url(../asset/icon-s-mike.svg);
+}
+.icon-s-smile {
+  background-image: url(../asset/icon-s-smile.svg);
+}
+.icon-s-square-rotate {
+  background-image: url(../asset/icon-s-square-rotate.svg);
+}
+.icon-s-star {
+  background-image: url(../asset/icon-s-star.svg);
+}
+.icon-s-top {
+  background-image: url(../asset/icon-s-top.svg);
+}
+.icon-s-user {
+  background-image: url(../asset/icon-s-user.svg);
+}
+</style><style type="text/css">@import '//at.alicdn.com/t/font_2268619_9xod8je6o8r.css';
+.comments-actions .action-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.comments-actions .action-flex-left {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  height: 34px;
+}
+.comments-actions .action-flex-left div {
+  flex: 1;
+  text-align: right;
+}
+.comments-actions .action-flex-left div .ant-btn {
+  padding: 3px 0 3px 16px;
+}
+.comments-actions-action {
+  line-height: 1;
+}
+.comments-actions-action .ant-btn-link {
+  color: #999;
+  padding: 0;
+  line-height: 1;
+}
+.comments-actions-action > * {
+  display: inline-block;
+  vertical-align: top;
+  line-height: 1;
+}
+.comments-actions-action-delete-popover {
+  margin-top: 14px !important;
+}
+.comments-actions-action-text {
+  color: #999;
+  font-size: 12px;
+  margin-right: 19px;
+}
+.comments-actions-action-floor {
+  padding: 3px 4px;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.02);
+  line-height: 1;
+  font-size: 12px;
+  color: #999;
+}
+.comments-actions-action .iconfont {
+  line-height: 28px;
+  color: #ccc;
+  font-size: 12px;
+  transition: all 0.3s;
+}
+.comments-actions-action-btn > * {
+  display: inline-block;
+  vertical-align: top;
+  line-height: 1;
+}
+.comments-actions-action-btn .icon-like {
+  display: inline-block;
+  height: 16px;
+  width: 16px;
+  vertical-align: -2px;
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAA+VBMVEUAAADGxsbDw8Ozs7PCwsK8vLzBwcG+vr67u7u8vLy5ubm6urq5ubm7u7u8vLy7u7u6urq6urq5ubm8vLy6urq+vr65ubm6urq5ubm6urq8vLy6urq8vLy6urq7u7u8vLy7u7u8vLy7u7u7u7u7u7u6urq8vLy7u7u5ubm7u7u8vLy7u7u7u7u7u7u7u7u7u7u8vLy7u7u8vLy6urq7u7u7u7u8vLy7u7u8vLy8vLy7u7u8vLy7u7u8vLy7u7u7u7u7u7u7u7u8vLy7u7u8vLy6urq7u7u8vLy7u7u7u7u8vLy7u7u7u7u8vLy7u7u8vLy7u7u7u7u7u7vdRgeGAAAAUnRSTlMACREUFRcdJykqLDAzODlAQ0ZJTE5OUFVYWVxgY2hpam1ucHF0dnZ7gIeIkpOVl5mbnZ+jpKaqsbK2uLq8vb/Ex8jM0dHT09TX2d/i5Ovw8vP2PHMgMgAAAPZJREFUeNqs0tEuA0EchfEDCsqfFpUCgAEIFLBRQqGB7/0fxmZSm612xo3fzZ5NvouZZPTvCnsNdksK6qkDvA8pZIEPs0uuFHLCgVSEQQU8YZKaTKu7EXxQZyMQbJEo9UbgHn2PzKafXiioqxtulTKuzWxAHXb4GvcB3kNFbcZqsCZvLkkBZbW49P8ZWFHOaJOL1qzhvVbVpgStBc45MP0C+dEZlGnEA4eLB6scx4MlkmhQAYsGjkTRYP6vYJ3zaDAJE9Eg4Sjb93gvZ4vD+lH8pJw7b6axXzWzmeVDOFWOeZt3ZALPtn9q+3t2Lj6BvvaGktTLzQDHCkA5yqyVxQAAAABJRU5ErkJggg==);
+  background-size: 100% 100%;
+}
+.comments-actions-action-btn .icon-like_active {
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAA/1BMVEUAAAD/OTn/PDzyMzPzMTH0Nzf2NTX4NDTzMjj5NzfzNDT0NTX1Mjf2MjfyNjbzNDT0NTX0Mzf1NDT1Njb1NDT1NDj1Mzb2MzbzNDf0NDb0NTX3NTf0MjX1NDb1Mzb1MzX1NTX2Mzb2MzX0NDf2NDb0NTf0NDb2NDb1NDbzNDb0MzX2NTb1NDb1NDb1MzX1NDb1NDX1NTb1NDb1Mzf2NDX0Mzb0NDb1NTb1NDf1NDb1NDf0Mzb1NDX2NDb0NTb2NDX1NDf1NTb1NDb1NTb0NDb1NDb0NDb1NDb1NDb2NDf0NDb1Mzb1NDb1Mzb1NTb1NDb1NDb2NDb2NDf1NDb1NDYafkCRAAAAVHRSTlMACREUFRcdJykqLDAzODlAQ0ZJTE5OUFVYWVxcYGNoaWptbnBxdHZ2e4CHiJKTlZeZm52fo6SmqrGytri6vL2/xMfIzNHR09PU19nf4uTk6/Dy8/bR+kXcAAAA90lEQVR42qySg3rGQBAAt3ZjfLXbq23bnPd/ld9Otp5oMdHdyb/TvnTLoisqTecAr52qMMKbZe1zoAqbrIj0Qocm3GDlzs8ESr+bgnDOjCLMcZK/PKL8R8s1ce7SDO3pwhHH+YvFoWVZbZJggY/+olDgMpI6+nZgSgoMneQAPClhcvkdMCE19DyzVwp3KPAwKHW4UIrAGAOWNAC1QVLwuP1cMJjPhUk2PhfGOPlUiMD6VDCcyKfC8FfCNLufCg7YnwonrFXiCwrcb492SZned7ya761wuzxgWVY4vgpbUoNVYPaMCsqybfXns7N39Q32dzCSpF5uBgBQNUGgOKtLKwAAAABJRU5ErkJggg==);
+  background-size: 100% 100%;
+}
+.comments-actions-action-btn .iconfont {
+  margin-right: 3px;
+  line-height: 24px;
+}
+.comments-actions-action-btn > span {
+  font-size: 12px;
+  line-height: 24px;
+}
+.comments-actions-action-btn:hover {
+  color: #777;
+}
+.comments-actions-action-btn:hover .iconfont {
+  color: #999;
+}
+.comments-actions-reply {
+  margin-top: 10px;
+  margin-bottom: 4px;
+}
+.comments-actions-reply-input {
+  flex: 1;
+  position: relative;
+}
+.comments-actions-reply-input-long {
+  width: calc(100% - 150px);
+}
+.comments-actions-reply-input > .ant-btn {
+  position: absolute;
+  top: 0px;
+  right: 15px;
+}
+.comments-actions-reply-input-count {
+  position: absolute;
+  right: 10px;
+  top: 12px;
+  font-size: 12px;
+}
+.comments-actions-reply-input-count > strong {
+  color: #666;
+  font-weight: normal;
+}
+.comments-actions-reply-controls {
+  display: flex;
+}
+.comments-actions-reply-controls-emotion-btn {
+  margin-right: -15px;
+  padding-right: 15px;
+}
+.comments-actions-reply-controls > div {
+  flex: 1;
+  text-align: right;
+  margin-top: 8px;
+}
+.comments-actions-reply-controls > div .ant-btn-primary {
+  border-radius: 14px;
+}
+</style><style type="text/css">@-webkit-keyframes closeWindow {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes closeWindow {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.ReactModalPortal .ril__outer {
+  z-index: 1000;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  outline: none;
+  -ms-content-zooming: none;
+  -ms-user-select: none;
+  -ms-touch-action: none;
+  -ms-touch-select: none;
+  touch-action: none;
+}
+.ReactModalPortal .ril__outerClosing {
+  opacity: 0;
+}
+.ReactModalPortal .ril__inner {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+.ReactModalPortal .ril__image,
+.ReactModalPortal .ril__imagePrev,
+.ReactModalPortal .ril__imageNext {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  max-width: none;
+  margin: auto;
+  -ms-content-zooming: none;
+  -ms-user-select: none;
+  -ms-touch-action: none;
+  -ms-touch-select: none;
+  touch-action: none;
+}
+.ReactModalPortal .ril__imageDiscourager {
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+.ReactModalPortal .ril__navButtons {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  bottom: 0;
+  width: 20px;
+  height: 34px;
+  padding: 40px 30px;
+  margin: auto;
+  border: none;
+  outline: none;
+  cursor: pointer;
+}
+.ReactModalPortal .ril__navButtonPrev {
+  left: 0;
+  background: rgba(0, 0, 0, 0.2) url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgd2lkdGg9IjIwIiBoZWlnaHQ9IjM0Ij48cGF0aCBkPSJtIDE5LDMgLTIsLTIgLTE2LDE2IDE2LDE2IDEsLTEgLTE1LC0xNSAxNSwtMTUgeiIgZmlsbD0iI0ZGRiIvPjwvc3ZnPg==') no-repeat center;
+}
+.ReactModalPortal .ril__navButtonNext {
+  right: 0;
+  background: rgba(0, 0, 0, 0.2) url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgd2lkdGg9IjIwIiBoZWlnaHQ9IjM0Ij48cGF0aCBkPSJtIDEsMyAyLC0yIDE2LDE2IC0xNiwxNiAtMSwtMSAxNSwtMTUgLTE1LC0xNSB6IiBmaWxsPSIjRkZGIi8+PC9zdmc+') no-repeat center;
+}
+.ReactModalPortal .ril__downloadBlocker {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-image: url('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7');
+  background-size: cover;
+}
+.ReactModalPortal .ril__caption,
+.ReactModalPortal .ril__toolbar {
+  position: absolute;
+  z-index: 1;
+  right: 0;
+  left: 0;
+  display: -ms-flexbox;
+  display: -webkit-box;
+  display: flex;
+  -ms-flex-pack: justify;
+  -webkit-box-pack: justify;
+  justify-content: space-between;
+  -webkit-transition: 0.5s;
+  -o-transition: 0.5s;
+  transition: 0.5s;
+}
+.ReactModalPortal .ril__caption {
+  bottom: 0;
+  overflow: auto;
+  max-height: 150px;
+}
+.ReactModalPortal .ril__captionContent {
+  color: #fff;
+}
+.ReactModalPortal .ril__toolbar {
+  top: 0;
+  background: rgba(0, 0, 0, 0.5);
+  height: 42px;
+}
+.ReactModalPortal .ril__toolbarSide {
+  height: 42px;
+  margin: 0;
+}
+.ReactModalPortal .ril__toolbarLeftSide {
+  -webkit-box-flex: 0;
+  -ms-flex: 0 1 auto;
+  flex: 0 1 auto;
+  padding-right: 0;
+  padding-left: 20px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ReactModalPortal .ril__toolbarRightSide {
+  -webkit-box-flex: 0;
+  -ms-flex: 0 0 auto;
+  flex: 0 0 auto;
+  padding-right: 20px;
+  padding-left: 0;
+}
+.ReactModalPortal .ril__toolbarItem {
+  display: none;
+  height: 42px;
+  max-width: 100%;
+  padding: 0;
+  color: #fff;
+  font-size: 20px;
+  line-height: 38px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ReactModalPortal .ril__toolbarItem:last-child {
+  display: inline-block;
+}
+.ReactModalPortal .ril__toolbarItemChild {
+  vertical-align: baseline;
+  font-size: 12px;
+}
+.ReactModalPortal .ril__toolbarItemChild :last-child {
+  font-size: 12px;
+  margin-left: 8px;
+}
+.ReactModalPortal .ril__builtinButton {
+  width: 40px;
+  height: 35px;
+  border: none;
+  opacity: 0.7;
+  outline: none;
+  cursor: pointer;
+}
+.ReactModalPortal .ril__builtinButton:hover {
+  opacity: 1;
+}
+.ReactModalPortal .ril__builtinButtonDisabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.ReactModalPortal .ril__builtinButtonDisabled:hover {
+  opacity: 0.5;
+}
+.ReactModalPortal .ril__closeButton {
+  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIj48cGF0aCBkPSJtIDEsMyAxLjI1LC0xLjI1IDcuNSw3LjUgNy41LC03LjUgMS4yNSwxLjI1IC03LjUsNy41IDcuNSw3LjUgLTEuMjUsMS4yNSAtNy41LC03LjUgLTcuNSw3LjUgLTEuMjUsLTEuMjUgNy41LC03LjUgLTcuNSwtNy41IHoiIGZpbGw9IiNGRkYiLz48L3N2Zz4=') no-repeat center;
+}
+.ReactModalPortal .ril__zoomInButton {
+  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGcgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCI+PHBhdGggZD0iTTEgMTlsNi02Ii8+PHBhdGggZD0iTTkgOGg2Ii8+PHBhdGggZD0iTTEyIDV2NiIvPjwvZz48Y2lyY2xlIGN4PSIxMiIgY3k9IjgiIHI9IjciIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIyIi8+PC9zdmc+') no-repeat center;
+}
+.ReactModalPortal .ril__zoomOutButton {
+  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGcgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCI+PHBhdGggZD0iTTEgMTlsNi02Ii8+PHBhdGggZD0iTTkgOGg2Ii8+PC9nPjxjaXJjbGUgY3g9IjEyIiBjeT0iOCIgcj0iNyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIiLz48L3N2Zz4=') no-repeat center;
+}
+.ReactModalPortal .ril__outerAnimating {
+  -webkit-animation-name: closeWindow;
+  animation-name: closeWindow;
+}
+@-webkit-keyframes pointFade {
+  0%,
+  19.999%,
+  100% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+}
+@keyframes pointFade {
+  0%,
+  19.999%,
+  100% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+}
+.ReactModalPortal .ril__loadingCircle {
+  position: relative;
+  height: 60px;
+  width: 60px;
+}
+.ReactModalPortal .ril__loadingCirclePoint {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100px;
+  width: 100%;
+}
+.ReactModalPortal .ril__loadingCirclePoint::before {
+  display: block;
+  width: 11%;
+  height: 30%;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 30%;
+  -webkit-animation: pointFade 800ms infinite ease-in-out both;
+  animation: pointFade 800ms infinite ease-in-out both;
+  content: '';
+}
+.ReactModalPortal .ril__loadingCirclePoint:nth-of-type(1) {
+  -webkit-transform: rotate(0deg);
+  transform: rotate(0deg);
+}
+.ReactModalPortal .ril__loadingCirclePoint:nth-of-type(7) {
+  -webkit-transform: rotate(180deg);
+  transform: rotate(180deg);
+}
+.ReactModalPortal .ril__loadingCirclePoint:nth-of-type(1)::before,
+.ReactModalPortal .ril__loadingCirclePoint:nth-of-type(7)::before {
+  -webkit-animation-delay: -800ms;
+  animation-delay: -800ms;
+}
+.ReactModalPortal .ril__loadingCirclePoint:nth-of-type(2) {
+  -webkit-transform: rotate(30deg);
+  transform: rotate(30deg);
+}
+.ReactModalPortal .ril__loadingCirclePoint:nth-of-type(8) {
+  -webkit-transform: rotate(210deg);
+  transform: rotate(210deg);
+}
+.ReactModalPortal .ril__loadingCirclePoint:nth-of-type(2)::before,
+.ReactModalPortal .ril__loadingCirclePoint:nth-of-type(8)::before {
+  -webkit-animation-delay: -666ms;
+  animation-delay: -666ms;
+}
+.ReactModalPortal .ril__loadingCirclePoint:nth-of-type(3) {
+  -webkit-transform: rotate(60deg);
+  transform: rotate(60deg);
+}
+.ReactModalPortal .ril__loadingCirclePoint:nth-of-type(9) {
+  -webkit-transform: rotate(240deg);
+  transform: rotate(240deg);
+}
+.ReactModalPortal .ril__loadingCirclePoint:nth-of-type(3)::before,
+.ReactModalPortal .ril__loadingCirclePoint:nth-of-type(9)::before {
+  -webkit-animation-delay: -533ms;
+  animation-delay: -533ms;
+}
+.ReactModalPortal .ril__loadingCirclePoint:nth-of-type(4) {
+  -webkit-transform: rotate(90deg);
+  transform: rotate(90deg);
+}
+.ReactModalPortal .ril__loadingCirclePoint:nth-of-type(10) {
+  -webkit-transform: rotate(270deg);
+  transform: rotate(270deg);
+}
+.ReactModalPortal .ril__loadingCirclePoint:nth-of-type(4)::before,
+.ReactModalPortal .ril__loadingCirclePoint:nth-of-type(10)::before {
+  -webkit-animation-delay: -400ms;
+  animation-delay: -400ms;
+}
+.ReactModalPortal .ril__loadingCirclePoint:nth-of-type(5) {
+  -webkit-transform: rotate(120deg);
+  transform: rotate(120deg);
+}
+.ReactModalPortal .ril__loadingCirclePoint:nth-of-type(11) {
+  -webkit-transform: rotate(300deg);
+  transform: rotate(300deg);
+}
+.ReactModalPortal .ril__loadingCirclePoint:nth-of-type(5)::before,
+.ReactModalPortal .ril__loadingCirclePoint:nth-of-type(11)::before {
+  -webkit-animation-delay: -266ms;
+  animation-delay: -266ms;
+}
+.ReactModalPortal .ril__loadingCirclePoint:nth-of-type(6) {
+  -webkit-transform: rotate(150deg);
+  transform: rotate(150deg);
+}
+.ReactModalPortal .ril__loadingCirclePoint:nth-of-type(12) {
+  -webkit-transform: rotate(330deg);
+  transform: rotate(330deg);
+}
+.ReactModalPortal .ril__loadingCirclePoint:nth-of-type(6)::before,
+.ReactModalPortal .ril__loadingCirclePoint:nth-of-type(12)::before {
+  -webkit-animation-delay: -133ms;
+  animation-delay: -133ms;
+}
+.ReactModalPortal .ril__loadingCirclePoint:nth-of-type(7) {
+  -webkit-transform: rotate(180deg);
+  transform: rotate(180deg);
+}
+.ReactModalPortal .ril__loadingCirclePoint:nth-of-type(13) {
+  -webkit-transform: rotate(360deg);
+  transform: rotate(360deg);
+}
+.ReactModalPortal .ril__loadingCirclePoint:nth-of-type(7)::before,
+.ReactModalPortal .ril__loadingCirclePoint:nth-of-type(13)::before {
+  -webkit-animation-delay: 0ms;
+  animation-delay: 0ms;
+}
+.ReactModalPortal .ril__loadingContainer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+.ReactModalPortal .ril__imagePrev .ril__loadingContainer,
+.ReactModalPortal .ril__imageNext .ril__loadingContainer {
+  display: none;
+}
+.ReactModalPortal .ril__errorContainer {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+  color: #fff;
+}
+.ReactModalPortal .ril__imagePrev .ril__errorContainer,
+.ReactModalPortal .ril__imageNext .ril__errorContainer {
+  display: none;
+}
+.ReactModalPortal .ril__loadingContainer__icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  color: #fff;
+  -webkit-transform: translateX(-50%) translateY(-50%);
+  transform: translateX(-50%) translateY(-50%);
+}
+.ReactModalPortal .ril-outer {
+  background-color: rgba(0, 0, 0, 0.65);
+}
+.ReactModalPortal .ril-toolbar {
+  height: 42px;
+}
+.ReactModalPortal .ril-toolbar .ril-toolbar-right .ril-toolbar__item {
+  height: 42px;
+  margin-right: 20px;
+}
+.ReactModalPortal .ril-toolbar .ril-toolbar-right .ril-toolbar__item .cur-pic-url {
+  position: relative;
+  color: #bfbfbf;
+  font-size: 14px;
+  font-weight: lighter;
+}
+.ReactModalPortal .ril-toolbar .ril-toolbar-right .ril-toolbar__item .cur-pic-url:hover {
+  color: #fff;
+}
+.ReactModalPortal .ril-toolbar .ril-toolbar-right .ril-toolbar__item .ril__builtinButton {
+  vertical-align: middle;
+  height: 14px;
+  width: 14px;
+  -webkit-background-size: 100%;
+  background-size: 100%;
+}
+.ReactModalPortal .ril-toolbar .ril-toolbar-right :last-child {
+  margin-right: 0;
+}
+.ReactModalPortal .ril-caption .ril-caption-content {
+  margin: auto;
+  font-weight: lighter;
+  color: #fff;
+}
+.ReactModalPortal .ril__navButtons {
+  width: 42px;
+  height: 120px;
+  border-radius: 6px;
+  padding: 0;
+  margin-right: 20px;
+  margin-left: 20px;
+  background-color: rgba(0, 0, 0, 0.6);
+  -webkit-background-size: 8px 14px;
+  background-size: 8px 14px;
+  -webkit-transition: 0.5s;
+  -o-transition: 0.5s;
+  transition: 0.5s;
+}
+.ReactModalPortal .ril__navButtons:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+.ReactModalPortal .lightbox-disable-left .ril-prev-button,
+.ReactModalPortal .lightbox-disable-right .ril-next-button {
+  display: none;
+}
+.ReactModalPortal .lightbox.hide-control .ril__toolbar {
+  margin-top: -42px;
+}
+.ReactModalPortal .lightbox.hide-control .ril__caption {
+  margin-bottom: -150px;
+}
+.ReactModalPortal .lightbox.hide-control .ril-prev-button {
+  margin-left: -42px;
+}
+.ReactModalPortal .lightbox.hide-control .ril-next-button {
+  margin-right: -42px;
+}
+</style><style type="text/css">.comments-attachments {
+  position: relative;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+.comments-attachments-video-thumbnail-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+}
+.comments-attachments-video-thumbnail-mask-info {
+  height: 30px;
+  position: relative;
+  top: 50%;
+  text-align: center;
+  transform: translateY(-50%);
+}
+.comments-attachments-video-thumbnail-mask-info-play {
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  line-height: 30px;
+}
+.comments-attachments-video-thumbnail-mask-info-play > i {
+  position: relative;
+  top: 0px;
+  left: 1px;
+  color: #fff;
+}
+.comments-attachments-video-thumbnail-mask-info-duration {
+  line-height: 14px;
+  color: #fff;
+  position: absolute;
+  width: 100%;
+  text-align: center;
+}
+.comments-attachments-list-hidden {
+  position: absolute;
+  left: -10000px;
+}
+.comments-attachments-list-video {
+  position: relative;
+  background-color: #000;
+}
+.comments-attachments-list-video > video {
+  width: 100%;
+  max-height: 100%;
+  height: auto;
+  position: relative;
+  top: 50%;
+  text-align: center;
+  transform: translateY(-50%);
+}
+.comments-attachments-list-video,
+.comments-attachments-list-image {
+  display: inline-block;
+  margin-right: 8px;
+  width: 96px;
+  height: 96px;
+  border: 1px solid #ededed;
+  border-radius: 8px;
+  vertical-align: middle;
+  overflow: hidden;
+  cursor: pointer;
+}
+.comments-attachments-detail {
+  position: relative;
+  padding: 16px 20px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+.comments-attachments-detail-hidden {
+  position: absolute;
+  left: -10000px;
+}
+.comments-attachments-detail-actions-action {
+  padding-right: 25px;
+  color: #555;
+  font-size: 14px;
+  cursor: pointer;
+}
+.comments-attachments-detail-actions-action i {
+  color: #555;
+  margin-right: 4px;
+}
+.comments-attachments-detail-previews {
+  margin-top: 16px;
+  margin-bottom: 20px;
+  position: relative;
+}
+.comments-attachments-detail-previews-previous,
+.comments-attachments-detail-previews-next {
+  position: absolute;
+  top: 0;
+  width: 150px;
+  height: 100%;
+  vertical-align: top;
+  overflow: hidden;
+}
+.comments-attachments-detail-previews-previous-crop,
+.comments-attachments-detail-previews-next-crop {
+  height: calc(100% - 80px);
+}
+.comments-attachments-detail-previews-previous-icon,
+.comments-attachments-detail-previews-next-icon {
+  position: absolute;
+  left: -10000px;
+  color: #777;
+  z-index: 100;
+}
+.comments-attachments-detail-previews-previous {
+  left: 0;
+  cursor: none;
+}
+.comments-attachments-detail-previews-next {
+  right: 0;
+  cursor: none;
+}
+.comments-attachments-detail-previews-current {
+  position: absolute;
+  display: block;
+  width: 100%;
+  left: -10000px;
+}
+.comments-attachments-detail-previews-current-selected {
+  position: relative;
+  left: 0;
+}
+.comments-attachments-detail-previews-current-image {
+  cursor: zoom-in;
+}
+.comments-attachments-detail-previews-current-image > img {
+  display: block;
+  height: auto;
+  margin: 0 auto;
+  max-width: 100%;
+}
+.comments-attachments-detail-previews-current-video > video {
+  display: block;
+  margin: 0 auto;
+  width: 100%;
+  height: auto;
+  outline: none;
+}
+.comments-attachments-detail-thumbnails {
+  text-align: center;
+}
+.comments-attachments-detail-thumbnails-thumbnail {
+  display: inline-block;
+  position: relative;
+  padding: 5px;
+  width: 90px;
+  height: 90px;
+  border-radius: 4px;
+  vertical-align: middle;
+  cursor: pointer;
+}
+.comments-attachments-detail-thumbnails-thumbnail:not(:last-child) {
+  margin-right: 2px;
+}
+.comments-attachments-detail-thumbnails-thumbnail:hover {
+  padding: 4px;
+  border: 1px dashed #666;
+}
+.comments-attachments-detail-thumbnails-thumbnail > div {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 4px;
+  background-color: #000;
+  overflow: hidden;
+}
+.comments-attachments-detail-thumbnails-thumbnail > div > video {
+  width: 100%;
+  max-height: 100%;
+  height: auto;
+  position: relative;
+  top: 50%;
+  text-align: center;
+  transform: translateY(-50%);
+}
+.comments-attachments-detail-thumbnails-thumbnail-selected {
+  padding: 3px;
+  border: 2px solid #666;
+}
+.comments-attachments-detail-thumbnails-thumbnail-selected > div {
+  opacity: 1;
+}
+</style><style type="text/css">.comments-content-text {
+  display: flex;
+}
+.comments-content-text-author {
+  flex: 0 0 auto;
+  font-weight: 600;
+  line-height: 2;
+  margin-right: 8px;
+}
+.comments-content-text-container {
+  flex: 1 1 auto;
+  max-width: 100%;
+}
+.comments-content-text-at {
+  color: #358ffe;
+  line-height: 2;
+}
+.comments-content-text-body {
+  position: relative;
+  margin-bottom: 0;
+  vertical-align: top;
+  display: inline-block;
+  max-width: 100%;
+  line-height: 2;
+}
+.comments-content-text-body-one-line {
+  display: inline-block;
+}
+.comments-content-text-body pre {
+  overflow-x: auto;
+}
+.comments-content-text-body-content {
+  margin-bottom: 0;
+}
+.comments-content-text-body-content > p {
+  display: -webkit-box;
+  line-height: 2;
+  margin-bottom: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-all;
+  -webkit-line-clamp: 4;
+  /* number of lines to show */
+  -webkit-box-orient: vertical;
+}
+.comments-content-text-body-content img {
+  max-width: 100%;
+  height: auto !important;
+}
+.comments-content-text-body-content-reply > p {
+  padding-top: 0;
+}
+.comments-content-text-body-content-bold {
+  font-weight: 600;
+}
+.comments-content-text-body-content-full-height {
+  max-width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  visibility: hidden;
+}
+.comments-content-text-body-content-full-height > p {
+  overflow: visible;
+  display: block;
+}
+.comments-content-text-body-content-expanded > p {
+  overflow: visible;
+  display: block;
+}
+.comments-content-text-body > button {
+  color: #3687f5;
+  font-size: 12px;
+  vertical-align: bottom;
+}
+.comments-content-text-body > button:hover {
+  color: #3687f5;
+  opacity: 0.8;
+}
+.comments-content-text-body .ant-btn-link {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+.comments-content-text-body .ant-btn-link::after {
+  display: none;
+}
+</style><style type="text/css">.comments-list-item {
+  padding: 24px 0 20px;
+  border-bottom: 1px solid #f3f3f4;
+}
+.comments-list-item:last-child {
+  padding-bottom: 4px;
+}
+.comments-list-item-replys {
+  position: relative;
+  margin-left: 50px;
+  border-radius: 8px;
+  background-color: #fAfAfA;
+  margin-top: 12px;
+}
+.comments-list-item-replys .comments-list-item {
+  padding: 12px 20px;
+  border: none;
+}
+.comments-list-item-replys-count {
+  color: #999;
+  text-align: center;
+  font-size: 14px;
+  line-height: 22px;
+  padding: 14px 0;
+}
+.comments-list-item-replys-count span {
+  color: #3486f5;
+  cursor: pointer;
+}
+.comments-list-item-replys-count span:hover {
+  opacity: 0.8;
+}
+.comments-list-item-reply {
+  padding: 0;
+  border: none;
+}
+.comments-list-item-reply:not(:first-child) {
+  padding-top: 16px;
+}
+.comments-list-item-reply .comment-avatar {
+  display: none;
+}
+.comments-list-item-reply .comment-content {
+  margin-left: 0 !important;
+}
+.comments-list-item-reply .comment-content-author {
+  display: none !important;
+}
+.comments-list-item-reply .comment-content-detail {
+  padding-top: 0 !important;
+}
+.comments-list-item-reply .comment-actions {
+  margin-top: 3px !important;
+}
+.comments-list-item .comment-inner-user {
+  padding-top: 0;
+}
+.comments-list-item .comment-avatar > img {
+  width: 36px;
+  height: 36px;
+}
+.comments-list-item .comment-actions {
+  margin-top: 4px !important;
+}
+.comments-list-item .comment-actions li {
+  display: block;
+  width: 100%;
+}
+.comments-no-data {
+  border-top: 1px solid #f3f3f4;
+}
+.comments-no-data p {
+  text-align: center;
+  margin: 20px;
+}
+.comments-no-data > img {
+  display: block;
+  margin: 0 auto;
+  margin-top: 20px;
+  width: 90px;
+}
+img[alt='popo-emoji'] {
+  width: 28px;
+  height: 28px;
+  vertical-align: top;
+}
+</style><style type="text/css">.comments {
+  padding: 24px 40px;
+  border-radius: 8px;
+}
+.comments .comments-editor {
+  position: relative;
+  padding: 0;
+  border-radius: 4px;
+}
+.comments .comments-editor-total {
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 28px;
+  color: #333;
+  margin-bottom: 22px;
+}
+.comments .comments-editor-total span {
+  color: #f23737;
+  margin-left: 3px;
+}
+.comments .comments-editor .comment-content-avatar {
+  padding-top: 8px;
+}
+.comments .comments-editor .comment-content-avatar > img {
+  width: 36px;
+  height: 36px;
+}
+.comments .comments-editor .comment-content .comment-actions {
+  margin-top: 15px;
+  margin-bottom: 3px;
+}
+.comments .comments-editor .comment-content .comment-actions-flex .ant-btn-link {
+  padding: 0;
+  margin-right: 22px;
+}
+.comments .comments-editor .comment-content-detail {
+  position: relative;
+  padding-top: 0;
+  overflow: hidden;
+  background: #F7F7F7;
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+.comments .comments-editor .comment-content-detail-count {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  color: #ccc;
+  font-size: 12px;
+  line-height: 12px;
+}
+.comments .comments-editor .comment-content-detail-count > strong {
+  color: #999;
+  font-size: 12px;
+  font-weight: normal;
+}
+.comments .comments-editor .comment-content-detail-count-limit > strong {
+  color: #ff7345;
+}
+.comments .comments-editor .comment-content-detail-media {
+  margin: -16px 16px 12px;
+}
+.comments .comments-editor .comment-content-detail-media-video {
+  background-color: #000;
+}
+.comments .comments-editor .comment-content-detail-media-video > video {
+  width: 100%;
+  max-height: 100%;
+  height: auto;
+  outline: none;
+  border-radius: 2px;
+  position: relative;
+  top: 50%;
+  text-align: center;
+  transform: translateY(-50%);
+}
+.comments .comments-editor .comment-content-detail-media-video,
+.comments .comments-editor .comment-content-detail-media-picture {
+  position: relative;
+  display: inline-block;
+  width: 64px;
+  height: 64px;
+  text-align: center;
+  vertical-align: middle;
+  border: 1px solid #ededed;
+  border-radius: 2px;
+}
+.comments .comments-editor .comment-content-detail-media-video:not(:first-child),
+.comments .comments-editor .comment-content-detail-media-picture:not(:first-child) {
+  margin-left: 16px;
+}
+.comments .comments-editor .comment-content-detail-media-video > i,
+.comments .comments-editor .comment-content-detail-media-picture > i {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  line-height: 16px;
+  background-color: #fff;
+  color: #555;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.3s;
+}
+.comments .comments-editor .comment-content-detail-media-video > i:hover,
+.comments .comments-editor .comment-content-detail-media-picture > i:hover {
+  color: #ff6666;
+}
+.comments .comments-editor .comment-content:hover,
+.comments .comments-editor .comment-content:focus-within {
+  border-color: rgba(255, 115, 69, 0.6);
+}
+.comments-editor-controls {
+  position: absolute;
+  right: 0px;
+  bottom: 0px;
+}
+.comments-editor-controls > span {
+  padding-left: 8px;
+}
+.comments-editor-controls-anonymous .wiki-checkbox-label {
+  color: #555;
+}
+.comments-editor-controls .ant-btn-primary {
+  border-radius: 16px;
+  height: 32px;
+  border: none;
+}
+.comments-emotion-btn {
+  margin-left: -20px;
+  padding-left: 20px;
+}
+.comment-editor .ql-container.ql-snow {
+  min-height: 120px;
+  background: transparent;
+  border: none;
+}
+.comment-editor .ql-container.ql-snow:not(.ql-disabled) .ql-editor {
+  min-height: 105px;
+  max-height: 280px;
+  padding: 12px 16px 0;
+  border: none;
+  border-bottom: 6px solid transparent;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.comment-editor .ql-container.ql-snow:not(.ql-disabled) .ql-editor::-webkit-scrollbar {
+  width: 6px;
+  height: 8px;
+  background: transparent;
+}
+.comment-editor .ql-container.ql-snow:not(.ql-disabled) .ql-editor::-webkit-scrollbar-track {
+  background: #fff;
+}
+.comment-editor .ql-container.ql-snow:not(.ql-disabled) .ql-editor::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  background: #ffe4e4;
+}
+.comment-editor .ql-container.ql-snow:not(.ql-disabled) .ql-editor::-webkit-scrollbar {
+  width: 6px;
+}
+.comment-editor .ql-container.ql-snow:not(.ql-disabled) .ql-editor::-webkit-scrollbar-thumb {
+  transform: rotate(-270deg);
+  background: #f7dddd;
+  border-radius: 4px;
+}
+.comment-editor .ql-container.ql-snow:not(.ql-disabled) .ql-editor::-webkit-scrollbar-track {
+  background: white;
+  width: 6px;
+}
+.comment-editor .ql-container.ql-snow img {
+  height: 28px;
+  width: 28px;
+}
+.comment-editor .ql-toolbar.ql-snow {
+  border: 1px solid #eee;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  border-bottom: 0;
+}
+.comment-editor .ql-toolbar.ql-snow .ql-formats {
+  margin: 0;
+}
+.comment-editor .ql-toolbar.ql-snow + .ql-container.ql-snow .ql-editor {
+  border-top: 1px solid #eee;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+.comment-editor .ql-toolbar.ql-snow + .ql-container.ql-snow .ql-editor:focus {
+  box-shadow: none;
+}
+.comment-editor .ql-editor {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  color: #555;
+  font-size: 14px;
+  font-variant: tabular-nums;
+  font-feature-settings: 'tnum';
+  list-style: none;
+  padding: 16px;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  line-height: 1.5715;
+}
+.comment-editor .ql-editor.ql-blank::before {
+  left: 16px;
+  right: 16px;
+  color: #ccc;
+  font-style: normal;
+}
+.comments-list,
+.comments-hot {
+  position: relative;
+  padding: 24px 0 0;
+}
+.comments-list-custom-border,
+.comments-hot-custom-border {
+  position: absolute;
+  width: 100%;
+  height: 3px;
+  left: 0;
+  top: 0;
+  overflow: hidden;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  background: linear-gradient(to right, #f53436 50%, #ff7345 100%);
+}
+.comments-list-title,
+.comments-hot-title {
+  height: 64px;
+  padding: 10px 0;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+.comments-list-title div,
+.comments-hot-title div {
+  font-size: 16px;
+  color: #333;
+  margin-right: 20px;
+  line-height: 28px;
+  cursor: pointer;
+}
+.comments-list-title .active,
+.comments-hot-title .active {
+  color: #f23535;
+}
+.comments-list-title::after,
+.comments-hot-title::after {
+  content: '';
+  display: block;
+  position: absolute;
+  bottom: 13px;
+  left: 0;
+  width: 30px;
+  height: 2px;
+  background: #f23535;
+  transition: left 0.3s;
+}
+.comments-list-title_hot::after,
+.comments-hot-title_hot::after {
+  left: 54px;
+}
+.comments-list .comment-editor .ql-container.ql-snow,
+.comments-hot .comment-editor .ql-container.ql-snow {
+  margin: 0;
+  min-height: 32px;
+}
+.comments-list .comment-editor .ql-container.ql-snow:not(.ql-disabled) .ql-editor,
+.comments-hot .comment-editor .ql-container.ql-snow:not(.ql-disabled) .ql-editor {
+  min-height: 32px;
+  padding: 5px 80px 5px 12px;
+  border: 1px solid #eee;
+}
+.comments-list-status,
+.comments-hot-status {
+  position: relative;
+  text-align: center;
+  padding-top: 24px;
+  height: 26px;
+  line-height: 26px;
+  box-sizing: content-box;
+}
+.comments-list-status .center-spin,
+.comments-hot-status .center-spin {
+  top: 44px;
+  transform: translateX(-50%);
+}
+.comments-list-status .load-more,
+.comments-hot-status .load-more {
+  cursor: pointer;
+  color: #3486f5;
+}
+.comments-hot {
+  border-radius: 6px;
+}
+.comments-hot-title {
+  color: #333;
+}
+.comment {
+  position: relative;
+}
+.comment-inner {
+  display: flex;
+  padding: 0;
+}
+.comment-inner-user {
+  padding: 8px 12px 0 0;
+  text-align: center;
+  max-width: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.comment-inner-user span {
+  display: block;
+  font-size: 12px;
+  white-space: nowrap;
+  color: #999;
+}
+.comment-avatar {
+  position: relative;
+  flex-shrink: 0;
+  margin-bottom: 4px;
+}
+.comment-content {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 1px;
+  word-wrap: break-word;
+  padding-top: 4px;
+}
+.comment-content-author {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  margin-bottom: 8px;
+}
+.comment-content-author > * {
+  font-size: 12px;
+  line-height: 18px;
+}
+.comment-content-author > *:not(:last-child) {
+  padding-right: 12px;
+}
+.comment-content-author-name {
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 28px;
+}
+.comment-content-author-time {
+  color: #777;
+  white-space: nowrap;
+}
+.comment-content-detail {
+  color: #555555;
+  line-height: 22px;
+  white-space: pre-wrap;
+}
+.comment-content-detail .comments-list-item-text-body {
+  display: inline-block;
+  vertical-align: top;
+}
+.comment-content-detail .comments-list-item-text-body p {
+  margin-bottom: 0;
+}
+.comment-content-detail .comments-list-item-text-body img[alt='popo-emoji'] {
+  height: 28px;
+  width: 28px;
+}
+.comment-actions {
+  margin-top: 9px;
+  margin-bottom: 0px;
+  padding: 0;
+}
+.comment-actions button .icon-d {
+  color: #BBB;
+}
+.comment-nested {
+  margin-left: 44px;
+}
+.comments-video-thumbnail-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.3);
+}
+.comments-video-thumbnail-mask-info {
+  position: relative;
+  top: 50%;
+  text-align: center;
+  transform: translateY(-50%);
+}
+.comments-video-thumbnail-mask-info > span {
+  color: #fff;
+  font-size: 12px;
+}
+.comments-video-thumbnail-mask-info-progress {
+  width: 50px;
+  margin: 0 auto;
+}
+.comments-video-thumbnail-mask-info-play {
+  display: inline-block;
+  width: 29px;
+  height: 29px;
+  border-radius: 50%;
+  background: hsla(0, 0%, 100%, 0.2);
+}
+.comments-video-thumbnail-mask-info-play > i {
+  position: relative;
+  top: 1px;
+  left: 1px;
+  color: #fff;
+  line-height: 1;
+}
+.comments-video-thumbnail-mask-info-duration {
+  line-height: 18px;
+  font-size: 12px;
+  color: #fff;
+}
+.public-emotion-popover .ant-popover-inner-content {
+  max-width: unset;
+}
+</style><style type="text/css">.km-common-qrcode-popover .ant-popover-inner-content {
+  padding: 20px;
+}
+.km-common-qrcode-popover .ant-popover-inner-content .qrcode-content {
+  text-align: center;
+}
+.km-common-qrcode-popover .ant-popover-inner-content .qrcode-content p {
+  text-align: center;
+  padding: 10px 0;
+  font-size: 14px;
+  line-height: 14px;
+  margin-bottom: 0;
+}
+.km-common-qrcode-popover .ant-popover-inner-content .qrcode-content_action {
+  display: flex;
+  justify-content: space-between;
+}
+.km-common-qrcode-popover .ant-popover-inner-content .qrcode-content_action div {
+  cursor: pointer;
+  width: 50%;
+  font-size: 12px;
+  line-height: 14px;
+  color: #2C7AD4;
+  white-space: nowrap;
+}
+.km-common-qrcode-popover .ant-popover-inner-content .qrcode-content_action div img {
+  width: 16px;
+  vertical-align: -3px;
+  margin-right: 3px;
+}
+.km-common-qrcode-popover .ant-popover-inner-content .qrcode-content_action div:nth-of-type(1) {
+  text-align: left;
+}
+.km-common-qrcode-popover .ant-popover-inner-content .qrcode-content_action div:nth-of-type(2) {
+  text-align: right;
+}
+</style><style id="nis-water-style" type="text/css">.nis-water-mark{position:absolute;z-index:99999;font-size:14px;color:#000;opacity:0.05;filter:alpha(opacity=5);pointer-events:none;-webkit-transform:rotate(-15deg);-moz-transform:rotate(-15deg);-o-transform:rotate(-15deg);-ms-transform:rotate(-15deg);transform:rotate(-15deg);font-family:-apple-system, BlinkMacSystemFont            , "Seogoe UI", Roboto, "Helvetica Neue", Helvetica,             Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI",             "Microsoft YaHei", "Source Han Sans CN", sans-serif;max-width:400px;word-wrap:break-word;}.nis-water-mark::before{content:'lsyn6789_2x7pPqNIp5A8EWHm8/vv5A==_梁士伟'}</style></head>
+<body class="locale-zh-CN">
+<div id="root"><div data-reactroot=""><header id="header" class="km-header km-header--zh-CN collapsing"><div class="km-header__logo"><a href="https://km.netease.com/home"><div class="image"></div><div class="text"></div></a></div><div class="km-header__nav"><ul class="items"><li class="item"><a href="https://km.netease.com/home" class="title">首页</a></li><li class="item"><a href="https://km.netease.com/topics" class="title">专题</a></li><li class="item"><a class="title" href="https://km.netease.com/profession">职业库</a></li><li class="item"><a href="https://v.netease.com/" class="title">易播</a></li><li class="item"><div class="title"><!-- react-text: 20 -->现场教学<!-- /react-text --><span class="arrow-down"><i fill="currentColor" style="display: inline-block;"><svg fill="currentColor" height="16" width="16" viewBox="0 0 1152 1792" style="display: inline-block; vertical-align: middle;"><path d="M1075 736q0 13-10 23l-466 466q-10 10-23 10t-23-10l-466-466q-10-10-10-23t10-23l50-50q10-10 23-10t23 10l393 393 393-393q10-10 23-10t23 10l50 50q10 10 10 23z"></path></svg></i></span></div><div class="dropdown-list"><a class="dropdown-item" href="https://salon.km.netease.com/">沙龙</a><a class="dropdown-item" href="https://training.km.netease.com/">上课吧</a></div></li><li class="item"><a href="https://km.netease.com/news" class="title">游戏资讯</a></li><li class="item"><a href="https://km.netease.com/qa" class="title">乐问</a></li></ul></div><div class="km-header__search"><div class="search-bar"><span class="search-button search-button-search"><i fill="currentColor" style="display: inline-block;"><svg fill="currentColor" height="18" width="18" viewBox="0 0 1664 1792" style="display: inline-block; vertical-align: middle;"><path d="M1152 832q0-185-131.5-316.5t-316.5-131.5-316.5 131.5-131.5 316.5 131.5 316.5 316.5 131.5 316.5-131.5 131.5-316.5zM1664 1664q0 52-38 90t-90 38q-54 0-90-38l-343-342q-179 124-399 124-143 0-273.5-55.5t-225-150-150-225-55.5-273.5 55.5-273.5 150-225 225-150 273.5-55.5 273.5 55.5 225 150 150 225 55.5 273.5q0 220-124 399l343 343q37 37 37 90z"></path></svg></i></span><span class="search-button search-button-close"><i fill="currentColor" style="display: inline-block;"><svg fill="currentColor" height="18" width="18" viewBox="0 0 1408 1792" style="display: inline-block; vertical-align: middle;"><path d="M1298 1322q0 40-28 68l-136 136q-28 28-68 28t-68-28l-294-294-294 294q-28 28-68 28t-68-28l-136-136q-28-28-28-68t28-68l294-294-294-294q-28-28-28-68t28-68l136-136q28-28 68-28t68 28l294 294 294-294q28-28 68-28t68 28l136 136q28 28 28 68t-28 68l-294 294 294 294q28 28 28 68z"></path></svg></i></span><div class="search-input-wrapper"><form><input class="search-input" placeholder="搜全站"></form></div></div></div><div class="km-header__actions"><div class="knowledge-area"><div class="under-text">更多专区</div><div class="guide-nav-hide  guide-nav guide-nav-2"><div class="top-img"></div><div class="text">在这里展开更多知识专区，精彩纷呈等你解锁</div><p><span>我知道了</span></p></div></div><div class="work-space"><div class="tooltip"><div class="under-text" style="margin-left: 0px;">团队空间</div></div><div class="space-list"><div style="position: relative; overflow: hidden; width: 100%; height: auto; min-height: 0px; max-height: 364px;"><div style="position: relative; overflow: scroll; margin-right: -17px; margin-bottom: -17px; min-height: 17px; max-height: 381px;"><h3><!-- react-text: 60 -->我的团队<!-- /react-text --><span>（11）</span></h3><div class="search"><i></i><input value="" placeholder="搜索团队空间"></div><ul><li><a href="https://km.netease.com/profile/km_owsxd4"><img src="./soc_files/5d1f26c1a7f2527d4723b882vAENmlti02" alt=""><div>天下&amp;ACE&amp;奇点美术技术分享</div></a></li><li><a href="https://km.netease.com/profile/messiah"><img src="./soc_files/5d1f26c1a7f2527d4723b882vAENmlti02" alt=""><div>Messiah知识库</div></a></li><li><a href="https://km.netease.com/profile/km_f3sd2b"><img src="./soc_files/5d1f26c1a7f2527d4723b882vAENmlti02" alt=""><div>H67</div></a></li><li><a href="https://km.netease.com/profile/km_acemeeting"><img src="./soc_files/5d1f26c1a7f2527d4723b882vAENmlti02" alt=""><div>ACE事业部2022年员工大会</div></a></li><li><a href="https://km.netease.com/profile/messiahserver"><img src="./soc_files/5d1f26c1a7f2527d4723b882vAENmlti02" alt=""><div>MessiahServer知识库</div></a></li><li><a href="https://km.netease.com/profile/wjsy"><img src="./soc_files/5d1f26c1a7f2527d4723b882vAENmlti02" alt=""><div>H43工作圈</div></a></li><li><a href="https://km.netease.com/profile/txhz123"><img src="./soc_files/5d1f26c1a7f2527d4723b882vAENmlti02" alt=""><div>天下事业部（杭州）</div></a></li><li><a href="https://km.netease.com/profile/programmer"><img src="./soc_files/5d1f26c1a7f2527d4723b882vAENmlti02" alt=""><div>程序缘之家</div></a></li><li><a href="https://km.netease.com/profile/km_ace"><img src="./soc_files/5d1f26c1a7f2527d4723b882vAENmlti02" alt=""><div>ACE事业部</div></a></li><li><a href="https://km.netease.com/profile/dante_department"><img src="./soc_files/5d1f26c1a7f2527d4723b882vAENmlti02" alt=""><div>Dante工作室</div></a></li><li><a href="https://km.netease.com/profile/game_engine"><img src="./soc_files/5d9bf60a5e6027d3db7a5c79yRq8OxUO02" alt=""><div>Neox引擎知识库</div></a></li></ul></div><div style="position: absolute; height: 6px; right: 2px; bottom: 2px; left: 2px; border-radius: 3px;"><div style="position: relative; display: block; height: 100%; cursor: pointer; border-radius: inherit; background-color: rgba(0, 0, 0, 0.2); width: 0px;"></div></div><div style="position: absolute; width: 6px; right: 2px; bottom: 2px; top: 2px; border-radius: 3px;"><div style="position: relative; display: block; width: 100%; cursor: pointer; border-radius: inherit; background-color: rgba(0, 0, 0, 0.2); height: 174px; transform: translateY(0px);"></div></div></div><a class="create-team-link" href="https://km.netease.com/team" target="_blank">创建团队空间</a></div><div class="guide-nav-hide  guide-nav"><div class="top-img"></div><div class="text">KM工作圈正式更名为“团队空间“啦~~入口凸显更清晰</div><p><span>下一条</span></p></div></div><div class="wiki-dropdown"><div class="tooltip"><div class="under-text" style="margin-left: 0px;">WIKI站点</div></div><div class="wiki-list"><div style="position: relative; overflow: hidden; width: 100%; height: auto; min-height: 0px; max-height: 364px;"><div style="position: relative; overflow: scroll; margin-right: -17px; margin-bottom: -17px; min-height: 17px; max-height: 381px;"><h3><!-- react-text: 83 -->WIKI站点<!-- /react-text --><span>（0）</span></h3><ul><li class="no-wiki"><div class="no-wiki-image"></div><div class="no-wiki-message">没有我的wiki</div></li></ul></div><div style="position: absolute; height: 6px; right: 2px; bottom: 2px; left: 2px; border-radius: 3px;"><div style="position: relative; display: block; height: 100%; cursor: pointer; border-radius: inherit; background-color: rgba(0, 0, 0, 0.2); width: 0px;"></div></div><div style="position: absolute; width: 6px; right: 2px; bottom: 2px; top: 2px; border-radius: 3px;"><div style="position: relative; display: block; width: 100%; cursor: pointer; border-radius: inherit; background-color: rgba(0, 0, 0, 0.2); height: 0px;"></div></div></div><a class="create-wiki-link" href="https://km.netease.com/wiki/create" target="_blank">新建我的站点</a></div><div class="guide-nav-hide  guide-nav"><div class="top-img"></div><div class="text">wiki站点在这里~</div><p><span>下一条</span></p></div></div><div class="search-button-wrapper"><span class="search-button"><i fill="currentColor" style="display: inline-block;"><svg fill="currentColor" height="18" width="18" viewBox="0 0 1664 1792" style="display: inline-block; vertical-align: middle;"><path d="M1152 832q0-185-131.5-316.5t-316.5-131.5-316.5 131.5-131.5 316.5 131.5 316.5 316.5 131.5 316.5-131.5 131.5-316.5zM1664 1664q0 52-38 90t-90 38q-54 0-90-38l-343-342q-179 124-399 124-143 0-273.5-55.5t-225-150-150-225-55.5-273.5 55.5-273.5 150-225 225-150 273.5-55.5 273.5 55.5 225 150 150 225 55.5 273.5q0 220-124 399l343 343q37 37 37 90z"></path></svg></i></span><div class="search-input-wrapper"><input class="search-input" placeholder="搜全站"></div></div><div class="user-prize-wrap user"><div class="user"><img class="avatar" src="./soc_files/person-big.png"><div class="dropdown"><div class="dropdown-item zone"><a href="https://km.netease.com/zone/lsyn6789"><span class="icon"><i fill="currentColor" style="display: inline-block;"><svg fill="currentColor" height="16" width="16" viewBox="0 0 1280 1792" style="display: inline-block; vertical-align: middle;"><path d="M1280 1399q0 109-62.5 187t-150.5 78h-854q-88 0-150.5-78t-62.5-187q0-85 8.5-160.5t31.5-152 58.5-131 94-89 134.5-34.5q131 128 313 128t313-128q76 0 134.5 34.5t94 89 58.5 131 31.5 152 8.5 160.5zM1024 512q0 159-112.5 271.5t-271.5 112.5-271.5-112.5-112.5-271.5 112.5-271.5 271.5-112.5 271.5 112.5 112.5 271.5z"></path></svg></i></span><!-- react-text: 116 -->个人空间<!-- /react-text --></a></div><div class="dropdown-item message"><a href="https://km.netease.com/profile/lsyn6789?message=1#/message/noticed/1/0/"><span class="icon"><i class="i-icon"></i></span><!-- react-text: 121 -->消息<!-- /react-text --><span class="message-notice" style="display: none;">99+</span><span class="message-apply" style="display: none;">99+</span></a></div><div class="dropdown-item drafts"><a href="https://km.netease.com/zone/lsyn6789/draft"><span class="icon"><i class="i-icon"></i></span><!-- react-text: 128 -->草稿箱<!-- /react-text --><span class="drafts-num" style="display: none;">99+</span></a></div><div class="dropdown-item apply"><a href="https://km.netease.com/auth_apply"><span class="icon"><i fill="currentColor" style="display: inline-block;"><svg fill="currentColor" height="14" width="14" viewBox="0 0 1536 1792" style="display: inline-block; vertical-align: middle;"><path d="M1024 512v-472q22 14 36 28l408 408q14 14 28 36h-472zM896 544q0 40 28 68t68 28h544v1056q0 40-28 68t-68 28h-1344q-40 0-68-28t-28-68v-1600q0-40 28-68t68-28h800v544z"></path></svg></i></span><!-- react-text: 136 -->我的申请<!-- /react-text --></a></div><div class="dropdown-item login_record"><a href="https://km.netease.com/zone/lsyn6789/login_records"><span class="icon"><i class="i-icon"></i></span><!-- react-text: 141 -->登录记录<!-- /react-text --></a></div><div class="dropdown-item preference"><a><em class="icon-png icon-zh"></em><!-- react-text: 145 -->简体中文<!-- /react-text --><i fill="currentColor" style="display: inline-block;"><svg fill="currentColor" height="16" width="16" viewBox="0 0 1152 1792" style="display: inline-block; vertical-align: middle;"><path d="M1075 736q0 13-10 23l-466 466q-10 10-23 10t-23-10l-466-466q-10-10-10-23t10-23l50-50q10-10 23-10t23 10l393 393 393-393q10-10 23-10t23 10l50 50q10 10 10 23z"></path></svg></i></a><div class="languages"><div class="active">简体中文</div><div class="">English</div></div></div><div style="position: relative; overflow: hidden; width: 100%; height: auto; min-height: 0px; max-height: 180px;"><div style="position: relative; overflow: scroll; margin-right: -17px; margin-bottom: -17px; min-height: 17px; max-height: 197px;"><div class="list wikis"><div class="header"><span class="icon"><i fill="currentColor" style="display: inline-block;"><svg fill="currentColor" height="14" width="14" viewBox="0 0 1664 1792" style="display: inline-block; vertical-align: middle;"><path d="M1639 478q40 57 18 129l-275 906q-19 64-76.5 107.5t-122.5 43.5h-923q-77 0-148.5-53.5t-99.5-131.5q-24-67-2-127 0-4 3-27t4-37q1-8-3-21.5t-3-19.5q2-11 8-21t16.5-23.5 16.5-23.5q23-38 45-91.5t30-91.5q3-10 0.5-30t-0.5-28q3-11 17-28t17-23q21-36 42-92t25-90q1-9-2.5-32t0.5-28q4-13 22-30.5t22-22.5q19-26 42.5-84.5t27.5-96.5q1-8-3-25.5t-2-26.5q2-8 9-18t18-23 17-21q8-12 16.5-30.5t15-35 16-36 19.5-32 26.5-23.5 36-11.5 47.5 5.5l-1 3q38-9 51-9h761q74 0 114 56t18 130l-274 906q-36 119-71.5 153.5t-128.5 34.5h-869q-27 0-38 15-11 16-1 43 24 70 144 70h923q29 0 56-15.5t35-41.5l300-987q7-22 5-57 38 15 59 43zM575 480q-4 13 2 22.5t20 9.5h608q13 0 25.5-9.5t16.5-22.5l21-64q4-13-2-22.5t-20-9.5h-608q-13 0-25.5 9.5t-16.5 22.5zM492 736q-4 13 2 22.5t20 9.5h608q13 0 25.5-9.5t16.5-22.5l21-64q4-13-2-22.5t-20-9.5h-608q-13 0-25.5 9.5t-16.5 22.5z"></path></svg></i></span><!-- react-text: 160 -->WIKI站点<!-- /react-text --></div><ul></ul></div></div><div style="position: absolute; height: 6px; right: 2px; bottom: 2px; left: 2px; border-radius: 3px;"><div style="position: relative; display: block; height: 100%; cursor: pointer; border-radius: inherit; background-color: rgba(0, 0, 0, 0.2); width: 0px;"></div></div><div style="position: absolute; width: 6px; right: 2px; bottom: 2px; top: 2px; border-radius: 3px;"><div style="position: relative; display: block; width: 100%; cursor: pointer; border-radius: inherit; background-color: rgba(0, 0, 0, 0.2); height: 0px;"></div></div></div><div class="dropdown-item change-version"><div class="list"><div class="header"><span class="icon"><i></i></span><!-- react-text: 171 -->切换版本<!-- /react-text --></div><ul><li><a href="https://kms.netease.com/">网易KM</a></li><li class="active"><a href="https://km.netease.com/">网易游戏KM</a></li></ul></div></div><div class="dropdown-item logout"><a href="https://km.netease.com/km_java_api/home/auth/logout?url=https://km.netease.com/article/299477"><span class="icon"><i fill="currentColor" style="display: inline-block;"><svg fill="currentColor" height="16" width="16" viewBox="0 0 1664 1792" style="display: inline-block; vertical-align: middle;"><path d="M640 1440q0 4 1 20t0.5 26.5-3 23.5-10 19.5-20.5 6.5h-320q-119 0-203.5-84.5t-84.5-203.5v-704q0-119 84.5-203.5t203.5-84.5h320q13 0 22.5 9.5t9.5 22.5q0 4 1 20t0.5 26.5-3 23.5-10 19.5-20.5 6.5h-320q-66 0-113 47t-47 113v704q0 66 47 113t113 47h288 11 13t11.5 1 11.5 3 8 5.5 7 9 2 13.5zM1568 896q0 26-19 45l-544 544q-19 19-45 19t-45-19-19-45v-288h-448q-26 0-45-19t-19-45v-384q0-26 19-45t45-19h448v-288q0-26 19-45t45-19 45 19l544 544q19 19 19 45z"></path></svg></i></span><!-- react-text: 183 -->注销登录<!-- /react-text --></a></div><!-- react-empty: 184 --></div><div class="overlay"></div></div></div><a class="release"><i class="icon-release"></i><span class="text">发布</span><div class="release-items"><div class="release-item article"><div class="image"></div><div class="text">发布文章</div></div><div class="release-item attachment"><div class="image"></div><div class="text">上传文档</div></div><div class="release-item question"><div class="image"></div><div class="text">我要提问</div></div><div class="release-item wiki"><div class="image"></div><div class="text">发布WIKI</div></div></div></a></div></header><div id="main"><div class="main-wrapper" style=""><div id="article"><!-- react-text: 251 --><!-- /react-text --><div class="breadcrumb"><div class="ant-breadcrumb"><span><span class="ant-breadcrumb-link"><a href="https://km.netease.com/km3#/profession/">职业库</a></span><span class="ant-breadcrumb-separator">&gt;</span></span><span><span class="ant-breadcrumb-link"><a href="https://km.netease.com/km3#/profession/5">程序</a></span><span class="ant-breadcrumb-separator">&gt;</span></span><span><span class="ant-breadcrumb-link"><a href="https://km.netease.com/km3#/profession/6">游戏客户端</a></span><span class="ant-breadcrumb-separator">&gt;</span></span><span><span class="ant-breadcrumb-link"><span>Masked Software Occlusion Culling 算法介绍</span></span><span class="ant-breadcrumb-separator">&gt;</span></span></div></div><div class="article-main"><div class="article-skin-tags"><i class="skin-tags-bg left"></i><div class="skin-tag-row"><div class="skin-tag"><span>原创</span></div></div><i class="skin-tags-bg right"></i></div><div class="header"><span class="tag-source">原创</span><span>Masked Software Occlusion Culling 算法介绍</span><i class="attachment-icon"></i></div><div class="header-intro author"><div class="creator"><a>Mata(张寒城)</a></div></div><div class="header-intro" style="margin-top: 15px; margin-bottom: 5px;"><span style="margin-right: 0px;">发布时间:</span><span>2020.03.23 10:26</span><i class="header-intro-icon watch-num"></i><em>258</em><i class="header-intro-icon like-num"></i><em>6</em><i class="header-intro-icon comment-num"></i><em>1</em><div class="moreContent">更多</div><span class="share-btn"><i class="kmfont iconpo"></i><!-- react-text: 294 -->分享至POPO眼界大开<!-- /react-text --></span><!-- react-empty: 295 --></div><div class="recommendInfo"><span><!-- react-text: 298 -->已推荐到<!-- /react-text --><!-- react-text: 299 -->：<!-- /react-text --></span><span>职业精选-程序/游戏客户端、</span><span>今日看点-4.3</span></div><div class="article_auth_panel"><p class="auth_tip_info"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAA/0lEQVRIid3UsUrDYBQF4E/RzVmtgq9QR6FPoFBnJ5cWBIVuPoWj6GJc3Fxd+gBCZ59BsPoCTg518BZiaPo3waL1wCHk5Nx7bpLLz6JjqShcXF8VpVV0cYzd0J5whwwfefP56dm34pXEADt4QLOg7wVPcIjnsgbLU5qv4zGa36OFtWArtGZ4NuoEZPEGPRxhgPfgILReeG7qBLTjejnFM37WLjNMC/gR/M+AfQxz96MExxhGbTLgFo0awzaiNhlQp3lp7Z/6yX1sBfvzCOjgNdiZR0Aeo7SlekCGTWybsC1lSB3XeRz4+jyV8CtbVHnKHN5mCehOMs6AFxW2a3HwCT8ULoE+mPcIAAAAAElFTkSuQmCC"><!-- react-text: 305 -->本文仅面向以下用户开放，请注意内容保密范围<!-- /react-text --></p><ul class="article_auth_list"><div class="auth-item"><i class="auth_icon"></i><!-- react-text: 309 -->查看权限<!-- /react-text --><!-- react-text: 310 -->：<!-- /react-text --><!-- react-text: 311 -->互娱正式员工<!-- /react-text --></div><div><div class="auth-item"><i class="auth_icon"></i><!-- react-text: 315 -->附件 <!-- /react-text --><!-- react-text: 316 -->1<!-- /react-text --><!-- react-text: 317 --> 下载权限<!-- /react-text --><!-- react-text: 318 -->：<!-- /react-text --><!-- react-text: 319 -->互娱正式-公开<!-- /react-text --></div></div></ul></div><div class="resource-content" style="margin-top: 30px;"><div class="WikiPage"><div class="wiki-catalogues-wrap"><div class="markdown-list clearFix" id="markdown_cat_list"><div id="page_dir" class="page_dir" style="display: none;"><div class="page_dir_right" id="page_dir_right"></div><div class="clear"></div></div><div id="page_dir2" class="page_dir on" style="opacity: 0;"><div class="right_dir_wrap"><div class="right_dir_hide_icon"></div><div id="page_dir_float" class="page_dir_right"></div></div></div><div class="dir_toggle_button dir_toggle_on" id="my_dir_toggle_button" style="opacity: 0; right: 180px;"></div></div></div></div><div id="article_content_wrap" class=""><div class="article-content" id="article_content"><p align="left"> 疫情期间一直在看的就是关于软件遮挡剔除的文章《<a href="https://software.intel.com/en-us/articles/masked-software-occlusion-culling" target="_blank">Masked Software Occlusion Culling</a>》。对其做了些梳理，加入了一些<em>个人理解</em>，并且把这个剔除功能加入到了Hakuna Renderer中。下面就结合<em>斜体的个人理解</em>来简单的介绍下这篇文章，欢迎交流指正。</p><p align="left"> 作为一个业余游戏策划，我会根据心流理论来排布内容，最大程度保证人人都看得舒服，内容如下：</p><ol><li align="left"> <strong>算法简介</strong></li><li align="left"> <strong>无效遮挡物的剔除</strong></li><li align="left"> <strong>深度缓冲区的数据结构</strong></li><li align="left"> <strong>三角形的光栅化方法</strong></li><li align="left"> <strong>深度缓冲区的更新策略</strong></li><li align="left"> <strong>被遮挡物的深度检测</strong></li><li align="left"> <strong>利用SIMD进行的并行优化</strong></li></ol><p align="left"> <strong>#</strong><strong>算法简介</strong></p><p align="left"> step1: 绘制一张遮挡物的depth buffer</p><p align="left"> step2: 利用depth buffer，对被遮挡物做深度检测</p><p align="left"> <strong>#</strong><strong>无效遮挡物的剔除</strong></p><p align="left"> 在做遮挡物的深度绘制之前，先判断那些物体具有遮挡别人的资格，一共涉及三步剔除和一步裁剪。</p><p align="left"> 首先是轴对齐包围盒(AABB)相对视锥的大颗粒度剔除，这里参考了Optimized View Frustum Culling Algorithms for Bounding Boxes这篇文章的前三点优化，获得所有包围盒与视锥相交（包含完全在内部）的遮挡物集合，收集来自于他们的三角面片。由于对整个话题来说不算强相关（毕竟这一步是视锥剔除的范畴了，不做遮挡剔除也要进行的），就不多赘述，感兴趣的同学可以直接搜索文章。</p><p align="left"> 对收集得到的三角面片去做视锥的检测，分为完全在外部，与视锥边界面相交以及完全在内部，这三种情况；完全在外部自然直接剔除，完全在内部则通过该步，相交的三角形需要去遍历每个视锥边界面，对其进行裁剪。被裁剪后的三角形保留在视锥內部的部分，结果可能是一个多边形，这时需要从整个N边形重构出N-2个三角形出来，与之前得到的完全在内部的三角形合并，一起进入下一步骤。</p><p align="left"> 注意这一步是发生在clip space的，若发生在clip space之前，那么边界面的方程不是常量，不方便计算，若发生在之后，那必定需要经过透视除法，此时还不能保证w分量的合理性，举个例子，一个在近平面以内的顶点，w分量为负数且趋向于0，此时做完透视除法之后的坐标值便毫无意义。</p><p align="left"> 下一步是背面剔除，这一步计算是在屏幕空间的，发生在视锥内外检验和裁剪之后的确会比较自然。</p><p align="left"> <em>当然也可以先做背面剔除再做视锥剔除和裁剪，只需要注意两点，一是要提前计算三角形各顶点的屏幕空间坐标，二是不要去计算裁剪坐标系下有一个或多个顶点的w分量为负值的三角形，否则转换得到的屏幕空间坐标是无意义的（上段已讲），我的做法是把这类面片直接假设为正面处理，直接去做视锥剔除和裁剪。合理性在于，这样的三角面片不可能完全在视锥内部，否则哪来的w分量为负，那么大概率会被视锥剔除，即三个点都在近平面以内，若其的确未被直接剔除，是一个与近平面相交的三角面，那么对其裁剪也未尝不可，毕竟设想一下一个与近平面相交的背面三角形产生的条件便是相机位于mesh内部，且顶在mesh边缘，是属于大革命系列bug的副产品，不纳入考虑。这样提前背面剔除的好处是背面剔除计算量远小于视锥的剔除（需要遍历各个视锥边界面）或视锥裁剪（需要对每个三角形逐个特例化地计算裁剪多边形和重构出的新内部三角形组，不能利用SIMD并行），那么可以确保做复杂剔除和裁剪过程的对象都是正面，至少可以剔除50%的三角面，在透视投影下背面剔除率会大于50%。</em></p><p align="left"> 无论顺序如何，这些步骤之后得到的三角形就是需要为其绘制深度的所有对象，下面来说下整个由CPU计算，主存中存储的深度缓冲区是什么样子的。<em>为了方便理解我会去掉所有SIMD元素，不管是数据结构还是逻辑策略都会按照串行的方式叙述，再结尾部分统一介绍SIMD指令对这个项目的优化点有哪些。</em></p><p align="left"> <strong>#</strong><strong>深度缓冲区的数据结构</strong></p><p align="left"> 首先屏幕被分成了若干个tile，每个tile宽32pixel，高8pixel，为方便理解以下记作tile(32*8)。一个tile(32*8)又被分为8个subtile——4列2行，即每个subtile宽8pixel，高4pixel，相似地，我们记作subtile(8*4)，每个subtile表示了一片32个像素的区域，故有一个uint32类型的mask，当subtile(8*4)部分被遮挡时，被遮挡像素设为1，背景未被遮挡像素设为0。除此之外每一个subtile(8*4)还有两个32位的深度值z0和z1，官方名称分别为working depth和reference depth，前者是用来最后做被遮挡物的深度检测的，所以是正在工作的，后者是用来更新前者的（后续会讲到更新逻辑），所以是一个参考值的存在。<em>第一次看到这两个深度值的名称会有一些问好，那么简单讲一下我自己的理解：<strong>z0</strong>是一片完整的背景中的最大深度，如下图所示，蓝色的遮挡物以及完整地遮住了整个subtile(8*4)的区域，所以很自然地成为了背景，记录下其中最远一处的深度，我们下面会将 <strong>z0</strong> 简称为背景深度；<strong>z1</strong>是位于前面，部分遮挡住subtile(8*4)的片面的最远处的深度，我们下面简称 <strong>z1</strong> 为半遮挡深度。</em></p><p style="text-align: center;"> &nbsp;<a href="./soc_files/5e781bb668d8641b96b3244f9gfb2LUX01" target="_blank"><img src="./soc_files/5e781bb668d8641b96b3244f9gfb2LUX01" class="ck_insert_img" width="470px" height="385px" style="max-width: 880px;"></a></p><p align="left"> 一块subtile(8*4)上方的遮挡情况的侧视图</p><p align="left"> 例如一个1920*1080的屏幕，会被划分为60*135个tile(32*8)，而进一步被划分为240*270个subtile(8*4)，那么整个深度缓冲区的主存占用便是240*270*32*3/8 = 759kB。</p><p align="left"> <strong>#</strong><strong>三角形的光栅化方法</strong></p><p align="left"> 先讲一下一个三角形针对一个tile(32*8)的覆盖情况，首先会计算三条边所在的直线与一块tile(32*8)中的8行，即8条水平扫面线的截距，这个截距的值是相对于tile(32*8)的局部坐标系来设定的，根据这8个截距来对8个全1的uint32数值分别进行移位，得到能够区分三角形边内外的mask，再将针对三条边的移位结果做与运算，得到这个三角形覆盖此tile(32*8)的遮罩，伪代码如下：</p><div id="highlighter_808210" class="syntaxhighlighter  "><div class="bar"><div class="toolbar"><a href="https://km.netease.com/article/299477#viewSource" title="view source" class="item viewSource" style="width: 16px; height: 16px;">view source</a><div class="item copyToClipboard"><embed width="16" height="16" id="highlighter_808210_clipboard" type="application/x-shockwave-flash" title="copy to clipboard" allowscriptaccess="always" wmode="transparent" flashvars="highlighterId=highlighter_808210" menu="false" src="/javascripts/ckeditor/plugins/syntaxhighlight/scripts/clipboard.swf"></div><a href="https://km.netease.com/article/299477#printSource" title="print" class="item printSource" style="width: 16px; height: 16px;">print</a><a href="https://km.netease.com/article/299477#about" title="?" class="item about" style="width: 16px; height: 16px;">?</a></div></div><div class="lines"><div class="line alt1"><table><tbody><tr><td class="number"><code>1</code></td><td class="content"><code class="plain">mask = (~0, ~0, ~0, ~0, ~0, ~0, ~0, ~0);</code></td></tr></tbody></table></div><div class="line alt2"><table><tbody><tr><td class="number"><code>2</code></td><td class="content"><code class="plain">For each edge of a triangle</code></td></tr></tbody></table></div><div class="line alt1"><table><tbody><tr><td class="number"><code>3</code></td><td class="content"><code class="plain">{</code></td></tr></tbody></table></div><div class="line alt2"><table><tbody><tr><td class="number"><code>4</code></td><td class="content"><code class="spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="plain">temp_mask = (~0, ~0, ~0, ~0, ~0, ~0, ~0, ~0);</code></td></tr></tbody></table></div><div class="line alt1"><table><tbody><tr><td class="number"><code>5</code></td><td class="content"><code class="spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="plain">calculate 8 intercepts </code><code class="keyword bold">for</code> <code class="plain">8 horizonal scanning;</code></td></tr></tbody></table></div><div class="line alt2"><table><tbody><tr><td class="number"><code>6</code></td><td class="content"><code class="spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="plain">shift temp_mask by 8 intercepts;</code></td></tr></tbody></table></div><div class="line alt1"><table><tbody><tr><td class="number"><code>7</code></td><td class="content"><code class="spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="plain">mask &amp;= temp_mask;</code></td></tr></tbody></table></div><div class="line alt2"><table><tbody><tr><td class="number"><code>8</code></td><td class="content"><code class="plain">}</code></td></tr></tbody></table></div></div></div><p style="text-align: center;"> &nbsp;<a href="./soc_files/5e781bf62dcade245a3eadfb8KqWtZD801" target="_blank"><img src="./soc_files/5e781bf62dcade245a3eadfb8KqWtZD801" class="ck_insert_img" width="554px" height="229px" style="max-width: 880px;"></a></p><p style="text-align: center;"> &nbsp;<a href="./soc_files/5e781c0168d8647b48f22fe5KuMmYSfV01" target="_blank"><img src="./soc_files/5e781c0168d8647b48f22fe5KuMmYSfV01" class="ck_insert_img" width="554px" height="235px" style="max-width: 880px;"></a></p><p style="text-align: center;"> <span style="font-family: 宋体;">三角形在tile(32*8)中的覆盖区域的确定过程</span></p><p align="left"> 再说一下这个过程中的优化和一些细节：</p><p style="text-align: center;"> &nbsp;<a href="./soc_files/5e781c3368d8641b96b3245f4iZVb08o01" target="_blank"><img src="./soc_files/5e781c3368d8641b96b3245f4iZVb08o01" class="ck_insert_img" width="554px" height="469px" style="max-width: 880px;"></a></p><p align="left"> 首先如上图所示计算三角形在屏幕空间xy屏幕内的2d包围盒（黄色虚线框），从而计算出与它可能重叠的tile(32*8)有哪些，如上图一共有三块tile(32*8)，接着遍历每一块涉及到的tile(32*8)，判断高度居中的顶点是否落在当前tile(32*8)的上下边界之间，若在则需要做三次移位（tile区域内涉及到三条边），若不在则只需要做两次移位。在移位的过程中一律使用右移，对于外部朝右的边会将移位结果取反，会根据三角形三个顶点中高度处于中间的顶点的位置是在左边还是右边，来决定每条边移位的结果是否需要取反。</p><p align="left"> 得到一个tile(32*8)的三角形覆盖信息之后，将其划分为一块块subtile(8*4)，之后再进行两个深度和对应mask的更新：</p><p style="text-align: center;"> &nbsp;<a href="./soc_files/5e781c4068d8641b96b32463Ub2ZXU8b01" target="_blank"><img src="./soc_files/5e781c4068d8641b96b32463Ub2ZXU8b01" class="ck_insert_img" width="498px" height="455px" style="max-width: 880px;"></a></p><p align="left"> <strong>#</strong><strong>深度缓冲区的更新策略</strong></p><p align="left"> 流程图如下，左下角是流程图中的变量注释，tri_mask是上一步获得的当前subtile(8*4)上被三角形覆盖部分的遮罩，<strong>z0</strong>即该三角形光栅化之前的背景深度，<strong>z1</strong>即该三角形光栅化之前的半遮挡深度，<strong>z_tri</strong>为该三角形在subtile(8*4)区域内的最远点深度值，mask是subtile(8*4)上的半遮挡信息。</p><p align="left"> &nbsp;&nbsp;<a href="./soc_files/5e781c9868d8645da5e74424jjdu1pxw01" target="_blank"><img src="./soc_files/5e781c9868d8645da5e74424jjdu1pxw01" class="ck_insert_img" width="1180px" height="543px" style="max-height: 404.949px; max-width: 880px;"></a></p><p style="text-align: center;"> <span style="font-family: 宋体;">单块subtile(8*4)的深度值与遮罩的更新逻辑</span></p><p align="left"> 第一个判断表示这个三角形是否需要被绘制到这个subtile(8*4)上去，成立条件时有像素被覆盖到(tri_mask不为全0)并且三角形的深度要比背景深度小，若不需要绘制那直接结束跳过。</p><p align="left"> 若三角形需绘制，接下来判断三角形是否影响力过大以至于可以直接丢弃原来的半遮挡信息。可以看到第二个和第三个判断框其实可以用 || 组合在一起，若<strong>三角形距离相机足够近</strong>或者三角形将subtile(8*4)全部遮住，则直接丢弃原来的半遮挡信息，直接设半遮挡遮罩为新三角形的覆盖遮罩，设半遮挡深度为新三角形的深度。</p><p align="left"> 若新三角形影响力没那么大，需用旧的半遮挡遮罩与三角形覆盖遮罩做或运算，而半遮挡深度也需设为三角形深度和旧的半遮挡深度的最大值。最后判断一下新得到的半遮挡遮罩是否已经为全1，若是全1则意味着不再是半遮挡的意思了，可以升级为新的背景，用半遮挡深度更新背景深度，并且将半遮挡深度赋值为0，同时清空半遮挡遮罩——将其值设为0。</p><p align="left"> 上述更新逻辑中，三角形距离相机足够近就要丢弃原来的半遮挡信息这一推论是启发式的优化，我们可以假设不存在这一启发式的判断，那么考虑下图中的情况：</p><p style="text-align: center;"> &nbsp;&nbsp;<a href="./soc_files/5e781cf268d8641b96b3247cLvhBMSyr01" target="_blank"><img src="./soc_files/5e781cf268d8641b96b3247cLvhBMSyr01" class="ck_insert_img" width="1180px" height="373px" style="max-height: 278.169px; max-width: 880px;"></a></p><p align="left"> 但红色三角形到来时，之前的半遮挡信息并未丢弃，半遮挡深度依然由黄色三角形决定，当绿色三角形到来的时候，它和红色三角形组成了完整的一个新背景，清空了mask值，同时更新背景深度为之前的半遮挡深度，这时候发现半遮挡深度依然是由黄色决定，那么这个由红色三角形和绿色三角形组成的新背景（<em>新家庭</em>）的深度（<em>爱情结晶</em>）居然是随远远藏在更深处的黄色三角形决定。那么你一定可以理解为什么启发式的丢弃黄色三角形是由必要的。（<em>也可以理解为什么新来的绿色三角形是绿色的了。。。。。。</em>）譬如右侧图中蓝色立方体本应该剔除，但因为这个保守的背景深度，使得蓝色立方体并未被剔除。</p><p align="left"> <strong>#</strong><strong>被遮挡物的深度检测</strong></p><p style="text-align: center;"> &nbsp;<a href="./soc_files/5e781cd268d8641b96b32478r1dEKkf201" target="_blank"><img src="./soc_files/5e781cd268d8641b96b32478r1dEKkf201" class="ck_insert_img" width="427px" height="189px" style="max-width: 880px;"></a></p><p align="left"> 1. 将被遮挡物AABB变换到clipspace，需要计算八个点中的最小深度值，这是由于之前的深度缓冲区就是用这个坐标系下的深度，需保持一致。</p><p style="text-align: center;"> &nbsp;<a href="./soc_files/5e781cfb68d8641b96b3247fyBdmqpfh01" target="_blank"><img src="./soc_files/5e781cfb68d8641b96b3247fyBdmqpfh01" class="ck_insert_img" width="486px" height="187px" style="max-width: 880px;"></a></p><p align="left"> 2. 上述结果中的AABB八个顶点坐标投影到screen space，并计算2d的AABB</p><p style="text-align: center;"> &nbsp;<a href="./soc_files/5e781d0168d8647b48f22febt14jtoIP01" target="_blank"><img src="./soc_files/5e781d0168d8647b48f22febt14jtoIP01" class="ck_insert_img" width="554px" height="206px" style="max-width: 880px;"></a></p><p align="left"> 3. 将得到的2dAABB与屏幕裁剪矩形做裁剪。</p><p style="text-align: center;"> &nbsp;<a href="./soc_files/5e781d0768d8641b96b324852PJ2T0aR01" target="_blank"><img src="./soc_files/5e781d0768d8641b96b324852PJ2T0aR01" class="ck_insert_img" width="505px" height="166px" style="max-width: 880px;"></a></p><p align="left"> 4. 遍历剩余部分所覆盖到的所有subtile(8*4)，若AABB顶点最小深度小于其中一个subtile的背景深度，则判断被遮挡物体需要被绘制；否则，剔除。</p><p align="left"> <strong>#</strong><strong>利用SIMD进行的并行优化</strong></p><p align="left"> 这里讲一下MSOC本身涉及的SIMD指令级并行优化，即不包含AABB的视锥剔除等准备工作。由于本人在阅读这个项目源码前对SIMD四个字母的印象只停留在《计算机组成》课上的一页PPT里，所以我不会也不会涉及任何的SIMD奇技淫巧。可能有和我一样不熟悉的同学，所以先简单介绍一下：</p><p align="left"> 普通指令 option(src1, src2, dst)</p><p align="left"> SIMD指令 option(array of src1s, array of src2s, array of dsts)</p><p align="left"> 我的理解就是可以用一个数组存多个同类操作数，然后一条指令可以处理若干个这样的等宽数组，将他们作为输入，得到的输出也等宽数组。</p><p align="left"> 所以下面我就列举一下该项目哪些地方用到了SIMD，用到的时候是把什么语义的对象作为任务最小载体来划分的，并且划分出的并行数是多少（<em>并行数——一条SIMD指令同时处理的数据份数的简称</em>），由于个人电脑CPU跑的时AVX2的SIMD版本，故并行数最高为8。</p><ul><li align="left"> 将遮挡体的三角形顶点变换到clip space：任务载体——顶点；并行数——8；</li><li align="left"> 三角面的背面剔除：任务载体——三角形；并行数——8；</li><li align="left"> 三角形的视锥剔除：任务载体——三角形；并行数——8；</li><li align="left"> 三角形光栅化的准备工作（截距的计算，三角形所在平面方程的计算等）：任务载体——三角形；并行数——8；</li><li align="left"> 三角形覆盖区域的计算：任务载体——水平扫描线；并行数——8；</li><li align="left"> subtile(8*4)的数据更新：任务载体——subtile；并行数——8；</li><li align="left"> 被遮挡物的AABB的坐标转换：任务载体——顶点；并行数——8；</li><li align="left"> 计算最小AABB顶点深度值，及屏幕空间2d包围盒: 任务载体—dimension；并行数—4；</li><li align="left"> 2d包围盒与subtile(8*4)的对齐：任务对象——Xmax/Xmin/Ymax/Ymin；并行数——4；</li><li align="left"> 被遮挡物深度检测：任务对象——subtile；并行数——8；</li></ul><p align="left"> <em>这里大多数都和Intel实现的demo一致，唯一不同的是第一点顶点的变换。在Intel的实现中，他们将顶点的坐标变换这个任务的任务载体设为三角形，也就是每一趟处理8个三角形，每个三角形都会计算不同的三个顶点的三维坐标；而我是在做变换的时候可以不考虑三角形这个结构，直接认为一个mesh就是一堆顶点，一次处理八个顶点，这样的话并行分批次的颗粒会更小，可以证明若mesh顶点数相同的情况下，按三角形来划分批次的任务计算量会比按照顶点来划分需要更多的计算量。更何况没有三角形这个概念完全就可以对顶点数组中的无冗余的顶点进行坐标转换，将结果再根据当前mesh的index buffer做索引，这样处理顶点数还能更少。</em></p><p> &nbsp;</p></div></div></div><p><!-- react-text: 335 -->*<!-- /react-text --><!-- react-text: 336 -->本内容仅代表个人观点，不代表网易游戏，仅供内部分享传播，不允许以任何形式外泄，否则追究法律责任。<!-- /react-text --></p><div class="attachment" id="attachment"><div class="related"><i class="attachment-icon"></i><span>相关附件</span></div><ul><li><a href="https://km.netease.com/article/299478" target="_blank">masked-software-occlusion-culling.pdf（18.87M）</a><a class="download-icon"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABDElEQVRYhe2WPQ7CMAxGH5QVbsMEnAMJrgEjhcIIC9yBASa4AxN3QmUgRe5v3KZSl3xL08r295JGicGrY/WyH+I4tiatt2EyfJnn9BjtdYa9tOVAlVWuiWM+fdcCHsADeABXVR5E4sApUxKcqyMlD6nsQaRZgREwVsRlNQaGtiANwBl4A9sa5pHJubQB8AQ+wE4JEQGhyXm2AfAAlkoIab40uZXKbZ5VuCmLnQNXIDAgEelNmDW/FRU57Q+p9zq3YVLwagCkpPkCuGuLFgG8+M1sVgNCY/7vHWwAtjteQgRmrJl5Yd2mDYmEQGFeKpeOKIGIm5q7AkiIxur8MuocoOoX2PvzFtT5Cnh5fQEwCT1O6V55dAAAAABJRU5ErkJggg=="></a><span class="attachment_files_code"><!-- react-text: 347 -->0<!-- /react-text --><!-- react-text: 348 -->积分<!-- /react-text --></span></li></ul></div><!-- react-empty: 349 --><div class="judge"><div><span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAC7UlEQVRYhb3Xz4uVdRTH8dcdJ7GiokURqZUtKh1qSkXDqayoKMgww3Ej1aJNEUYgpAtnxh8kFZgF7dr0B0RQCYlRQ5kSGNpMmdYiohlqEeGPFLMftjjn1uVy7+M8z9zbBy4Xvs95znk/3+ec8z1PbXj7SyrqVnyKc7gDY1Wc9FYMPgufYD9qCXIlfi/rqKciwHO4BI9iFS7FuiqOqgBcgE14F6dwErtyrfSOVgFYg4vxQsPaBrEjg/8HwA58iCMNa1/hY7zabYBBXIGhFtc2iUR8rJsAW3FQZH+zPhOluK1bAHfiBqwvsFmPmzAwVaftsnYWLsN80XD68BQO4aMCf3swjr14E1/nPd/gOM60A7gbi3BzBu0TmQ5ncQKfK376up7Fy1iJxzEz139LoCMJ+QVGe7FFJBB8n0ajOIrJXJvA6SkEJzrk7bgIczAv/2/EAtyFJ9J2qDeD7xB1/Zfo7Z3QaXybv0bVMAOvYEtvGtyHPzsU+Hw6l7Hux9EerMYtYturng1lNEO8pj4M9ojaHcByUcu1LgbvwT5R0sswVn/ifXhAJM+uLgWvpe8lYvv314nq2oN78ZDo653WKB7EPeIs0QwgAz8i+sLbHQz+jii/FQnyr1ol3XtiF1YlxMwWNlPVhSKvVoqnf7/ZoF3Wf4BnEmLZNADmiwa0FrtbGRRNMD+Jev1lGgDjuF608pYqAlguDpDvpgHwR/7aqqjx9ONXFSbdMioCmC2O0enqYTxdFuByMXod6ADACrzhv+N9SgBzE+JggeMBfJk2RZVSH2CuLQMwL/9bfW4tEF1zr0iwv0Wt7xZl16wDog1fVwagH8fwc8PabLwmBpal4utosZiknhe7cBg7cXXDfZNiGuovA3CbSMCz4ktoRExF67AZV+H1BvudubY5wSYxLMr8TIItLAMwIc7rDfghnb0lcmNE6/HsVF67Jm1H8t6N4rVNlAEYETPhdvGuF+LJdk6a9GPaLsp7XxSvbWsr438AeJ2gFuJk8lwAAAAASUVORK5CYII="></span><p class="collceted">已收藏 9</p></div><div><span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACWUlEQVRYhcXWWagOYRzH8Y/lkOxZcoNyCheIZEm2IkVkuZCTSElcuhqT5DwXZM5EypWl3IhkTRIXEoUodRRu5MaWvWyRZLmYoen1HsvxLr96mub/m+d5vvOfZ57n30Gu5m0t/kMDsR3z0YDj2BDi6NmfOnb8n1lz9cAlNOEizmM5Lock7V0LgNUYiaUhjpaEOFqMBWjEuloATMfdEEcnfwRCHJ3DrdyrOkAfPC8Tf4NetQDoi7dl4g1/07kSAINxv0y8uywLVQUYi/64XsbrhvfVBliPjzhVxuuJd9UEmIYV2IfXRSMkaQMG4HG1ABpxCE/RXMYfno99708DdW7H5POwX/aN5yh5+1yT8+vmkKTrC/EnuIY9IY5eUj4DwzC+0CbL9viNuIEzssU1RfnFB3dxxa+/51hswe2QpOOgww+neVtLb9limtHGoPAIu7ETH4pGiKPfdCs8l6QzcRCdMLqYge2yt2rB2rwtz71jGIUh2Fo6+b8oxNFFWUb7ISoCLMzJYuzN26Hcu4c7+NbeiUsgWnEOi4oAA2Srula6g6GV2Irbq574VE+AqWitC0BI0kaMwal6ZWARvuJIvQCacDXE0cOaA4QkHSHbYQ9TmYLkX7UMX3C0XgBNuBDi6HnNAUKSTsAIefprDoCV+IQTNQfIq6RlOB3i6GcNUQSoyEHzG82VFbAHisEiwANMUqgRKqWQpN2xCS9wtugVS7Jd2IFWWUXTlsZhg5LPF5K0ree7YCIGYWWIo89tAexEV6zC7EL8FW4W7odilqyi+Rt9lR29a0IcnSk1vwMbGozuP+Ks3wAAAABJRU5ErkJggg=="></span><p class="liked">已点赞 6</p></div><!-- react-empty: 359 --><div><span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAByElEQVRYheXXsWsVQRAG8F+MtViFEGwfr7IXrAxiEbsEScAulY22aiyCFlELaxEUG22EBMugqWyUFDaCRKzEwsImwT/gWeyc5D0uL3e3+9I4MNzuHDvz8e3ud3P87zZVDdYfPu6yvodHuBzzHdzB96MW3L97e2h+ukvVsD4+4eyh2CLmcQHfmiQ5lQFgI4pvYy58O2IbTZPkAKhoX8Wv8NWIXTkJAHU2aLsgB8BOPJ9jFufwImLvmibJOYQvpQO3INFf2T7uNU3SlYFlvMUrbOFP+JZ0A/aaJurCwDJeYxq/cbNDjn/WloHDxdfxIKd4WwArpYu3AbAi7XfR4nUAetjEQfgmrk6qOMOHcJy2P5UOXNHiDDMwTtvnJlF8FEARbc8BMFXzvrW25wAYp+3vTwLAmqTjlbb/jPE+PuANZiYJYE/S8VFtv4hbuIYv8ZwIAFIbtYQz4Uv4ikvSFs1ITBRjo6kS/pBuwg2JmWJstPkWDPAM5x3PRp2i9nIBVHYcG33sSipabeVixPolADCejSdadMu5TWkdGwvxrpGiluiKR9lopagl2/KKjc8xb6SoOV1xnQ1wHR/Vd8trowtK/5hwtKLWdst/AcxMeZm8X0qDAAAAAElFTkSuQmCC"></span><p>分享</p></div><div class="share-popo"><span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAmElEQVRYhe2WwQ6AMAhDwey/PRq/ep5IDBkRCBM060kPq+VtZsX9ODv4hOzd5bM5Px6mdnvmE0l6mtTkU4oASZpQO5nJJ53ACrACjP4C62mXpPIpRcB7J3CZfEoQeHXPudIJrAAN/Kff24hoXb0+ENWITOtLESBFNSKV0gnMDICgoPZrAt8IMLMRqfxKEYhqRFzkO7w70glcyRsS5I+0nm8AAAAASUVORK5CYII="></span><p>用手机查看</p></div></div><div class="exceptional" style="margin-bottom: 0px;"><div class="top"><div class="semicircle"><a title="打赏"><img src="./soc_files/db0daf13a4684514c0f4f1087f25c61e.png"></a><em><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAEOElEQVRIiZWWXUybVRjHf31LWle2Frq3y4JzyECkwCDCmGGbgPuCTsEZknkzdYm789qmevVeadNr713iR8KWTSw6MMLCgEkWBzqktEOQgdkwtkApH03fBF4v+k0/KP+7k3Oe55fn5Jzn+asURSGbJLtDBbwBvAWcBsqAwsj2CjAD/Ar8CAxLNmvWhKpMQMnuEIBrwKcRSC6aAb4Abkg263bOQMnuKAG6gAYAg17P8UozJcXFmMSD6HQ6tre2CKyt4Q8EeDq/gMvjYcW/Gk3xG/CeZLPO7QqU7I4W4BYgGvR6zrc0U2WuQFCpspa2rSi43B76B++zGggA+IBOyWYdygiU7I6LQA+gKS8rpbO9Ha1WkxW0UyFZ5razh+mZWQAZ6JBs1p9TgJLd8Srhqzjw+ol62s6dRZWmKq9viZAcAkCr0WISD6acURSFvoF7PHw0BrAOnJBs1icxoGR3qIFRoKHaXEHnOx0kokKyzL37Q/w55WYzGExKLhqNWC6co7SkJBkK3P7ByaTbQ6SQRslm3RIi+x8CDQb9Adotbeysy+vz8XBsPAYrLz2GaDQC4Fte5uuuW8zOJb8PFdBuacOg10P48V0DUPOCTgXcBIxvt16k6PDhlCsKrK0x/niC1rNvcuXdy7xWc5yT9XUEg0GeLS4CsOL3U1dbkxSXp1azP1+H+8k0QOXgyIMvBaAJKCsw6Kkym1NgACZR5OPrH9F4sgGtJv6ILBfOo9u3D4B/nj1PG1tlNlNg0EP4LzcJwCWAarM549PXajRpHwcQA2aSoFJRHS/kkgCcAni5+GjWwHTy+pbwLS8D8NKLRRnPJeRuFIBXAA6Jpj3BQrKMs7c3tm45czrj2YTc5XlEGrFOl/1qEuX1LdF15/tYdc2nGlO+RaLy47kL83KmJMC++va72BfpsLRSV1ubc7xAeMSwuRnc5WhYw6Oje4ZtxHOvCMBfAP/5vDkBJ1xTQLjD5FpZQu5pgXBL4+n8Qk7BURkLC3I+m5B7NA/4Cfhk0u3mbHPTrmPo+gdXgXDjzkWKojDpdkeXdwVgCJjxrwZwxTcy6khREUeKijI2gp2adLvxrwYg7AaG1YP9vzA48mAT6Hi++C/1tTWo1eq0wSFZxnm3l98nJlCrBUyimBUmyzJdd7oJhUIAVslmHY9OixvAo9VAAGdvH5lc0Pgfj5lwTTE9+zc3u51ZYQrg7O2LTv+xCAMBQLJZt4D3gfVJt4e+/gHSeZ1DpnhF2VqZoij09Q9EZ+E6cDXCSLEYFqCbLBYjOvFNopg0OaJKYzEuSzZrrAemM1EWwvNxf9REVZsr0tqNRKUxUevAlURYWmAEWgF8A9RD1CZWUlJ8FJMokp+vA2BjYxOvz8fc/AIujzvRJo5FrtGzM3cuRvgzoDRreXHNAp+zVyOcBnwGaCc8O0tJtvqzhK1+DzCSCRTV/yNtwjlM8ZJvAAAAAElFTkSuQmCC"></em></div></div><div class="middle"><ul><li id="five" style="left: 0px;"><p>5积分</p></li><li id="ten" style="left: 50%; margin-left: -28px;"><p>10积分</p></li><li id="twenty" style="right: 0px;"><p>20积分</p></li></ul></div><div class="bottom"><p><strong>目前收到</strong><span></span><strong>人打赏</strong><strong>，共</strong><span></span><strong>积分</strong></p></div></div><div><div class="comments"><div class="comments-editor"><h3 class="comments-editor-total"><!-- react-text: 395 -->全部评论<!-- /react-text --><span>1</span></h3><div class="comment"><div class="comment-inner"><div class="comment-inner-user"><div class="comment-avatar"><img alt="" src="./soc_files/person-big.png"></div></div><div class="comment-content"><div class="comment-content-detail"><div><div><div class="quill comment-editor"><div class="ql-container ql-snow"><div class="ql-editor ql-blank" data-gramm="false" contenteditable="true" data-placeholder="请输入评论内容"><p><br></p></div><div class="ql-clipboard" contenteditable="true" tabindex="-1"></div></div></div></div><div class="comment-content-detail-count">还可以输入 <strong>500</strong> 个字</div></div></div><ul class="comment-actions"><div class="comment-actions-flex"><li><button title="添加表情" type="button" class="ant-btn ant-btn-link popover-comments-editor-emotion-btn"><i class="iconfont icon-d icon-d-smile" type="unset"></i></button></li><li><button title="添加图片" type="button" class="ant-btn ant-btn-link"><i class="iconfont icon-d icon-d-picture" type="unset"></i><span></span></button></li><li><button title="" type="button" class="ant-btn ant-btn-link"><i class="iconfont icon-d icon-d-video-camera" type="unset"></i><span></span></button></li><li><button disabled="" title="" type="button" class="ant-btn ant-btn-link"><i class="iconfont icon-d" type="unset"></i><span>(可添加1个视频+5张图片)</span></button></li></div></ul></div></div></div><div class="comments-editor-controls"><span class="comments-editor-controls-anonymous"><label class="ant-checkbox-wrapper"><span class="ant-checkbox"><span class="ant-checkbox-inner"></span><input type="checkbox" class="ant-checkbox-input" value="on"></span><span>匿名</span></label></span><span class="comments-editor-controls-reply"><button disabled="" type="button" class="ant-btn ant-btn-primary" style="min-width: 80px;"><span>评 论</span></button></span></div></div><div class="comments-list"><div class="comments-list-title"><div class="active"><!-- react-text: 439 --> <!-- /react-text --><!-- react-text: 440 -->最热<!-- /react-text --></div><div class=""><!-- react-text: 442 --> <!-- /react-text --><!-- react-text: 443 -->最新<!-- /react-text --></div></div><div><div class="comments-list-item" data-comment-id="174100"><div class="comment"><div class="comment-inner"><div class="comment-inner-user"><div class="comment-avatar"><img alt="" src="./soc_files/person-big.png"></div><span class="comments-actions-action-floor">1楼</span></div><div class="comment-content"><div class="comment-content-author"><span class="comment-content-author-name">胡凇源</span></div><div class="comment-content-detail"><div><div class=""><div class="comments-content-text"><div class="comments-content-text-container"><div class="comments-content-text-body comments-content-one-line"><p class="comments-content-text-body-content-expanded comments-content-text-body-content" id="comment-content-174100"><p>附件的下载权限是不是不太对</p></p><p class="comments-content-text-body-content-full-height comments-content-text-body-content" id="comment-content-full-174100"><p>附件的下载权限是不是不太对</p></p></div></div></div><div class="comments-attachments"><div class=" comments-attachments-list"></div><div class=" comments-attachments-detail comments-attachments-detail-hidden"><div class="comments-attachments-detail-actions"><span class="comments-attachments-detail-actions-action"><i class="iconfont icon-d icon-d-upload" type="unset"></i><!-- react-text: 498 -->收起<!-- /react-text --></span><span class="comments-attachments-detail-actions-action" icon=""><i class="iconfont icon-d icon-d-search" type="unset"></i><!-- react-text: 501 -->查看原图<!-- /react-text --></span></div><div class="comments-attachments-detail-previews" data-comments-attachment-preview-id="174100"></div><div class="comments-attachments-detail-thumbnails"></div></div><!-- react-empty: 504 --></div></div></div></div><ul class="comment-actions"><div class="comment-actions-flex"><li><div><div class="comments-actions"><div class="action-flex"><div class="action-flex-left"><span class="comments-actions-action"><span class="comments-actions-action-text">2020-04-27 11:15</span></span><div><span class="comments-actions-action"></span><span class="comments-actions-action"><button type="button" class="ant-btn ant-btn-link comments-actions-action-btn"><i class="iconfont icon-d icon-d-commenting"></i><span>回 复</span></button></span><span class="comments-actions-action"><button type="button" class="ant-btn ant-btn-link comments-actions-action-btn"><span class="" style="margin-right: 5px;"><i class="kmfont iconthumbs-up2"></i></span><span>0</span></button></span></div></div></div></div></div></li></div></ul></div></div></div><div class="comments-list-item-replys"><div id="reply-list-174100"><div class="comments-list-item" data-comment-id="143775"><div class="comment"><div class="comment-inner"><div class="comment-content"><div class="comment-content-detail"><div><div class=""><div class="comments-content-text"><span class="comments-content-text-author"><span>Mata(张寒城)</span></span><div class="comments-content-text-container"><div class="comments-content-text-body comments-content-one-line"><p class="comments-content-text-body-content-expanded comments-content-text-body-content-reply comments-content-text-body-content" id="comment-content-143775">已修改</p><p class="comments-content-text-body-content-full-height comments-content-text-body-content-reply comments-content-text-body-content" id="comment-content-full-143775">已修改</p></div></div></div></div></div></div><ul class="comment-actions"><div class="comment-actions-flex"><li><div><div class="comments-actions"><div class="action-flex"><div class="action-flex-left"><span class="comments-actions-action"><span class="comments-actions-action-text">2020-04-27 11:17</span><span style="color: rgb(153, 153, 153); font-size: 12px;">作者回复</span></span><div><span class="comments-actions-action"></span><span class="comments-actions-action"><button type="button" class="ant-btn ant-btn-link comments-actions-action-btn"><i class="iconfont icon-d icon-d-commenting"></i><span>回 复</span></button></span><span class="comments-actions-action"><button type="button" class="ant-btn ant-btn-link comments-actions-action-btn"><span class="" style="margin-right: 5px;"><i class="kmfont iconthumbs-up2"></i></span><span>0</span></button></span></div></div></div></div></div></li></div></ul></div></div></div></div></div></div></div></div><div class="comments-list-status"><div>加载完毕,没有更多了</div></div></div><input type="file" accept="image/bmp,image/gif,image/jpeg,image/png" class="hidden" value="" style="display: none;"><input type="file" accept="video/mp4,video/quicktime,video/x-msvideo,video/x-ms-wmv" class="hidden" value="" style="display: none;"></div></div></div><div id="fixed-buttons"><div class="button feedback">建议反馈</div><div class="button back-to-top" style="opacity: 0;">返回顶部</div></div><!-- react-empty: 455 --><!-- react-empty: 456 --><!-- react-empty: 457 --><!-- react-empty: 458 --><!-- react-empty: 459 --><!-- react-empty: 460 --><!-- react-empty: 461 --><!-- react-empty: 462 --><!-- react-empty: 463 --><!-- react-empty: 464 --><!-- react-empty: 465 --></div></div><!-- react-empty: 207 --></div><footer id="km-footer" class="km-footer km-footer--zh-CN clearfix"><div class="logo"><img src="./soc_files/km_logo.png"><div class="text"><span>Share us</span><br><span class="line-2">your growing</span></div></div><div class="brands"><a class="netease" href="https://www.163.com/" target="_blank"><img src="./soc_files/logo-netease.png"></a><a class="netease-game" href="https://game.163.com/" target="_blank"><img src="./soc_files/logo-netease-game.png"></a></div><div class="container"><div class="links"><div class="title">常用链接</div><div class="list clearfix"><div class="column"><a class="item" href="https://pm.netease.com/#/home" target="_blank">易协作</a><a class="item" href="https://oa.netease.com/" target="_blank">OA</a></div><div class="column"><a class="item" href="https://br.oa.netease.com/" target="_blank">会议预定</a><a class="item" href="https://hz.oa.netease.com/service/stationery/html/index.jsp" target="_blank">文具预定</a></div><div class="column"><a class="item" href="https://192.168.10.226/WIKI/index.php/%E9%A6%96%E9%A1%B5" target="_blank">游戏部IT资源</a><a class="item" href="https://portal.netease.com/" target="_blank">易网</a></div><div class="column"><a class="item" href="https://popo.netease.com/" target="_blank">网易POPO</a><a class="item" href="https://rp.netease.com/" target="_blank">工作报告</a></div></div></div><div class="clients"><a class="item"><div class="image"></div><div class="title">POPO服务号</div><div class="qrcode popo"><img src="./soc_files/qrcode-popo-service.png"></div></a><a class="item"><div class="image"></div><div class="title">KM APP下载</div><div class="qrcode app"><img src="./soc_files/qrcode-download.png"></div></a></div><div class="about"><a class="item" href="https://km.netease.com/km_protocol" target="_blank">平台用户协议</a><a class="item" href="https://km.netease.com/topics/topic/1003" target="_blank">帮助中心</a></div></div></footer></div></div>
+<script type="text/javascript" src="./soc_files/bundle.js.下载"></script>
+
+<div id="nis-water-container"><div class="nis-water-mark" style="left: 20px; top: 20px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 20px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 20px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 142px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 142px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 142px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 264px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 264px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 264px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 386px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 386px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 386px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 508px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 508px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 508px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 630px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 630px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 630px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 752px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 752px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 752px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 874px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 874px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 874px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 996px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 996px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 996px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 1118px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 1118px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 1118px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 1240px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 1240px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 1240px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 1362px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 1362px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 1362px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 1484px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 1484px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 1484px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 1606px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 1606px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 1606px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 1728px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 1728px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 1728px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 1850px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 1850px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 1850px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 1972px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 1972px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 1972px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 2094px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 2094px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 2094px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 2216px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 2216px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 2216px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 2338px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 2338px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 2338px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 2460px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 2460px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 2460px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 2582px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 2582px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 2582px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 2704px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 2704px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 2704px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 2826px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 2826px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 2826px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 2948px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 2948px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 2948px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 3070px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 3070px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 3070px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 3192px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 3192px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 3192px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 3314px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 3314px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 3314px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 3436px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 3436px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 3436px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 3558px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 3558px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 3558px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 3680px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 3680px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 3680px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 3802px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 3802px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 3802px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 3924px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 3924px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 3924px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 4046px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 4046px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 4046px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 4168px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 4168px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 4168px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 4290px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 4290px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 4290px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 4412px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 4412px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 4412px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 4534px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 4534px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 4534px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 4656px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 4656px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 4656px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 4778px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 4778px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 4778px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 4900px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 4900px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 4900px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 5022px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 5022px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 5022px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 5144px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 5144px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 5144px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 5266px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 5266px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 5266px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 5388px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 5388px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 5388px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 5510px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 5510px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 5510px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 5632px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 5632px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 5632px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 5754px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 5754px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 5754px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 5876px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 5876px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 5876px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 5998px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 5998px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 5998px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 6120px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 6120px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 6120px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 6242px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 6242px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 6242px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 6364px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 6364px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 6364px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 6486px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 6486px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 6486px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 6608px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 6608px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 6608px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 6730px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 6730px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 6730px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 6852px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 6852px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 6852px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 6974px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 6974px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 6974px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 7096px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 7096px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 7096px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 7218px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 7218px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 7218px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 7340px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 7340px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 7340px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 7462px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 7462px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 7462px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 7584px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 7584px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 7584px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 7706px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 7706px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 7706px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 20px; top: 7828px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 432px; top: 7828px; width: 312px; height: 22px;"></div><div class="nis-water-mark" style="left: 844px; top: 7828px; width: 312px; height: 22px;"></div></div></body></html>

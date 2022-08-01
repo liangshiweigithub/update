@@ -207,7 +207,7 @@ template<typename T> className
 
 ##### 函数模板的实例化
 
-函数模板也存在现实实例化和隐式实例化。现实实例化语法：
+函数模板也存在现实实例化和隐式实例化。显示实例化语法：
 
 ```c++
 // declaration of template function
