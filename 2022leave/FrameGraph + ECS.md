@@ -48,7 +48,6 @@ https://km.netease.com/wiki/561/page/62349?parent_id=9039&wiki=561&has_child=fal
    + Transient：生命周期一帧之内，可被回收利用
    + 长时间有效，比如ReflectionProbe
 
-   ### 
 
 ## ECS
 
@@ -62,8 +61,6 @@ https://km.netease.com/wiki/561/page/62349?parent_id=9039&wiki=561&has_child=fal
    + 可重用
    + 不用理解内部实现就可以使用。
    
-2. 内存访问速度和CPU之间的性能差距越来越大。 从主存中读取数据可能会消耗600个时钟周期，L2 Cache中大概40个时钟周期，L1 Cache中1-2个时钟周期。
-
 3. OO缓存不友好。优化时优先优化数据，然后是代码。内存可能是最大的瓶颈
 
-4. DOD：data oriented design。缓存更加友好，
+4. DOD：data oriented design。出现这种设计模式的问题就是CPU和内存间的性能差距越来越大。这种设计模型的核心要求就是尽可能的提升缓存命中率。比如对一个3.2GHz的CPU来说， 从主存中读取数据可能会消耗600个时钟周期，L2 Cache中大概40个时钟周期，L1 Cache中1-2个时钟周期。
