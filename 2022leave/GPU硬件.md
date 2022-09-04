@@ -81,3 +81,9 @@ TBR的优缺点
 11. 减少FS中Clip(HLSL)、discard(GLSL)、gl_FragDepth的使用：会打断Early-DT的执行
 12. 区分使用float、half、fix：1). 降低带宽占用 2). 减少GPU周期提高并行程度 3). 降低统一变量寄存器数量，从而降低寄存器数量溢出风险，参考[Unity3D shader优化技巧集合](http://www.xionggf.com/post/unity3d/shader/u3d_shader_optimization/)
 13. 减少FrameData压力：顶点处理部分容易成为瓶颈，应避免使用曲面细分shader、置换贴图等负操作。提倡使用模型LOD，且尽早进行遮挡剔除（如umbra）
+
+
+
+一篇硬件介绍好文：
+
+https://zhuanlan.zhihu.com/p/347001411
