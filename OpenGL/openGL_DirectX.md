@@ -18,6 +18,12 @@ vulkan的ndc：
 
 https://matthewwellings.com/blog/the-new-vulkan-coordinate-system/
 
+ndc 总结
+
+https://zhuanlan.zhihu.com/p/339295068
+
+
+
 投影矩阵的推导：
 
 http://www.songho.ca/opengl/gl_projectionmatrix.html
