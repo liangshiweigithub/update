@@ -18,6 +18,10 @@
 
    https://www.gdcvault.com/browse/
 
+5. vulkan gpu driven guid
 
+   https://vkguide.dev/docs/chapter-1/vulkan_init_code/
 
-3. PVRCarbon
+6. 基于UE的 动画合批，mobile AI
+
+   https://www.zhihu.com/column/c_1274757765979201536
