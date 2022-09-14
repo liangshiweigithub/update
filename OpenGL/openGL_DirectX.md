@@ -18,6 +18,12 @@ vulkan的ndc：
 
 https://matthewwellings.com/blog/the-new-vulkan-coordinate-system/
 
+ndc 总结
+
+https://zhuanlan.zhihu.com/p/339295068
+
+
+
 投影矩阵的推导：
 
 http://www.songho.ca/opengl/gl_projectionmatrix.html
@@ -84,7 +90,9 @@ glTexStorage2D and glTexImage2D区别:
 
 https://stackoverflow.com/questions/15405869/is-gltexstorage2d-imperative-when-auto-generating-mipmaps
 
+Pixel Buffer Object (PBO)
 
+http://www.songho.ca/opengl/gl_pbo.html#unpack
 
 投影矩阵的推导，一下n和f皆为正值
 
