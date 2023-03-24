@@ -18,4 +18,14 @@ https://en.wikipedia.org/wiki/Special_member_functions
 
 https://stackoverflow.com/questions/3106110/what-is-move-semantics/3109981#3109981
 
-https://gamedev.stackexchange.com/questions/18901/can-someone-explain-the-reasons-for-the-implications-of-colum-vs-row-major-in/18929#18929
+https://gamedev.stackexchange.com/questions/18901/can-someone-explain-the-reasons-for-the-implications-of-colum-vs-row-major-in/18929#18929\
+
+#### 协程：
+
+https://lewissbaker.github.io/
+
+#### 模板
+
+https://blog.csdn.net/harman_zjc/article/details/70255960
+
+#### lib和dll的区别
