@@ -1,13 +1,13 @@
 Deferred Rendering:https://zhuanlan.zhihu.com/p/28489928。
 
-Deferred Rendering最大的优势是将光源树木和场景中物体数目在复杂度层面完全分开，能够渲染很多光源的同时保持很高的帧率。
+Deferred Rendering最大的优势是将光源数量和场景中物体数目在复杂度层面完全分开，能够渲染很多光源的同时保持很高的帧率。
 
 **步骤：**
 
 + Geometry Pass: 将所有物体都先绘制到G-buffer。
 + Lighting Pass: 渲染屏幕大小的二维矩形，使用G-buffer中存储的数据对此矩阵的每个片段计算场景光照。
 
-等价于先进行了深度测试，再进行找色计算。复杂度从O(m*n)降到了(n + m);
+等价于先进行了深度测试，再进行着色计算。复杂度从O(m*n)降到了(n + m);
 
 **优点：**
 
