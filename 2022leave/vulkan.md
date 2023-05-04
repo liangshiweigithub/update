@@ -10,6 +10,8 @@ SSBO与UBO的不同之处
 https://zhuanlan.zhihu.com/p/24817959
 https://zhuanlan.zhihu.com/p/80692115
 
+https://zhuanlan.zhihu.com/p/25771079
+
 1. Fence
 
    提供了一种粗粒度的，从Device向Host单向传递信息的机制。Host可以使用Fence来查询通过vkQueueSubmit所提交的操作是否完成。Fence有两种状态，signaled和非signaled状态。

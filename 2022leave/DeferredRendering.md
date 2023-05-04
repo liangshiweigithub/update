@@ -1,5 +1,7 @@
 Deferred Rendering:https://zhuanlan.zhihu.com/p/28489928。
 
+https://zhuanlan.zhihu.com/p/618250549
+
 Deferred Rendering最大的优势是将光源数量和场景中物体数目在复杂度层面完全分开，能够渲染很多光源的同时保持很高的帧率。
 
 **步骤：**
@@ -21,7 +23,7 @@ Deferred Rendering最大的优势是将光源数量和场景中物体数目在�
 + 读写G-buffer的内存带宽是性能瓶颈
 + 透明物体渲染
 + MSAA支持不友好
-+ 多种材质支持不友好
++ 多种材质支持不友好，只能用同一套lighting pass
 
 **适用于4RT GBuffer**
 
