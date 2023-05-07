@@ -5,6 +5,8 @@ SSBO与UBO的不同之处
 3. SSBO支持可变存储，运行期决定block的大小。UBO必须编译期就确定对象的大小。因此SSBO内可有任意长度数组，数组的实际大小基于缓冲区的范围确定。
 4. SSBO访问速度更慢。SSBO数据放在显卡的全局内存，UBO放在常量内存中。
 
+https://zhuanlan.zhihu.com/p/20712354。Vulkan设计理念
+
 同步相关
 
 https://zhuanlan.zhihu.com/p/24817959
