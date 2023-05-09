@@ -47,3 +47,9 @@
 
      
 
+### Lighting:
+
+#### Realtime light
+
++ cast shadow up to shadow distance
++ only contribute realtime direct light, if use built-in Render pipeline and enable Enlighten Realtime Global Illumination, Realtime lights also contribute realtime indirect lighting.
